@@ -1,4 +1,8 @@
 import os
+import re
+import socket
+import sys
+import urllib.parse as urlparse
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -67,28 +71,72 @@ TEMPLATES = [
     }
 ]
 
-database_url = os.getenv("DATABASE_URL", "")
-if database_url.startswith("postgres"):
-    import urllib.parse as urlparse
-
-    parsed = urlparse.urlparse(database_url)
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": parsed.path.lstrip("/"),
-            "USER": parsed.username,
-            "PASSWORD": parsed.password,
-            "HOST": parsed.hostname,
-            "PORT": parsed.port or 5432,
-        }
-    }
-else:
-    DATABASES = {
+def _sqlite_default():
+    return {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+
+
+def _supabase_ipv4_url(database_url: str) -> str:
+    """Direct db.<ref>.supabase.co hosts are IPv6-only. Use the IPv4 pooler when needed."""
+    parsed = urlparse.urlparse(database_url)
+    host = parsed.hostname or ""
+    match = re.fullmatch(r"db\.([a-z0-9]+)\.supabase\.co", host)
+    if not match:
+        return database_url
+    try:
+        socket.getaddrinfo(host, parsed.port or 5432, socket.AF_INET)
+        return database_url
+    except OSError:
+        pass
+    ref = match.group(1)
+    pooler = os.getenv("SUPABASE_POOLER_HOST", "aws-1-eu-west-1.pooler.supabase.com")
+    user = f"postgres.{ref}"
+    password = urlparse.quote(urlparse.unquote(parsed.password or ""), safe="")
+    return (
+        f"{parsed.scheme}://{user}:{password}@{pooler}:6543/postgres?sslmode=require"
+    )
+
+
+def _postgres_from_url(database_url: str):
+    parsed = urlparse.urlparse(_supabase_ipv4_url(database_url))
+    query = dict(urlparse.parse_qsl(parsed.query))
+    name = parsed.path.lstrip("/").split("?", 1)[0] or "postgres"
+    host = parsed.hostname or ""
+    port = parsed.port or 5432
+    sslmode = query.get("sslmode")
+    if not sslmode and "supabase" in host:
+        sslmode = "require"
+    config = {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": name,
+        "USER": urlparse.unquote(parsed.username or ""),
+        "PASSWORD": urlparse.unquote(parsed.password or ""),
+        "HOST": host,
+        "PORT": port,
+        "CONN_MAX_AGE": 0 if port == 6543 else 60,
+        "CONN_HEALTH_CHECKS": True,
+        "DISABLE_SERVER_SIDE_CURSORS": port == 6543,
+    }
+    if sslmode:
+        config["OPTIONS"] = {"sslmode": sslmode}
+    return {"default": config}
+
+
+def _running_tests() -> bool:
+    if "pytest" in sys.modules:
+        return True
+    return len(sys.argv) > 1 and sys.argv[1] == "test"
+
+
+database_url = os.getenv("DATABASE_URL", "").strip()
+if database_url.startswith("postgres") and not _running_tests():
+    DATABASES = _postgres_from_url(database_url)
+else:
+    DATABASES = _sqlite_default()
 
 AUTH_PASSWORD_VALIDATORS = []
 LANGUAGE_CODE = "en-us"

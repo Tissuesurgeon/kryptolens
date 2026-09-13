@@ -79,7 +79,7 @@ Open [http://127.0.0.1:8000](http://127.0.0.1:8000) → **Enter Demo** → compi
 
 Without `CMC_API_KEY`, Run now persists `stage=error`. The product will not invent market data.
 
-Local SQLite is used when `DATABASE_URL` is empty. **Run now** and the 15-minute Beat schedule need Redis plus Celery:
+Set `DATABASE_URL` to a Postgres URL (Supabase or Compose). Empty `DATABASE_URL` falls back to local SQLite. Pytest always uses SQLite. **Run now** and the 15-minute Beat schedule need Redis plus Celery:
 
 ```bash
 # separate terminals
@@ -112,7 +112,7 @@ Copy `.env.example` to `.env`. Never commit secrets.
 | `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL` | Alternate OpenAI-compatible provider. Optional. |
 | `TELEGRAM_BOT_TOKEN` | Optional Event → Telegram delivery. |
 | `APP_EMAIL` / `APP_PASSWORD` | Single operator account. Defaults are in `.env.example`. |
-| `DATABASE_URL` | Empty = local SQLite. Compose sets Postgres. |
+| `DATABASE_URL` | Postgres URL. Empty = local SQLite. Pytest always uses SQLite. |
 | `REDIS_URL` | Celery broker. Required for queued Run now and Beat. |
 | `EVENT_COOLDOWN_MINUTES` | Dedup window for event fingerprints. Default `60`. |
 | `SCORE_HIGH_MIN` / `SCORE_MEDIUM_MIN` | Scoring bands. Defaults `4` / `2`. |
