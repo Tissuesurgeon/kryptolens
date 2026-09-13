@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Workspace · KryptoLens{% endblock %}
+
+{% block content %}
+<div class="conversation-stream">
+  <header class="stream-intro">
+    <h1>Ask KryptoLens what to watch</h1>
+    <p class="lede">
+      Compile an Intelligence Policy from language. Activate it, then Run now against live CoinMarketCap.
+      Quiet scans are valid — the agent will not invent a move.
+    </p>
+  </header>
+
+  <section class="desk">
+    <div class="desk-body">
+      {% if events %}
+        <div class="event-feed" aria-label="Recent receipts">
+          {% for event in events %}
+            {% include "workspace/partials/event_card.html" %}
+          {% endfor %}
+        </div>
+      {% elif lenses %}
+        <div class="empty-state">
+          <h2>Lenses are compiled</h2>
+          <p class="empty">Open one from the roster, activate it, and run against live listings.</p>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <h2>No lens on this workspace</h2>
+          <p class="empty">Describe the condition below. You asked / KryptoLens assumed appears after compile.</p>
+        </div>
+      {% endif %}
+
+      {% if templates %}
+        <div class="starter">
+          <p class="starter-label">Start from a condition</p>
+          <div class="chips">
+            {% for item in templates %}
+              <a class="chip" href="{% url 'lens_create' %}?template={{ item.slug }}">{{ item.name }}</a>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+    {% url 'home' as composer_action %}
+    {% include "workspace/partials/composer.html" with composer_placeholder="Ask KryptoLens…" composer_submit="Compile" %}
+  </section>
+</div>
+{% endblock %}

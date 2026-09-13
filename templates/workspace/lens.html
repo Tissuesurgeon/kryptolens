@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ lens.name }} · KryptoLens{% endblock %}
+
+{% block content %}
+<div class="conversation-stream">
+  <header class="conversation-head">
+    <div>
+      <p class="page-id">{{ lens.name }} · v{{ version.version|default:"—" }}</p>
+      <h1>{{ lens.name }}</h1>
+      <p class="lede">{{ lens.natural_language_request }}</p>
+    </div>
+    <div class="conversation-controls">
+      <span class="badge {% if lens.status == 'active' %}badge-active{% endif %}">{{ lens_state.label }}</span>
+      {% if lens.status != 'active' %}
+        <form method="post" action="{% url 'lens_activate' lens.id %}">{% csrf_token %}<button class="btn btn-primary">Activate</button></form>
+      {% else %}
+        <form method="post" action="{% url 'lens_pause' lens.id %}">{% csrf_token %}<button class="btn">Pause</button></form>
+      {% endif %}
+      <form
+        method="post"
+        action="{% url 'lens_run_now' lens.id %}"
+        hx-post="{% url 'lens_run_now' lens.id %}"
+        hx-target="#scan-mount"
+        hx-swap="innerHTML"
+      >
+        {% csrf_token %}
+        <button class="btn">Run now</button>
+      </form>
+    </div>
+  </header>
+
+  <div class="desk">
+    <div class="desk-body">
+      {% include "workspace/partials/understanding.html" %}
+      {% include "workspace/partials/policy.html" %}
+
+      {% if diffs %}
+        <section class="desk-section">
+          <header class="plate-head">
+            <h2>Threshold changes</h2>
+          </header>
+          <div class="diff-list">
+            {% for item in diffs %}
+              <div class="diff-row">
+                <strong class="mono">{{ item.metric }}</strong>
+                <span class="quiet">{{ item.from }}</span>
+                <span>{{ item.to }}</span>
+              </div>
+            {% endfor %}
+          </div>
+          <form method="post" class="plate-action">
+            {% csrf_token %}
+            <input type="hidden" name="intent" value="{{ draft }}">
+            <button class="btn btn-primary" name="action" value="apply">Apply next version</button>
+          </form>
+        </section>
+      {% endif %}
+
+      <div id="scan-mount">{% if latest_run %}{% include "workspace/partials/run_status.html" with run=latest_run %}{% endif %}</div>
+
+      {% if events %}
+        <section class="event-feed desk-section" aria-label="Receipts from this lens">
+          {% for event in events %}
+            {% include "workspace/partials/event_card.html" %}
+          {% endfor %}
+        </section>
+      {% elif not latest_run %}
+        <div class="empty-state">
+          <h2>No receipts on this lens</h2>
+          <p class="empty">Activate, then Run now. The HTTP request returns immediately; HTMX polls LensRun.stage.</p>
+        </div>
+      {% endif %}
+    </div>
+    {% url 'lens_detail' lens.id as composer_action %}
+    {% include "workspace/partials/composer.html" with composer_hidden="preview" composer_placeholder="Ask KryptoLens to revise this lens…" composer_submit="Preview edit" %}
+  </div>
+</div>
+{% endblock %}

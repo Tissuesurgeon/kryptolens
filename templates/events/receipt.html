@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.symbol }} receipt · KryptoLens{% endblock %}
+
+{% block content %}
+<div class="conversation-stream">
+  <header class="stream-intro">
+    <p class="page-id">receipt / {{ event.symbol }}</p>
+    <h1>{{ event.symbol }}{% if event.name %} <span class="quiet">{{ event.name }}</span>{% endif %}</h1>
+    <p class="receipt-meta">
+      <span>{{ event.lens.name }}</span>
+      <span>Lens v{{ event.lens_version.version }}</span>
+      <span>Score {{ event.score }}</span>
+      <span class="badge badge-{{ event.severity }}">{{ event.severity }}</span>
+    </p>
+  </header>
+
+  <article class="receipt">
+    <section class="receipt-block">
+      <h2>01 · What happened</h2>
+      <p>{{ event.explanation }}</p>
+    </section>
+
+    <section class="receipt-block">
+      <h2>02 · Why it scored</h2>
+      <ul>
+        {% for reason in event.score_reasons_json %}
+          <li>{{ reason }}</li>
+        {% empty %}
+          <li>Policy conditions were met.</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="receipt-block">
+      <h2>03 · Why this version</h2>
+      <p>Produced by Lens version {{ event.lens_version.version }}. Later revisions do not rewrite this receipt.</p>
+      <p class="quiet">{{ event.lens_version.source_intent }}</p>
+    </section>
+
+    <section class="receipt-block">
+      <h2>04 · Data used</h2>
+      <ul>
+        <li>CoinMarketCap — price {{ observation.price|default:"—" }}, 24h {{ observation.price_change_24h|default:"—" }}%, volume {{ observation.volume_24h|default:"—" }}, volume change {{ observation.volume_change_24h|default:"—" }}%, market cap {{ observation.market_cap|default:"—" }}, rank {{ observation.market_cap_rank|default:"—" }}</li>
+        {% if market_context.fear_greed_value %}
+          <li>Market context — Fear &amp; Greed {{ market_context.fear_greed_value }} ({{ market_context.fear_greed_label }})</li>
+        {% endif %}
+      </ul>
+      <p class="quiet">Source: CoinMarketCap. Raw payloads are not stored on the event.</p>
+      <div class="actions receipt-actions">
+        <button class="btn" type="button" commandfor="cmc-evidence" command="show-modal">View API evidence</button>
+      </div>
+    </section>
+
+    <section class="receipt-block">
+      <h2>05 · Action taken</h2>
+      <ul>
+        <li>Stored against Lens v{{ event.lens_version.version }}</li>
+        <li>{% if event.notified_at %}Telegram sent {{ event.notified_at }}{% else %}Telegram not sent{% endif %}</li>
+      </ul>
+    </section>
+  </article>
+</div>
+
+<dialog id="cmc-evidence" class="evidence-dialog">
+  <h2>View API evidence</h2>
+  {% if event.cmc_call_log %}
+    <dl class="spec-grid">
+      <div><dt>Endpoint</dt><dd class="mono">{{ event.cmc_call_log.endpoint }}</dd></div>
+      <div><dt>Redacted params</dt><dd class="mono">{{ event.cmc_call_log.params_redacted }}</dd></div>
+      <div><dt>Fields used</dt><dd class="mono">{{ event.cmc_call_log.fields_used }}</dd></div>
+      <div><dt>Status / credits</dt><dd class="mono">{{ event.cmc_call_log.status_code }} · {{ event.cmc_call_log.credit_count }}</dd></div>
+    </dl>
+    <pre>{{ event.cmc_call_log.response_excerpt }}</pre>
+  {% else %}
+    <p class="quiet">No CmcCallLog is attached to this event.</p>
+  {% endif %}
+  <form method="dialog" class="actions">
+    <button class="btn" value="close">Close</button>
+  </form>
+</dialog>
+<script>
+  document.querySelector("[commandfor='cmc-evidence']")?.addEventListener("click", function (event) {
+    const dialog = document.getElementById("cmc-evidence");
+    if (dialog && typeof dialog.showModal === "function" && !("commandForElement" in event.currentTarget)) {
+      event.preventDefault();
+      dialog.showModal();
+    }
+  });
+</script>
+{% endblock %}

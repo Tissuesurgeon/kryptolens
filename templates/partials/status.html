@@ -1,0 +1,35 @@
+{% load humanize %}
+<aside class="instrument" aria-label="Monitor status">
+  <div class="status-row">
+    <span class="status-dot" aria-hidden="true"></span>
+    {% if agent_status.watching %}
+      Monitoring
+    {% else %}
+      Idle
+    {% endif %}
+  </div>
+  <ul class="status-list">
+    <li><span>Universe</span><span>{{ agent_status.assets|default:0 }} assets</span></li>
+    <li>
+      <span>Last check</span>
+      <span>
+        {% if agent_status.last_checked %}
+          {{ agent_status.last_checked|naturaltime }}
+        {% else %}
+          —
+        {% endif %}
+      </span>
+    </li>
+    <li>
+      <span>Next check</span>
+      <span>
+        {% if agent_status.next_check %}
+          {{ agent_status.next_check|naturaltime }}
+        {% else %}
+          after activate
+        {% endif %}
+      </span>
+    </li>
+  </ul>
+  <p class="status-note">Beat and Run now share one monitor. Interval is 15 minutes.</p>
+</aside>

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ lens.name }} · KryptoLens{% endblock %}
+
+{% block content %}
+<p class="page-id">lens / v{{ version.version|default:"—" }}</p>
+<div class="page-head">
+  <div>
+    <h1>{{ lens.name }}</h1>
+    <p class="lede">{{ lens.natural_language_request }}</p>
+  </div>
+  <span class="badge {% if lens.status == 'active' %}badge-active{% endif %}">{{ lens.status }}</span>
+</div>
+
+<div class="actions actions-block">
+  {% if lens.status != 'active' %}
+    <form method="post" action="{% url 'lens_activate' lens.id %}">{% csrf_token %}<button class="btn btn-primary">Activate</button></form>
+  {% else %}
+    <form method="post" action="{% url 'lens_pause' lens.id %}">{% csrf_token %}<button class="btn">Pause</button></form>
+  {% endif %}
+  <form method="post" action="{% url 'lens_run_now' lens.id %}">{% csrf_token %}<button class="btn">Run now</button></form>
+  <a class="btn" href="{% url 'lens_edit_intent' lens.id %}">Revise intent</a>
+</div>
+
+<div class="grid-2">
+  <div class="stack">
+    {% if understanding %}
+    <section class="instrument">
+      <h2>What KryptoLens compiled</h2>
+      <dl class="understand">
+        <div><dt>Universe</dt><dd>{{ understanding.universe }}</dd></div>
+        <div><dt>Signals</dt><dd>{{ understanding.signals|join:" · " }}</dd></div>
+        <div><dt>Trigger</dt><dd>{{ understanding.interesting_event }}</dd></div>
+        <div><dt>Market context</dt><dd>{{ understanding.market_context }}</dd></div>
+        <div><dt>Cadence</dt><dd>{{ understanding.behavior }}</dd></div>
+        <div>
+          <dt>Assumptions</dt>
+          <dd>
+            {% for item in understanding.assumptions %}{{ item }}{% if not forloop.last %}<br>{% endif %}{% empty %}None recorded{% endfor %}
+          </dd>
+        </div>
+      </dl>
+    </section>
+    {% endif %}
+
+    {% if policy %}
+    <section>
+      <h2>Policy JSON</h2>
+      <pre>{{ policy_json }}</pre>
+    </section>
+    {% endif %}
+  </div>
+
+  <div class="stack">
+    {% include "partials/status.html" %}
+    <section class="instrument">
+      <h2>Runs</h2>
+      {% for run in runs %}
+        <div class="row">
+          <div>{{ run.trigger }} · {{ run.status }}</div>
+          <div class="quiet">{{ run.candidates_evaluated }} evaluated · {{ run.events_promoted }} promoted · {{ run.events_suppressed }} filtered</div>
+        </div>
+        {% if run.error %}<p class="quiet">{{ run.error }}</p>{% endif %}
+      {% empty %}
+        <p class="empty">No runs. Activate, then Run now to hit live listings.</p>
+      {% endfor %}
+    </section>
+  </div>
+</div>
+
+<section class="section">
+  <h2>Receipts from this lens</h2>
+  {% for event in events %}
+    <a class="row" href="{% url 'event_receipt' event.id %}">
+      <div>
+        <strong>{{ event.symbol }}</strong>
+        <div class="quiet">Lens v{{ event.lens_version.version }} · {{ event.detected_at|naturaltime }}</div>
+      </div>
+      <div class="quiet">{{ event.explanation|truncatechars:100 }}</div>
+      <span class="badge badge-{{ event.severity }}">{{ event.severity }} {{ event.score }}</span>
+    </a>
+  {% empty %}
+    <p class="empty">This version has not promoted an event yet.</p>
+  {% endfor %}
+</section>
+{% endblock %}

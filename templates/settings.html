@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Settings · KryptoLens{% endblock %}
+
+{% block content %}
+<div class="conversation-stream">
+  <header class="stream-intro">
+    <p class="page-id">settings</p>
+    <h1>Telegram</h1>
+    <p class="lede">Connect a chat to receive Event Receipts. A failed send never drops the stored receipt.</p>
+  </header>
+
+  <section class="desk form-narrow">
+    <div class="desk-body">
+    <header class="plate-head">
+      <h2>{% if telegram_connected %}Connected{% else %}Not connected{% endif %}</h2>
+    </header>
+    <form method="post" class="stack">
+      {% csrf_token %}
+      <div>
+        <label for="telegram_chat_id">Telegram chat ID</label>
+        <input id="telegram_chat_id" type="text" name="telegram_chat_id" value="{{ preference.telegram_chat_id }}" placeholder="Numeric chat id from the bot">
+      </div>
+      <label class="check">
+        <input type="checkbox" name="telegram_enabled" {% if preference.telegram_enabled %}checked{% endif %}>
+        Deliver receipts to this chat
+      </label>
+      <div class="actions">
+        <button class="btn btn-primary" type="submit" name="action" value="connect">Connect</button>
+        <button class="btn" type="submit" name="action" value="test">Send test message</button>
+        <button class="btn" type="submit" name="action" value="disconnect">Disconnect</button>
+      </div>
+      <p class="quiet">Open the bot in Telegram, then paste the numeric chat id. Requires <span class="mono">TELEGRAM_BOT_TOKEN</span>.</p>
+    </form>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% load static humanize %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}KryptoLens{% endblock %}</title>
+  <meta name="description" content="KryptoLens compiles market intent into an Intelligence Policy and monitors CoinMarketCap every 15 minutes.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,600&family=Source+Code+Pro:wght@400;500&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+</head>
+<body class="{% if request.user.is_authenticated %}is-app{% else %}is-landing{% endif %}">
+  <a class="skip" href="#main">Skip to content</a>
+  {% if request.user.is_authenticated %}
+  <div class="workspace">
+    {% include "workspace/partials/roster.html" %}
+    <div class="workspace-main">
+      <header class="workspace-bar">
+        <div class="workspace-bar-status" aria-live="polite">
+          <span class="status-dot status-{{ agent_status.kind|default:'paused' }}" aria-hidden="true"></span>
+          <span>{{ agent_status.label|default:"Idle" }}</span>
+        </div>
+        <form method="post" action="{% url 'sign_out' %}">
+          {% csrf_token %}
+          <button class="btn btn-ghost" type="submit">Sign out</button>
+        </form>
+      </header>
+      <div class="workspace-body">
+        <main id="main" class="conversation">
+          {% block content %}{% endblock %}
+        </main>
+        <aside class="context-rail" aria-label="Monitor">
+          <p class="rail-label">Monitor</p>
+          <p class="rail-status">{{ agent_status.label|default:"Idle" }}</p>
+          <dl class="rail-dl">
+            <div>
+              <dt>Assets</dt>
+              <dd>{{ agent_status.assets|default:0 }}</dd>
+            </div>
+            <div>
+              <dt>Last check</dt>
+              <dd>
+                {% if agent_status.last_checked %}
+                  {{ agent_status.last_checked|naturaltime }}
+                {% else %}
+                  —
+                {% endif %}
+              </dd>
+            </div>
+            <div>
+              <dt>Next check</dt>
+              <dd>
+                {% if agent_status.next_check %}
+                  {{ agent_status.next_check|naturaltime }}
+                {% else %}
+                  after activate
+                {% endif %}
+              </dd>
+            </div>
+            <div>
+              <dt>Cadence</dt>
+              <dd>15 minutes</dd>
+            </div>
+          </dl>
+          <p class="rail-note">Beat and Run now share one monitor. Zero events is a successful scan.</p>
+        </aside>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <main id="main">{% block landing %}{% endblock %}</main>
+  {% endif %}
+  {% include "partials/messages.html" %}
+</body>
+</html>

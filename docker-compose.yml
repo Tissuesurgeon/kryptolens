@@ -1,0 +1,73 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: kryptolens
+      POSTGRES_USER: kryptolens
+      POSTGRES_PASSWORD: kryptolens
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kryptolens"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+
+  web:
+    build: .
+    command: ["web"]
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://kryptolens:kryptolens@postgres:5432/kryptolens
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    expose:
+      - "8000"
+
+  worker:
+    build: .
+    command: ["worker"]
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://kryptolens:kryptolens@postgres:5432/kryptolens
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  beat:
+    build: .
+    command: ["beat"]
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://kryptolens:kryptolens@postgres:5432/kryptolens
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  nginx:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - web
+
+volumes:
+  pgdata:

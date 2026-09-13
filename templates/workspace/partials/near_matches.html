@@ -1,0 +1,27 @@
+{% if run.near_matches_json %}
+<div class="near-list">
+  {% for item in run.near_matches_json %}
+    <div class="near-item">
+      <div class="near-head">
+        <strong>{{ item.symbol }}</strong>
+        <span class="quiet">{{ item.name }}</span>
+      </div>
+      <ul class="cond-list">
+        {% for condition in item.conditions %}
+          <li>
+            <span class="mono">{{ condition.metric }} {{ condition.operator }} {{ condition.threshold }}</span>
+            <span class="chip-state {% if condition.passed %}is-pass{% else %}is-miss{% endif %}">{% if condition.passed %}passed{% else %}missed{% endif %}</span>
+          </li>
+        {% endfor %}
+      </ul>
+      {% if item.actuals %}
+        <p class="quiet near-actuals">
+          {% for key, value in item.actuals.items %}
+            {{ key }} {{ value }}{% if not forloop.last %} · {% endif %}
+          {% endfor %}
+        </p>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}

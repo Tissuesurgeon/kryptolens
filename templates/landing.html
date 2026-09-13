@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}KryptoLens — See what matters in crypto.{% endblock %}
+
+{% block landing %}
+<div class="landing-shell landing">
+  <header class="landing-bar">
+    <a class="brand" href="{% url 'landing' %}">
+      <img src="{% static 'img/mark.svg' %}" alt="">
+      <span>KryptoLens</span>
+    </a>
+    <a class="btn btn-ghost" href="{% url 'enter_demo' %}">Enter Demo</a>
+  </header>
+
+  <div class="landing-stage">
+    <div class="landing-claim">
+      <h1>See what matters in crypto.</h1>
+      <p class="lede">
+        Tell KryptoLens what matters. It compiles an Intelligence Policy, watches CoinMarketCap
+        every 15 minutes, and writes a receipt when the policy fires.
+      </p>
+    </div>
+    <form method="post" class="landing-composer" action="{% url 'landing' %}">
+      {% csrf_token %}
+      <label for="landing-intent">Ask KryptoLens…</label>
+      <textarea id="landing-intent" name="intent" required placeholder="Watch the top 100 altcoins for unusual price and volume activity.">{{ preview.intent }}</textarea>
+      <div class="actions landing-actions">
+        <button class="btn" type="submit">Preview compile</button>
+        <a class="btn btn-primary" href="{% url 'enter_demo' %}">Enter Demo</a>
+      </div>
+      <p class="quiet">Same compiler as the workspace. Nothing is saved until you enter.</p>
+    </form>
+    <aside class="landing-spec" aria-label="How the system runs">
+      {% if preview %}
+        <h2>{{ preview.name }}</h2>
+        <div class="ask-split ask-split-tight">
+          <div>
+            <h3>You asked</h3>
+            <ul class="plain-list">
+              {% for item in preview.you_asked %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+          </div>
+          <div>
+            <h3>KryptoLens assumed</h3>
+            <ul class="plain-list">
+              {% for item in preview.assumptions %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+          </div>
+        </div>
+      {% else %}
+        <dl>
+          <div><dt>Cadence</dt><dd>Every 15 minutes. Not a live tape.</dd></div>
+          <div><dt>Source</dt><dd>CoinMarketCap listings, quotes, Fear &amp; Greed.</dd></div>
+          <div><dt>Scoring</dt><dd>Deterministic. The model does not rank events.</dd></div>
+          <div><dt>Agents</dt><dd>Intent compiler. Explanation brief.</dd></div>
+        </dl>
+      {% endif %}
+    </aside>
+  </div>
+
+  <footer class="landing-foot">Policy in. Observation out. No invented ticks.</footer>
+</div>
+{% endblock %}

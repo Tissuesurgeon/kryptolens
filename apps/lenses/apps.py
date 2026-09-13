@@ -1,0 +1,7 @@
+from django.apps import AppConfig
+
+
+class LensesConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "apps.lenses"
+    label = "lenses"

@@ -1,0 +1,17 @@
+<form class="composer-dock" method="post" action="{{ composer_action }}">
+  {% csrf_token %}
+  {% if composer_hidden %}
+    <input type="hidden" name="action" value="{{ composer_hidden }}">
+  {% endif %}
+  <label class="visually-hidden" for="composer-intent">Ask KryptoLens</label>
+  <div class="composer-shell">
+    <textarea
+      id="composer-intent"
+      name="intent"
+      required
+      rows="2"
+      placeholder="{{ composer_placeholder|default:'Ask KryptoLens…' }}"
+    >{{ draft }}</textarea>
+    <button class="btn btn-primary" type="submit">{{ composer_submit|default:"Compile" }}</button>
+  </div>
+</form>

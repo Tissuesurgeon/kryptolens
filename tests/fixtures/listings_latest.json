@@ -1,0 +1,57 @@
+{
+  "status": {
+    "timestamp": "2026-09-13T00:00:00.000Z",
+    "error_code": 0,
+    "error_message": null,
+    "credit_count": 1
+  },
+  "data": [
+    {
+      "id": 1,
+      "name": "Bitcoin",
+      "symbol": "BTC",
+      "cmc_rank": 1,
+      "last_updated": "2026-09-13T00:00:00.000Z",
+      "quote": {
+        "USD": {
+          "price": 64000,
+          "volume_24h": 28000000000,
+          "volume_change_24h": 12.2,
+          "percent_change_24h": 1.4,
+          "market_cap": 1260000000000
+        }
+      }
+    },
+    {
+      "id": 5426,
+      "name": "Solana",
+      "symbol": "SOL",
+      "cmc_rank": 5,
+      "last_updated": "2026-09-13T00:00:00.000Z",
+      "quote": {
+        "USD": {
+          "price": 180.12,
+          "volume_24h": 6200000000,
+          "volume_change_24h": 210.5,
+          "percent_change_24h": 12.4,
+          "market_cap": 82000000000
+        }
+      }
+    },
+    {
+      "id": 825,
+      "name": "Tether",
+      "symbol": "USDT",
+      "cmc_rank": 3,
+      "quote": {
+        "USD": {
+          "price": 1.0,
+          "volume_24h": 90000000000,
+          "volume_change_24h": 2.0,
+          "percent_change_24h": 0.01,
+          "market_cap": 120000000000
+        }
+      }
+    }
+  ]
+}

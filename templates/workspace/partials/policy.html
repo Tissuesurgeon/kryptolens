@@ -1,0 +1,15 @@
+{% if understanding %}
+<section class="desk-section" aria-label="Policy">
+  <header class="plate-head">
+    <h2>{{ policy.name }}</h2>
+    <span class="badge">v{{ version.version }}</span>
+  </header>
+  <dl class="spec-grid">
+    <div><dt>Universe</dt><dd>{{ understanding.universe }}</dd></div>
+    <div><dt>Signals</dt><dd>{{ understanding.signals|join:" · " }}</dd></div>
+    <div><dt>Trigger</dt><dd>{{ understanding.interesting_event }}</dd></div>
+    <div><dt>Market context</dt><dd>{{ understanding.market_context }}</dd></div>
+    <div><dt>Cadence</dt><dd>{{ understanding.behavior }}</dd></div>
+  </dl>
+</section>
+{% endif %}

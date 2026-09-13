@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Revise intent · {{ lens.name }}{% endblock %}
+
+{% block content %}
+<div class="conversation-stream">
+  <header class="stream-intro">
+    <h1>Revise {{ lens.name }}</h1>
+    <p class="lede">A new LensVersion is created only when you apply. Existing receipts keep citing the version that produced them.</p>
+  </header>
+
+  <section class="desk">
+    <div class="desk-body">
+      {% include "workspace/partials/understanding.html" %}
+      {% include "workspace/partials/policy.html" %}
+
+      {% if diffs %}
+        <section class="desk-section">
+          <header class="plate-head">
+            <h2>Threshold changes</h2>
+          </header>
+          <div class="diff-list">
+            {% for item in diffs %}
+              <div class="diff-row">
+                <strong class="mono">{{ item.metric }}</strong>
+                <span class="quiet">{{ item.from }}</span>
+                <span>{{ item.to }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      {% elif preview %}
+        <div class="empty-state">
+          <h2>No numeric threshold changes</h2>
+          <p class="empty">Applying still writes a new LensVersion.</p>
+        </div>
+      {% endif %}
+    </div>
+    <form class="composer-dock" method="post">
+      {% csrf_token %}
+      <label class="visually-hidden" for="composer-intent">Ask KryptoLens</label>
+      <div class="composer-shell">
+        <textarea id="composer-intent" name="intent" required rows="2" placeholder="Ask KryptoLens to revise this lens…">{{ draft }}</textarea>
+        <div class="composer-actions">
+          <button class="btn" name="action" value="preview" type="submit">Preview diff</button>
+          {% if preview %}
+            <button class="btn btn-primary" name="action" value="apply" type="submit">Apply next version</button>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

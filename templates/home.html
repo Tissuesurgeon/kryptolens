@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Briefing · KryptoLens{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="page-id">briefing</p>
+    <h1>What fired</h1>
+    <p class="lede">Active lenses are evaluated against live CoinMarketCap data on a 15-minute cadence. Receipts stay tied to the policy version that produced them.</p>
+  </div>
+  <a class="btn btn-primary" href="{% url 'lens_create' %}">New lens</a>
+</div>
+
+<div class="grid-2">
+  <div class="stack">
+    <section>
+      <h2>Receipts</h2>
+      {% if events %}
+        <div class="list">
+          {% for event in events %}
+            <a class="row" href="{% url 'event_receipt' event.id %}">
+              <div>
+                <strong>{{ event.symbol }}</strong>
+                <div class="quiet">{{ event.lens.name }} · v{{ event.lens_version.version }}</div>
+              </div>
+              <div class="quiet">{{ event.explanation|truncatechars:96 }}</div>
+              <span class="badge badge-{{ event.severity }}">{{ event.severity }} {{ event.score }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty">No receipts yet. Compile a lens, activate it, then run against live listings. Quiet markets stay quiet — KryptoLens will not invent a move.</p>
+      {% endif %}
+      {% if filtered_count %}
+        <p class="quiet">{{ filtered_count }} candidates were scored and filtered on recent runs.</p>
+      {% endif %}
+    </section>
+
+    <section>
+      <h2>Start from a condition</h2>
+      <p class="quiet">These fill the compiler. You still review the policy before it runs.</p>
+      <div class="chips">
+        {% for item in templates %}
+          <a class="chip" href="{% url 'lens_create' %}?template={{ item.slug }}">{{ item.name }}</a>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <div class="stack">
+    {% include "partials/status.html" %}
+    <section class="instrument">
+      <h2>Lenses</h2>
+      {% if lenses %}
+        <div class="list">
+          {% for lens in lenses %}
+            <a class="row" href="{% url 'lens_detail' lens.id %}">
+              <strong>{{ lens.name }}</strong>
+              <span class="badge {% if lens.status == 'active' %}badge-active{% endif %}">{{ lens.status }}</span>
+              <span class="quiet">{{ lens.last_assets_checked }} assets</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty">No lenses on this workspace. Write an intent — for example top-100 momentum with rank improvement — then activate.</p>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

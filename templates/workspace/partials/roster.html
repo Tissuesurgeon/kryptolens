@@ -1,0 +1,25 @@
+{% load static %}
+<aside class="roster" aria-label="Your Lenses">
+  <a class="brand roster-brand" href="{% url 'home' %}">
+    <img src="{% static 'img/mark.svg' %}" alt="">
+    <span>KryptoLens</span>
+  </a>
+  <div class="roster-head">
+    <p class="roster-kicker">Your Lenses</p>
+    <a class="roster-new" href="{% url 'lens_create' %}">New Lens</a>
+  </div>
+  <nav class="roster-list">
+    {% for item in workspace_lenses %}
+      <a
+        class="roster-item {% if lens and item.id == lens.id %}is-current{% endif %}"
+        href="{% url 'lens_detail' item.id %}"
+      >
+        <strong>{{ item.name }}</strong>
+        <span class="roster-item-meta">{{ item.status }}{% if item.last_assets_checked %} · {{ item.last_assets_checked }} assets{% endif %}</span>
+      </a>
+    {% empty %}
+      <p class="roster-empty">No lenses yet.</p>
+    {% endfor %}
+  </nav>
+  <a class="roster-settings" href="{% url 'settings' %}">Settings</a>
+</aside>

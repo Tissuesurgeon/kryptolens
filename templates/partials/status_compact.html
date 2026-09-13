@@ -1,0 +1,10 @@
+{% if agent_status %}
+<span class="status-row" title="Active lenses are checked every 15 minutes.">
+  <span class="status-dot" aria-hidden="true"></span>
+  {% if agent_status.watching %}
+    {{ agent_status.assets }} assets
+  {% else %}
+    Idle
+  {% endif %}
+</span>
+{% endif %}

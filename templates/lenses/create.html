@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}New lens · KryptoLens{% endblock %}
+
+{% block content %}
+<p class="page-id">lens / new</p>
+<h1>Compile an Intelligence Policy</h1>
+<p class="lede">Describe the condition in language. KryptoLens returns a structured policy — universe, signals, thresholds — not a chat answer.</p>
+
+<div class="chips" style="margin: 22px 0 28px">
+  {% for item in templates %}
+    <a class="chip" href="{% url 'lens_create' %}?template={{ item.slug }}">{{ item.name }}</a>
+  {% endfor %}
+</div>
+
+<form method="post" class="stack form-narrow">
+  {% csrf_token %}
+  <div>
+    <label for="intent">Intent</label>
+    <textarea id="intent" name="intent" required placeholder="Monitor the top 100 by market cap. Flag 24h price strength, elevated volume, and improving rank. Use Fear & Greed as context.">{{ intent }}</textarea>
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary" type="submit">Compile policy</button>
+    <span class="quiet">Review the understanding, then activate.</span>
+  </div>
+</form>
+{% endblock %}
