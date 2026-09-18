@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from apps.intelligence.clarified_task import ClarifiedTask
-from apps.intelligence.compiler import extract_listing_limit, infer_you_asked
+from apps.intelligence.compiler import extract_listing_limit, infer_you_asked, is_gainers_ask, is_losers_ask
 from apps.intelligence.job import JobDefinition
 from apps.intelligence.job_compiler import (
     _btc_reaction,
     _compare_now,
     _event_watch,
+    _listings_rank,
     _morning_brief,
     _news_job,
     _status_now,
@@ -49,17 +50,25 @@ def compile_from_task(
             job, workflow, policy = _event_watch(text or task.objective, policy)
             _apply_task_trigger(job, workflow, task)
         report = _pack(job, workflow, policy, text)
+    elif is_gainers_ask(text) or is_losers_ask(text):
+        policy = _policy_from_task(task, text)
+        job, workflow, policy = _listings_rank(
+            text or task.objective,
+            policy,
+            "gainers" if is_gainers_ask(text) else "losers",
+        )
+        report = _pack(job, workflow, policy, text)
     elif task.scope.window or "historical" in task.capabilities:
-        policy = current_policy or _policy_from_task(task, text)
+        policy = _policy_from_task(task, text)
         job, workflow, policy = _compare_now(text or task.objective, policy)
         workflow = _with_historical(workflow, task)
         report = _pack(job, workflow, policy, text)
     elif len(task.scope.assets) >= 2 and "compare" in (text or "").lower():
-        policy = current_policy or _policy_from_task(task, text)
+        policy = _policy_from_task(task, text)
         job, workflow, policy = _compare_now(text, policy)
         report = _pack(job, workflow, policy, text)
     else:
-        policy = current_policy or _policy_from_task(task, text)
+        policy = _policy_from_task(task, text)
         job, workflow, policy = _status_now(text or task.objective, policy)
         report = _pack(job, workflow, policy, text)
 

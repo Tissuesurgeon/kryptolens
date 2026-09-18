@@ -82,3 +82,26 @@ def test_bitcoin_today_is_a_snapshot_not_a_5_percent_watch():
     assert [step.type for step in workflow.steps] == ["get_quotes", "present"]
     assert workflow.steps[0].symbols == ["BTC"]
     assert "5.0" not in (job.trigger_summary or "")
+
+
+def test_eth_snapshot_does_not_keep_btc_from_current_policy():
+    from apps.intelligence.job_compiler import _status_now
+
+    policy = HeuristicCompiler().compile("how is bitcoin doing on the market today")
+    _, workflow, updated = _status_now("what is ETH doing right now", policy)
+    assert workflow.steps[0].symbols == ["ETH"]
+    assert updated.universe.symbols == ["ETH"]
+
+
+def test_highest_gains_compiles_to_listings_rank():
+    from apps.intelligence.compiler import is_gainers_ask
+    from apps.intelligence.job_compiler import compile_job_report
+    from apps.intelligence.llm import HeuristicProvider
+
+    text = "find me the coins with the highest gains within 24hrs"
+    assert is_gainers_ask(text)
+    report = compile_job_report(text, provider=HeuristicProvider())
+    assert report["job"].execution_model == "task"
+    assert report["job"].is_persistent() is False
+    assert report["workflow"].steps[0].type == "get_universe"
+    assert any(step.type == "sort" and step.order == "descending" for step in report["workflow"].steps)

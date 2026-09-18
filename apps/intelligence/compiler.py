@@ -64,16 +64,63 @@ STATUS_ASKS = (
 )
 
 
+GAINERS_ASKS = (
+    "highest gain",
+    "highest gains",
+    "top gainer",
+    "top gainers",
+    "biggest gain",
+    "biggest gains",
+    "best performing",
+    "top performing",
+    "what is pumping",
+    "biggest winner",
+    "gainers",
+    "most gained",
+    "24h gain",
+    "24hr gain",
+    "24 hour gain",
+)
+LOSERS_ASKS = (
+    "top loser",
+    "biggest loser",
+    "worst performing",
+    "highest loss",
+    "biggest declin",
+    "largest declin",
+    "biggest drop",
+    "losers",
+)
+
+
 def is_now_status(text: str) -> bool:
     """True for a live snapshot question, not a standing watch."""
     lowered = text.lower()
     if any(marker in lowered for marker in WATCH_MARKERS):
+        return False
+    if is_gainers_ask(text) or is_losers_ask(text):
         return False
     if any(ask in lowered for ask in STATUS_ASKS):
         return True
     named = bool(re.search(r"\b(btc|bitcoin|eth|ethereum|sol|solana)\b", lowered))
     snapshot = any(token in lowered for token in (" today", " right now", " currently"))
     return named and snapshot
+
+
+def is_gainers_ask(text: str) -> bool:
+    lowered = text.lower()
+    if any(marker in lowered for marker in WATCH_MARKERS):
+        return False
+    return any(stem in lowered for stem in GAINERS_ASKS)
+
+
+def is_losers_ask(text: str) -> bool:
+    lowered = text.lower()
+    if any(marker in lowered for marker in WATCH_MARKERS):
+        return False
+    if is_gainers_ask(text):
+        return False
+    return any(stem in lowered for stem in LOSERS_ASKS)
 
 
 def extract_listing_limit(text: str, default: int = 100) -> int:

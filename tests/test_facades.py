@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import httpx
 import pytest
 import respx
@@ -14,6 +17,7 @@ from apps.users.models import User
 
 PASSWORD = "Workspace-secret-99"
 GOLDEN = "When BTC drops by 2%, check the top 100 coins and rank their declines."
+LISTINGS = json.loads((Path(__file__).parent / "fixtures" / "listings_latest.json").read_text())
 
 
 def _user():
@@ -94,10 +98,11 @@ def test_status_question_runs_once_and_repeat_does_not_rewrite_the_job():
         item.item_type == "routine_created" for item in lens.conversation_items.all()
     )
     asked = " ".join(
-        " ".join((item.payload_json or {}).get("you_asked") or [])
-        for item in lens.conversation_items.filter(item_type="job_created")
+        (item.payload_json or {}).get("text") or ""
+        for item in lens.conversation_items.filter(item_type="user_message")
     )
     assert "how is bitcoin doing on the market today" in asked
+    assert not any(item.item_type == "job_created" for item in lens.conversation_items.all())
     later = ConversationService.handle(lens, text)
     assert later.kind == "run"
     lens.refresh_from_db()
@@ -148,15 +153,89 @@ def test_status_question_answers_with_live_btc_quote():
     page = client.get(f"/lenses/{lens.id}")
     html = page.content
     assert b"Bitcoin is at $115,432.18" in html
+    assert b"I understand the job" not in html
+    assert b"I'll do" not in html
+    assert b"Evidence" not in html
+    assert b"Verification" not in html
+    assert b"observed universe" not in html
     assert b"Evidence collected" not in html
     assert b"Market quotes" not in html
     assert b"View API data" not in html
     assert b'starter-label">Working' not in html
     visible = ConversationService.context(lens)["conversation_items"]
     assert all(is_visible_thread_item(item) for item in visible)
-    assert not any(item.item_type in {"cmc_activity", "status_update"} for item in visible)
-    assert any(item.item_type == "evidence" for item in visible)
-    assert any(item.item_type == "verification" for item in visible)
+    assert [item.item_type for item in visible] == ["user_message", "assistant_message"]
+    assert not any(item.item_type in {"cmc_activity", "status_update", "evidence", "verification", "job_created", "scan_result"} for item in visible)
+
+
+def _quote_payload(symbol: str, name: str, price: float, change: float, asset_id: int):
+    return {
+        "status": {"timestamp": "2026-09-17T15:17:26.927Z", "error_code": "0", "credit_count": 1},
+        "data": [
+            {
+                "id": asset_id,
+                "name": name,
+                "symbol": symbol,
+                "cmc_rank": 1 if symbol == "BTC" else 2,
+                "tags": [],
+                "quote": [{"symbol": "USD", "price": price, "percent_change_24h": change, "market_cap": 1e11}],
+            }
+        ],
+    }
+
+
+@respx.mock
+@pytest.mark.django_db
+def test_eth_followup_quotes_eth_not_the_previous_btc_snapshot():
+    def quotes(request):
+        symbol = (request.url.params.get("symbol") or "").upper()
+        if "ETH" in symbol:
+            return httpx.Response(200, json=_quote_payload("ETH", "Ethereum", 2459.31, 2.50, 1027))
+        return httpx.Response(200, json=_quote_payload("BTC", "Bitcoin", 77962.46, 1.73, 1))
+
+    respx.get("https://pro-api.coinmarketcap.com/v3/cryptocurrency/quotes/latest").mock(side_effect=quotes)
+    user = _user()
+    lens = AgentService.create(user, "analyst", "")
+    ConversationService.handle(lens, "what is btc doing right now")
+    later = ConversationService.handle(lens, "what is ETH doing right now")
+    assert later.kind == "run"
+    answers = list(lens.conversation_items.filter(item_type="assistant_message"))
+    assert "Ethereum is at $2,459.31" in answers[-1].payload_json["text"]
+    assert "up 2.50%" in answers[-1].payload_json["text"]
+    result = Result.objects.filter(lens=lens).order_by("-id").first()
+    assert result.payload_json["rows"][0]["symbol"] == "ETH"
+
+
+@respx.mock
+@pytest.mark.django_db
+def test_highest_gains_ranks_listings_instead_of_quoting_btc():
+    respx.get("https://pro-api.coinmarketcap.com/v3/cryptocurrency/listings/latest").mock(
+        return_value=httpx.Response(200, json=LISTINGS)
+    )
+    user = _user()
+    lens = AgentService.create(user, "analyst", "")
+    later = ConversationService.handle(lens, "find me the coins with the highest gains within 24hrs")
+    assert later.kind == "run"
+    lens.refresh_from_db()
+    assert lens.current_routine() is None
+    result = Result.objects.filter(lens=lens).order_by("-id").first()
+    assert result.kind == "ranked_table"
+    assert result.payload_json["rows"][0]["symbol"] == "SOL"
+    assert result.payload_json["rows"][0]["price_change_24h"] == 12.4
+    answer = list(lens.conversation_items.filter(item_type="assistant_message"))[-1]
+    assert "Highest 24h gains" in answer.payload_json["text"]
+    assert "Solana" in answer.payload_json["text"]
+    assert "up 12.40%" in answer.payload_json["text"]
+    assert not any(item.item_type == "job_created" for item in lens.conversation_items.all())
+    client = Client()
+    client.force_login(user)
+    html = client.get(f"/lenses/{lens.id}").content
+    assert b"I understand the job" not in html
+    assert b"I'll do" not in html
+    assert b"Solana" in html
+    visible = ConversationService.context(lens)["conversation_items"]
+    assert not any(item.item_type in {"evidence", "verification", "job_created"} for item in visible)
+    assert any(item.item_type == "scan_result" for item in visible)
 
 
 @pytest.mark.django_db
@@ -186,6 +265,21 @@ def test_status_question_does_not_show_job_update_after_a_watch():
     assert not any(item.item_type == "policy_diff" for item in lens.conversation_items.all())
     asked = " ".join(item.payload_json.get("text") or "" for item in lens.conversation_items.filter(item_type="user_message"))
     assert "how is bitcoin doing on the market today" in asked
+
+
+@pytest.mark.django_db
+def test_eth_ask_does_not_replace_standing_btc_watch():
+    user = _user()
+    lens = AgentService.create(user, "analyst", "")
+    ConversationService.handle(lens, GOLDEN)
+    lens.refresh_from_db()
+    version = lens.current_version().version
+    ConversationService.handle(lens, "what is ETH doing right now")
+    lens.refresh_from_db()
+    standing = lens.current_version().as_job()
+    assert lens.current_version().version == version
+    assert standing.is_persistent() is True
+    assert standing.execution_model == "watch_plus_workflow"
 
 
 @pytest.mark.django_db

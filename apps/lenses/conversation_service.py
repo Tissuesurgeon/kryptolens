@@ -183,6 +183,8 @@ class ConversationService:
             return ConversationService._begin_ask(lens, report)
         if not version:
             attach_compiled_job(lens, text, report, persist_routine=task.mode == "work")
+            if task.mode == "ask":
+                return ConversationService._begin_ask(lens, report)
             return ConversationService._begin_work(lens, persistent=task.mode == "work")
         if task.mode == "work":
             version, diffs = apply_compiled_edit(lens, text, report)
@@ -194,7 +196,7 @@ class ConversationService:
         if ConversationService._same_one_shot(current_job, current_workflow, job, new_workflow):
             add_item(lens, "user_message", {"text": text})
         else:
-            apply_compiled_edit(lens, text, report, record_diff=False)
+            apply_compiled_edit(lens, text, report, record_diff=False, announce_job=False)
         return ConversationService._begin_ask(lens, report)
 
     @staticmethod
@@ -207,6 +209,7 @@ class ConversationService:
                 "mode": "ask",
                 "job": job.model_dump(mode="json") if job else {},
                 "capabilities": report.get("capabilities") or [],
+                "clarified_task": report.get("clarified_task") or {},
             },
             workflow=report.get("workflow"),
             objective=job.purpose if job else "",

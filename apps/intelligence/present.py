@@ -24,9 +24,16 @@ def spoken_result(result) -> str | None:
     if kind == "ranked_table":
         rows = list(payload.get("rows") or [])
         if not rows:
-            return None
+            return "CoinMarketCap returned listings, but none matched this ranking."
         leaders = rows[:3]
-        return "Biggest 24h moves: " + " ".join(_spoken_row(row) for row in leaders)
+        direction = payload.get("direction") or ""
+        if direction == "gainers" or (result.title or "").lower().startswith("highest 24h"):
+            preface = "Highest 24h gains:"
+        elif direction == "losers" or "declin" in (result.title or "").lower():
+            preface = "Biggest 24h declines:"
+        else:
+            preface = "Biggest 24h moves:"
+        return preface + " " + " ".join(_spoken_row(row) for row in leaders)
     if kind == "market_summary":
         assets = payload.get("assets")
         mean = payload.get("mean_price_change_24h")

@@ -18,6 +18,20 @@ def is_visible_thread_item(item) -> bool:
         payload = item.payload_json or {}
         if payload.get("status") == "working" or (payload.get("text") or "").strip() == "Working":
             return False
+    if item.item_type == "lens_created":
+        return False
+    result = getattr(item, "result", None)
+    kind = getattr(result, "kind", None)
+    rows = ((result.payload_json or {}).get("rows") if result else None) or []
+    run = getattr(item, "lens_run", None)
+    ask_run = bool(run and (getattr(run, "summary_json", None) or {}).get("mode") == "ask")
+    direction = ((result.payload_json or {}).get("direction") if result else "") or ""
+    if item.item_type in {"evidence", "verification"} and (
+        kind == "comparison" or ask_run or direction in {"gainers", "losers"}
+    ):
+        return False
+    if item.item_type == "scan_result" and kind == "comparison" and len(rows) <= 1:
+        return False
     return True
 
 
@@ -72,12 +86,8 @@ def record_creation(lens: Lens, version: LensVersion, job, workflow, routine=Non
         {"text": version.source_intent},
         version=version,
     )
-    add_item(
-        lens,
-        "lens_created",
-        {"name": lens.name, "purpose": lens.purpose, "status": lens.status},
-        version=version,
-    )
+    if job and not job.is_persistent():
+        return
     add_item(
         lens,
         "job_created",

@@ -567,6 +567,19 @@ def _record_os_conversation(lens, version, run, result, evidence, verification_a
             )
         if not lens.conversation_items.filter(result=result, item_type="scan_result").exists():
             record_result(lens, result, run)
+    ask = (run.summary_json or {}).get("mode") == "ask"
+    direction = ((result.payload_json or {}).get("direction") if result else "") or ""
+    if ask or direction in {"gainers", "losers"}:
+        add_item(
+            lens,
+            "execution_receipt",
+            receipt.payload_json,
+            version=version,
+            run=run,
+            result=result,
+            artifact=receipt,
+        )
+        return
     add_item(
         lens,
         "evidence",

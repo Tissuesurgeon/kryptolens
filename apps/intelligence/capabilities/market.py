@@ -28,11 +28,12 @@ class MarketCapability:
         extras: dict | None = None,
     ) -> CapabilityResult:
         extras = extras or {}
-        breadth = market_breadth(observations)
-        mean = aggregate_mean(observations, "price_change_24h")
         claims: list[str] = []
-        if breadth["assets"]:
-            declining = breadth["percent_declining"]
+        wide = len(observations) >= 5 or (task.scope.universe or "").startswith("top")
+        breadth = market_breadth(observations) if wide else {"assets": len(observations)}
+        mean = aggregate_mean(observations, "price_change_24h") if wide else None
+        if wide and breadth.get("assets"):
+            declining = breadth.get("percent_declining")
             if declining is not None:
                 claims.append(f"{declining:.0f}% of the observed universe declined over 24 hours.")
             if mean is not None:

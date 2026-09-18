@@ -6,6 +6,8 @@ from apps.intelligence.compiler import (
     compile_intent_report,
     extract_listing_limit,
     infer_you_asked,
+    is_gainers_ask,
+    is_losers_ask,
     is_now_status,
     _extract_symbols,
 )
@@ -130,6 +132,8 @@ def infer_job_and_workflow(
         return _apply_edit(text, policy, current_job, current_workflow)
     if is_now_status(text):
         return _status_now(text, policy)
+    if is_gainers_ask(text) or is_losers_ask(text):
+        return _listings_rank(text, policy, "gainers" if is_gainers_ask(text) else "losers")
     if _is_btc_reaction(lowered):
         return _btc_reaction(text, policy)
     if _is_compare_now(lowered):
@@ -251,18 +255,26 @@ def _btc_reaction(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition,
     return job, workflow, policy
 
 
-def _status_now(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition, WorkflowDefinition, IntelligencePolicy]:
+def _snapshot_symbols(text: str, policy: IntelligencePolicy) -> list[str]:
+    mentioned = _extract_symbols(text)
+    if mentioned:
+        return mentioned[:4]
     symbols = list(policy.universe.symbols or [])
-    if not symbols:
-        lowered = text.upper()
-        for symbol in ("BTC", "ETH", "SOL", "XRP"):
-            if symbol in lowered:
-                symbols.append(symbol)
-        if "BITCOIN" in text.upper() and "BTC" not in symbols:
-            symbols.append("BTC")
-        if "ETHEREUM" in text.upper() and "ETH" not in symbols:
-            symbols.append("ETH")
-        symbols = symbols[:4] or ["BTC"]
+    if symbols:
+        return symbols[:4]
+    lowered = text.upper()
+    for symbol in ("BTC", "ETH", "SOL", "XRP"):
+        if re.search(rf"\b{symbol}\b", lowered):
+            symbols.append(symbol)
+    if "BITCOIN" in lowered and "BTC" not in symbols:
+        symbols.append("BTC")
+    if "ETHEREUM" in lowered and "ETH" not in symbols:
+        symbols.append("ETH")
+    return symbols[:4] or ["BTC"]
+
+
+def _status_now(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition, WorkflowDefinition, IntelligencePolicy]:
+    symbols = _snapshot_symbols(text, policy)
     policy = policy.model_copy(
         update={
             "name": f"{symbols[0]} now",
@@ -293,11 +305,12 @@ def _status_now(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition, W
 
 
 def _compare_now(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition, WorkflowDefinition, IntelligencePolicy]:
-    symbols = policy.universe.symbols or ["BTC", "ETH"]
+    mentioned = _extract_symbols(text)
+    symbols = list(mentioned or policy.universe.symbols or [])
     if len(symbols) < 2:
         lowered = text.upper()
         for symbol in ("BTC", "ETH", "SOL", "XRP"):
-            if symbol in lowered and symbol not in symbols:
+            if re.search(rf"\b{symbol}\b", lowered) and symbol not in symbols:
                 symbols.append(symbol)
         symbols = symbols[:4] or ["BTC", "ETH"]
     policy = policy.model_copy(
@@ -320,6 +333,54 @@ def _compare_now(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition, 
         routine_kind=None,
         workflow_summary=f"Compare {', '.join(symbols)}",
         you_asked=[f"Compare {' and '.join(symbols)} right now"],
+        steps_explained=workflow.explained_steps(),
+    )
+    return job, workflow, policy
+
+
+def _listings_rank(
+    text: str, policy: IntelligencePolicy, direction: str = "gainers"
+) -> tuple[JobDefinition, WorkflowDefinition, IntelligencePolicy]:
+    limit = policy.universe.limit if policy.universe.type == "listings" else extract_listing_limit(text)
+    gains = direction == "gainers"
+    order = "descending" if gains else "ascending"
+    label = "gain" if gains else "decline"
+    policy = policy.model_copy(
+        update={
+            "name": "Highest 24h gains" if gains else "Biggest 24h declines",
+            "universe": policy.universe.model_copy(
+                update={"type": "listings", "limit": limit, "exclude_stablecoins": True, "symbols": []}
+            ),
+            "asset_conditions": [],
+            "interesting_event": f"Live top {limit} ranked by 24h {label}",
+        }
+    )
+    workflow = WorkflowDefinition(
+        trigger=None,
+        steps=[
+            WorkflowStep(type="get_universe", source="cmc", universe=f"top_{limit}", limit=limit),
+            WorkflowStep(
+                type="get_market_data",
+                fields=["price_change_24h", "market_cap", "cmc_rank"],
+            ),
+            WorkflowStep(
+                type="filter",
+                field="price_change_24h",
+                operator=">" if gains else "<",
+                value=0,
+            ),
+            WorkflowStep(type="sort", field="price_change_24h", order=order),
+            WorkflowStep(type="present", format="ranked_table", operation=direction, limit=10),
+        ],
+    )
+    job = JobDefinition(
+        purpose=f"Rank top listings by 24h {label} from live CMC data.",
+        summary=text.strip(),
+        execution_model="task",
+        routine_kind=None,
+        trigger_summary="",
+        workflow_summary=f"Rank top {limit} by 24h {label}",
+        you_asked=[text.strip()],
         steps_explained=workflow.explained_steps(),
     )
     return job, workflow, policy

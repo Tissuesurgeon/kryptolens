@@ -153,7 +153,7 @@ def apply_intent_edit(
 
 
 def apply_compiled_edit(
-    lens: Lens, text: str, report: dict, *, record_diff: bool = True
+    lens: Lens, text: str, report: dict, *, record_diff: bool = True, announce_job: bool = True
 ) -> tuple[LensVersion, list[dict]]:
     current = lens.current_policy()
     current_version = lens.current_version()
@@ -197,17 +197,18 @@ def apply_compiled_edit(
             {"diffs": diffs, "version": version.version},
             version=version,
         )
-    add_item(
-        lens,
-        "job_created",
-        {
-            "you_asked": job.you_asked if job else [],
-            "assumptions": report.get("assumptions") or [],
-            "purpose": lens.purpose,
-            "clarification": report.get("clarification"),
-        },
-        version=version,
-    )
+    if announce_job:
+        add_item(
+            lens,
+            "job_created",
+            {
+                "you_asked": job.you_asked if job else [],
+                "assumptions": report.get("assumptions") or [],
+                "purpose": lens.purpose,
+                "clarification": report.get("clarification"),
+            },
+            version=version,
+        )
     _sync_routine(lens, job)
     upsert_job(lens, version, job, lens.current_routine())
     _record_plan(lens, version, job, workflow)

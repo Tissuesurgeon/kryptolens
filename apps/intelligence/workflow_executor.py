@@ -52,6 +52,9 @@ def execute_steps(
     context = None
     btc_observation = None
     present_format = "ranked_table"
+    present_operation = ""
+    present_limit = None
+    rank_order = "ascending"
     limit = 100
     listings_fetched = False
     news_items: list[dict] = []
@@ -177,7 +180,8 @@ def execute_steps(
                 raise WorkflowExecutionError(f"unknown calculation: {step.operation}")
         elif step.type == "sort":
             run.set_stage("analyzing")
-            observations = sort_assets(observations, field=step.field or "price_change_24h", order=step.order or "ascending")
+            rank_order = step.order or "ascending"
+            observations = sort_assets(observations, field=step.field or "price_change_24h", order=rank_order)
         elif step.type == "filter":
             run.set_stage("analyzing")
             if step.relative_to:
@@ -198,6 +202,8 @@ def execute_steps(
             run.set_stage("analyzing")
         elif step.type == "present":
             present_format = step.format or "ranked_table"
+            present_operation = step.operation or ""
+            present_limit = step.limit
         else:
             raise WorkflowExecutionError(f"unknown workflow step: {step.type}")
 
@@ -246,9 +252,21 @@ def execute_steps(
         kind = "market_summary"
         title = "Market summary"
     else:
-        payload = {"rows": rank_assets(observations, "price_change_24h", "ascending"), "assets": len(observations)}
+        rows = rank_assets(observations, "price_change_24h", rank_order)
+        if present_limit:
+            rows = rows[:present_limit]
+        payload = {
+            "rows": rows,
+            "assets": len(observations),
+            "direction": present_operation or ("gainers" if rank_order == "descending" else ""),
+        }
         kind = "ranked_table"
-        title = "Market reaction"
+        if present_operation == "gainers":
+            title = "Highest 24h gains"
+        elif present_operation == "losers":
+            title = "Biggest 24h declines"
+        else:
+            title = "Market reaction"
 
     return {
         "kind": kind,

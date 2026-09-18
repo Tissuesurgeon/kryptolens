@@ -25,6 +25,11 @@ def compose_reply(result, verification: dict | None = None, evidence: list | Non
         "comparable observations" in item.lower() for item in limitations
     )
     provider = provider or get_provider()
+    if getattr(result, "kind", "") in {"comparison", "ranked_table"}:
+        text = fallback
+        if historical and "comparable observations, not a prediction" not in text.lower():
+            text = text.rstrip(".") + ". These are comparable observations, not a prediction."
+        return text
     if not provider_is_llm(provider) or isinstance(provider, HeuristicProvider):
         return _heuristic_reply(fallback, claims, limitations, historical, verification)
     try:

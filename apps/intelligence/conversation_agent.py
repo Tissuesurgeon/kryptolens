@@ -6,7 +6,13 @@ import json
 import re
 
 from apps.intelligence.clarified_task import ClarifiedTask, TaskScope, TaskTrigger, TurnResult
-from apps.intelligence.compiler import _extract_json, _extract_symbols, is_now_status
+from apps.intelligence.compiler import (
+    _extract_json,
+    _extract_symbols,
+    is_gainers_ask,
+    is_losers_ask,
+    is_now_status,
+)
 from apps.intelligence.job import JobDefinition
 from apps.intelligence.job_compiler import _is_btc_reaction, _is_compare_now, _is_scheduled_brief, is_news_request
 from apps.intelligence.llm import get_provider
@@ -39,6 +45,7 @@ Do not ask when the request is already a live snapshot, a comparison, news, or a
 Rules:
 - "Compare BTC and ETH over the last 30 days." → ready, mode=ask, historical+market.
 - "How is BTC doing?" / "how is bitcoin doing on the market today" → ready, mode=ask.
+- "Find me the coins with the highest gains within 24hrs." → ready, mode=ask, universe=top_100. Not a BTC quote.
 - "Watch BTC for unusual activity." → needs_input (unusual = price / volume / relative / combination).
 - "Watch BTC and tell me when something important happens." → needs_input.
 - "When BTC drops by 2%, check the top 100..." → ready, mode=work immediately.
@@ -95,20 +102,23 @@ def _understand_llm(text: str, *, history, current_job, provider) -> TurnResult:
     status = data.get("status") or "ready"
     if status == "needs_input":
         question = (data.get("question") or "").strip() or UNUSUAL_QUESTION
-        task = _task_from_llm(text, data)
+        task = _apply_movers_override(text, _task_from_llm(text, data))
+        if task.mode == "ask" and (is_gainers_ask(text) or is_losers_ask(text)):
+            task.status = "ready"
+            return TurnResult(status="ready", task=task)
         task.status = "needs_input"
         task.question = question
         task.pending_field = data.get("pending_field") or "unusual_definition"
         return TurnResult(status="needs_input", question=question, task=task)
     task = _task_from_llm(text, data)
     task.status = "ready"
-    return TurnResult(status="ready", task=task)
+    return TurnResult(status="ready", task=_apply_movers_override(text, task))
 
 
 def _task_from_llm(text: str, data: dict) -> ClarifiedTask:
-    assets = [str(item).upper() for item in (data.get("assets") or []) if item]
-    if not assets:
-        assets = _extract_symbols(text) or ["BTC"]
+    mentioned = _extract_symbols(text)
+    llm_assets = [str(item).upper() for item in (data.get("assets") or []) if item]
+    assets = mentioned or llm_assets or ["BTC"]
     capabilities = list(data.get("capabilities") or _default_capabilities(data.get("task_type") or "", data.get("window") or ""))
     return ClarifiedTask(
         status="ready",
@@ -198,6 +208,19 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             capabilities=caps,
             objective=f"Compare {' and '.join(assets[:4] or ['BTC', 'ETH'])} from live CMC quotes.",
             assumptions=["comparable observations, not a prediction."] if window else [],
+        )
+    if is_gainers_ask(text) or is_losers_ask(text):
+        gains = is_gainers_ask(text)
+        return _ready(
+            text,
+            mode="ask",
+            task_type="one_shot_research",
+            assets=[],
+            universe="top_100",
+            listing_limit=_listing_limit(text),
+            action="report",
+            capabilities=["market"],
+            objective=f"Rank top listings by 24h {'gain' if gains else 'decline'} from live CMC data.",
         )
     if _is_discovery(lowered):
         return _ready(
@@ -328,6 +351,22 @@ def _finish_work(draft: ClarifiedTask, text: str) -> TurnResult:
     draft.pending_field = ""
     draft.source_text = (draft.source_text + " " + text).strip()
     return TurnResult(status="ready", task=draft)
+
+
+def _apply_movers_override(text: str, task: ClarifiedTask) -> ClarifiedTask:
+    if not (is_gainers_ask(text) or is_losers_ask(text)):
+        return task
+    gains = is_gainers_ask(text)
+    task.mode = "ask"
+    task.task_type = "one_shot_research"
+    task.scope.assets = []
+    task.scope.universe = task.scope.universe if str(task.scope.universe).startswith("top") else "top_100"
+    task.scope.window = ""
+    task.scope.listing_limit = task.scope.listing_limit or 100
+    task.action = "report"
+    task.capabilities = ["market"]
+    task.objective = f"Rank top listings by 24h {'gain' if gains else 'decline'} from live CMC data."
+    return task
 
 
 def _ready(
