@@ -124,20 +124,20 @@ def _start_copy(user, base: str) -> str:
 def _agents_copy(user) -> str:
     lenses = AgentService.list_for_user(user)
     if not lenses:
-        return "No agents yet. Send /create Market Scout"
+        return "No Lenses yet. Send /create Market Scout"
     return "\n".join(f"• {item.name} — {item.agent_state.get('label')}" for item in lenses)
 
 
 def _result_copy(lens, result, base: str) -> str:
     if result.kind == "run" and result.run:
         return (
-            f"{lens.name} is working (job #{result.run.id}). I'll keep watch.\n"
+            f"{lens.name} is working (job #{result.run.id}). Run queued.\n"
             f"View Full Report: {base}/jobs/{result.run.id}"
         )
     if result.kind in {"attached", "routine_created", "applied"}:
-        return result.flash or f"{lens.name} has the job. I'll keep watch. Open {base}/agents/{lens.id}"
+        return result.flash or f"{lens.name} has the job. Routine activated. Open {base}/agents/{lens.id}"
     if result.kind == "proposed":
-        return f"{lens.name} has the job. I'll keep watch. Open {base}/agents/{lens.id}"
+        return f"{lens.name} has the job. Routine activated. Open {base}/agents/{lens.id}"
     if result.flash:
         return result.flash
     return f"{lens.name} updated the conversation. {base}/agents/{lens.id}"

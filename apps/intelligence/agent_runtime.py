@@ -132,7 +132,8 @@ class AgentRuntime:
 
             result = run.results.order_by("-id").first()
             if result:
-                _apply_capabilities(lens, version, run, result, plan)
+                if result.kind != "no_result":
+                    _apply_capabilities(lens, version, run, result, plan)
             market_task.status = "observing"
             market_task.save(update_fields=["status", "updated_at"])
 
@@ -555,7 +556,12 @@ def _trigger_line(trigger: dict) -> str:
 
 def _record_os_conversation(lens, version, run, result, evidence, verification_artifact, receipt, verification=None) -> None:
     if result:
-        spoken = compose_reply(result, verification=verification or verification_artifact.payload_json, evidence=evidence)
+        spoken = compose_reply(
+            result,
+            verification=verification or verification_artifact.payload_json,
+            evidence=evidence,
+            task=(run.summary_json or {}).get("clarified_task") if run else None,
+        )
         if spoken and not lens.conversation_items.filter(lens_run=run, item_type="assistant_message").exists():
             add_item(
                 lens,

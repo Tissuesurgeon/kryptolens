@@ -7,7 +7,7 @@ from apps.intelligence.agent import ChiefAgent, job_category
 from apps.intelligence.job import JobDefinition
 from apps.intelligence.job_compiler import compile_job_report
 from apps.intelligence.policy import IntelligencePolicy, policy_diff
-from apps.lenses.conversation import add_item, record_creation
+from apps.lenses.conversation import add_item, record_creation, watching_payload
 from apps.lenses.models import ApprovalRequest, Artifact, Job, Lens, LensVersion, Routine
 
 
@@ -211,6 +211,25 @@ def apply_compiled_edit(
         )
     _sync_routine(lens, job)
     upsert_job(lens, version, job, lens.current_routine())
+    if announce_job and job and job.is_persistent():
+        if workflow and (workflow.steps or workflow.trigger):
+            add_item(
+                lens,
+                "workflow_created",
+                {
+                    "trigger": workflow.trigger.model_dump() if workflow.trigger else None,
+                    "steps": workflow.explained_steps(),
+                },
+                version=version,
+            )
+        routine = lens.current_routine()
+        if routine:
+            add_item(
+                lens,
+                "routine_created",
+                watching_payload(job, workflow, routine),
+                version=version,
+            )
     _record_plan(lens, version, job, workflow)
     return version, diffs
 

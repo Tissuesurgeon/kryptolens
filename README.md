@@ -2,7 +2,7 @@
 
 Tell KryptoLens what matters. Give it a job. It keeps watch for you.
 
-KryptoLens is a persistent crypto intelligence workspace where users create **Agents** (the UI name for a Lens), talk to them in natural language, give them crypto-market jobs, and leave those jobs running against live market data. A **Routine** starts work without another prompt. Celery Beat runs unattended through **AgentRuntime** → LensRuntime → CMC. The conversation is a structured work log: Plan → Evidence → Verification → Result.
+KryptoLens is a persistent crypto intelligence workspace where users create a **Lens**, tell it what they want in natural language, and leave those jobs running against live market data. A **Routine** starts work without another prompt. Celery Beat runs unattended through **AgentRuntime** → LensRuntime → CMC. The conversation is a structured work log: Plan → Evidence → Verification → Result.
 
 It is not a chatbot, not a market dashboard, not a demo, and not a trading bot. Cadence is **15 minutes**. Quiet markets are a valid result.
 
@@ -11,24 +11,27 @@ Built for the [Build with CMC](https://coinmarketcap.com/api/resources/api-hacka
 ## How it works
 
 ```
-Human intent
-  → ConversationAgent (needs_input | ClarifiedTask)
-  → Chief Agent (capabilities + tools; never CMC)
-  → AgentRuntime → LensRuntime
-  → CryptoToolRegistry → CMC adapter
-  → Observation rows → deterministic capabilities
-  → Evidence → Verification → Response LLM
-  → Conversation (You asked / I'll do / compact Evidence / Verification)
+User
+  → Lens conversation
+  → Understanding Agent (LLM JSON)
+  → ClarifiedTask
+  → Chief Agent → CapabilityPlan
+  → Capabilities + registered CMC tools
+  → Workflow
+  → Deterministic analysis
+  → Verification
+  → Response Agent
+  → Same Lens thread
 ```
 
 Chief Agent does not call CMC. Capabilities declare tools; `dispatch_cmc` executes. On-chain, DEX, derivatives, and RWA are registry stubs with honest 403. News uses CoinMarketCap Content Latest plus quotes.
 
 | Piece | Status | Role |
 | --- | --- | --- |
-| ConversationAgent | Implemented | ASK vs WORK, questions only when material |
-| ClarifiedTask | Implemented | Ready job the Chief can plan from |
-| Chief Agent | Implemented | Plans capabilities and tools. Does not call CMC |
-| Hidden capabilities | Implemented | Market, Anomaly, Reaction, Historical, Discovery, Regime |
+| Understanding Agent | Implemented | LLM-first ClarifiedTask; heuristics are fallback only |
+| ClarifiedTask | Implemented | What the user asked; source of truth for compile |
+| Chief Agent / CapabilityPlan | Implemented | Selects one or more capabilities and validated tools. Does not call CMC |
+| Internal capabilities | Implemented | Market, Anomaly, Reaction, Historical, Discovery, Regime — not user-managed bots |
 | Evidence / Verification | Implemented | Compact claims and checkmarks in the thread |
 | Approvals | Foundation only | READ/ANALYZE not required; EXECUTE denied |
 | Onchain / DEX / Derivatives / RWA | Boundary | Honest refusal, not on Startup |
@@ -45,7 +48,7 @@ Policy JSON field names are frozen: `metrics`, `asset_conditions`, `market_conte
 
 1. Landing composer stashes the instruction. **No Agent and no CMC job before authentication.**
 2. **Get Started** (`/signup`) or **Log In** (`/login`). Password reset is Django's built-in flow.
-3. After auth, a pending landing instruction creates **your** Agent. Otherwise **Create Agent** on Agent Home, then message the job.
+3. After auth, a pending landing instruction creates **your** Lens. Otherwise **Create a Lens** (name only) on Your Lenses, then send the first message.
 4. Chat a job. The LLM understands it (**You asked** / **KryptoLens assumed** / I'll do), Chief Agent plans, and work starts in the thread. A Routine is standing watch — not a setup form.
 5. Close the laptop. Beat ticks every 15 minutes, calls the same Celery `run_lens` task as **Check now** (`AgentRuntime` → `LensRuntime` → live CMC), and writes the result into the conversation. No extra LLM. No invented ticks.
 6. **Check now** creates a `LensRun` (`stage=queued`) and returns `run_id` immediately. HTMX polls `LensRun.stage` until `complete` or `error`. CMC activity cards in the transcript show real endpoints, status, and elapsed_ms.
@@ -60,11 +63,11 @@ Workspace status is derived from real runs: Idle · Watching · Working · Inves
 
 Agent Home and one transcript — not a dashboard.
 
-- Left: **Agents** — name, status, job preview. Hover shows the current action. Create Agent only.
-- Home: Who → What → State → Activity cards. Live CMC strip (BTC / ETH / SOL / TOTAL).
-- Selected Agent: slim Bot head (name + presence), transcript, composer. Pause / check now / activate are messages.
-- Transcript: You asked / KryptoLens assumed / I'll do, watching status, CMC activity cards, Plan → Evidence → Verification → Result
-- Bottom: **Ask {name}…**. First-run is Create Agent, not a compile-chosen "New Lens".
+- Left: **Your Lenses** — name, status, recent activity. **+ New Lens**.
+- Home: Who → State → Activity. Live CMC strip (BTC / ETH / SOL / TOTAL).
+- Selected Lens: name + presence (Watching / Working / Idle), transcript, composer. Pause / resume / check now are messages.
+- Transcript: work log — messages, clarification, compact work preview, Plan → Evidence → Verification → Result
+- Bottom: **Ask KryptoLens…**. A new Lens opens an empty conversation. The user sends the first message.
 
 Near-match objects have a frozen shape (`symbol`, `name`, `actuals`, `conditions[].passed`). Templates only render those fields.
 

@@ -115,7 +115,7 @@ def test_lens_state_idle_until_activate(db):
     )
     state = lens_state(lens)
     assert state["label"] == "Idle"
-    assert state["action"] == "Give this agent a job"
+    assert state["action"] == "Give this Lens a job"
 
 
 def test_workspace_state_matches_last_run(active_lens):

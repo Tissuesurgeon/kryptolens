@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from apps.intelligence.agent import ChiefAgent
 from apps.intelligence.clarified_task import ClarifiedTask
 from apps.intelligence.compiler import infer_you_asked
 from apps.intelligence.conversation_agent import ConversationAgent
@@ -91,38 +92,38 @@ class ConversationService:
         text = (text or "").strip()
         if action in {"create_routine", "confirm"}:
             if not lens.current_version():
-                return ChatResult(kind="error", flash="Give this agent a job.", flash_level="error")
+                return ChatResult(kind="error", flash="Give this Lens a job.", flash_level="error")
             if lens.status == "active" and lens.current_routine():
                 return ChatResult(kind="routine_created", flash="Already watching.")
             RoutineService.confirm(lens, text)
             job = lens.current_version().as_job() if lens.current_version() else None
             return ConversationService._begin_work(lens, persistent=bool(job and job.is_persistent()))
         if action == "cancel_proposal":
-            add_item(lens, "assistant_message", {"text": "Okay — I won't create that routine."})
-            return ChatResult(kind="cancelled")
+            add_item(lens, "status_update", {"text": "Routine not created.", "status": "cancelled"})
+            return ChatResult(kind="cancelled", flash="Routine not created.")
         command = ConversationService.command(text, action=action)
         if command == "check":
             run = RunService.queue_now(lens, trigger="manual")
             if not run:
-                return ChatResult(kind="error", flash="This agent has no job yet.", flash_level="error")
-            return ChatResult(kind="run", command="check", run=run)
+                return ChatResult(kind="error", flash="This Lens has no job yet.", flash_level="error")
+            return ChatResult(kind="run", command="check", run=run, flash="Run queued.")
         if command == "pause":
             AgentService.pause(lens)
-            return ChatResult(kind="paused", command="pause", flash=f"{lens.name} is paused.")
+            return ChatResult(kind="paused", command="pause", flash="Routine paused.")
         if command == "resume":
             status = AgentService.activate(lens)
             if status == "no_job":
-                return ChatResult(kind="error", flash="Give this agent a job before activating.", flash_level="error")
+                return ChatResult(kind="error", flash="Give this Lens a job before activating.", flash_level="error")
             if status == "news":
                 return ChatResult(kind="news", flash="News monitoring isn't available yet.")
             return ChatResult(
                 kind="resumed",
                 command="resume",
-                flash="I'm on it. I'll keep this job running and bring results back here.",
+                flash="Routine activated.",
                 flash_level="success",
             )
         if command == "found":
-            return ChatResult(kind="found", command="found", flash="Latest results are on this conversation.")
+            return ChatResult(kind="found", command="found")
         if command == "evidence":
             add_item(lens, "user_message", {"text": text})
             add_item(lens, "assistant_message", ConversationService.evidence_reply(lens))
@@ -140,7 +141,7 @@ class ConversationService:
     @staticmethod
     def _turn(lens: Lens, text: str, action: str = "") -> ChatResult:
         if not text.strip():
-            return ChatResult(kind="error", flash="Give this agent a job.", flash_level="error")
+            return ChatResult(kind="error", flash="Give this Lens a job.", flash_level="error")
         version = lens.current_version()
         current_job = version.as_job() if version else None
         try:
@@ -163,9 +164,11 @@ class ConversationService:
         ConversationService._clear_pending(lens)
         task = turn.task
         if not task:
-            return ChatResult(kind="error", flash="Give this agent a job.", flash_level="error")
+            return ChatResult(kind="error", flash="Give this Lens a job.", flash_level="error")
+        plan = ChiefAgent().plan_from_task(task)
         report = compile_from_task(
             task,
+            capability_plan=plan,
             current_policy=current_policy,
             current_job=current_job,
             current_workflow=current_workflow,
@@ -187,7 +190,12 @@ class ConversationService:
                 return ConversationService._begin_ask(lens, report)
             return ConversationService._begin_work(lens, persistent=task.mode == "work")
         if task.mode == "work":
-            version, diffs = apply_compiled_edit(lens, text, report)
+            version, diffs = apply_compiled_edit(
+                lens,
+                text,
+                report,
+                record_diff=bool(current_job and current_job.is_persistent()),
+            )
             next_job = version.as_job()
             if next_job and not next_job.news_unavailable:
                 start_watching(lens)
@@ -269,7 +277,7 @@ class ConversationService:
             return ChatResult(kind="news", flash="News monitoring isn't available yet.")
         run = RunService.queue_now(lens, trigger="chat")
         diffs = diffs or []
-        flash = "I'll keep watch." if persistent else ""
+        flash = "Routine activated." if persistent else ""
         level = "success" if persistent else "info"
         if not run:
             kind = "applied" if diffs else "attached"
@@ -280,7 +288,7 @@ class ConversationService:
     def compile_preview(lens: Lens, text: str) -> ChatResult:
         current = lens.current_policy()
         if not current:
-            return ChatResult(kind="error", flash="This agent has no job definition yet.", flash_level="error")
+            return ChatResult(kind="error", flash="This Lens has no job definition yet.", flash_level="error")
         version = lens.current_version()
         report = compile_job_report(
             text,
@@ -294,7 +302,7 @@ class ConversationService:
     def apply(lens: Lens, text: str) -> ChatResult:
         current = lens.current_policy()
         if not current:
-            return ChatResult(kind="error", flash="This agent has no job definition yet.", flash_level="error")
+            return ChatResult(kind="error", flash="This Lens has no job definition yet.", flash_level="error")
         version, diffs = apply_intent_edit(lens, text)
         return ChatResult(
             kind="applied",
@@ -409,6 +417,6 @@ class ConversationService:
             "work_track": work_track(latest_run),
             "work_open": False,
             "working_cards": RunService.working_cards(latest_run) if latest_run else [],
-            "composer_placeholder": f"Ask {lens.name}…",
+            "composer_placeholder": "Ask KryptoLens…",
             "agent_nav": "chat",
         }

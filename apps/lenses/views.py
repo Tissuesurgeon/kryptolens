@@ -95,13 +95,13 @@ def lens_activate(request, lens_id: int):
     lens = _owned(request, lens_id)
     status = AgentService.activate(lens)
     if status == "no_job":
-        messages.error(request, "Give this agent a job before activating.")
+        messages.error(request, "Give this Lens a job before activating.")
     elif status == "news":
         messages.info(request, "News monitoring isn't available yet.")
     else:
         messages.success(
             request,
-            "I'm on it. I'll keep this job running and bring results back here.",
+            "Routine activated.",
         )
     return redirect("lens_detail", lens_id=lens.id)
 
@@ -186,7 +186,7 @@ def agent_create(request):
         name = (request.POST.get("name") or "").strip()
         purpose = (request.POST.get("purpose") or request.POST.get("description") or "").strip()
         if not name:
-            messages.error(request, "Give this agent a name.")
+            messages.error(request, "Give this Lens a name.")
             return render(request, "workspace/create_agent.html", {"name": name, "purpose": purpose})
         lens = AgentService.create(request.user, name, purpose)
         messages.success(request, f"Created {lens.name}.")

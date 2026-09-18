@@ -164,7 +164,7 @@ def lens_state(lens: Lens) -> dict:
     if lens.status != "active":
         if lens.current_version():
             return _state("Ready", "paused", "Activate to keep watch")
-        return _state("Idle", "paused", "Give this agent a job")
+        return _state("Idle", "paused", "Give this Lens a job")
     if last and last.status == "error":
         return _state("Error", "degraded", last.error or "Needs attention")
     if _new_intelligence(last):

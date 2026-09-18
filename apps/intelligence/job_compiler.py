@@ -134,8 +134,8 @@ def infer_job_and_workflow(
         return _status_now(text, policy)
     if is_gainers_ask(text) or is_losers_ask(text):
         return _listings_rank(text, policy, "gainers" if is_gainers_ask(text) else "losers")
-    if _is_btc_reaction(lowered):
-        return _btc_reaction(text, policy)
+    if _is_reaction_watch(lowered):
+        return _reaction_from_text(text, policy)
     if _is_compare_now(lowered):
         return _compare_now(text, policy)
     if _is_scheduled_brief(lowered):
@@ -162,14 +162,25 @@ def _is_edit(lowered: str) -> bool:
     ) or bool(re.search(r"\btop\s+\d+\b", lowered))
 
 
-def _is_btc_reaction(lowered: str) -> bool:
-    has_btc = "btc" in lowered or "bitcoin" in lowered
+def _is_reaction_watch(lowered: str) -> bool:
     has_drop = any(word in lowered for word in ("drop", "fall", "fell", "declin"))
+    has_percent = bool(re.search(r"\d+(?:\.\d+)?\s*%", lowered))
+    has_when = any(stem in lowered for stem in ("when ", "whenever", "every time", "each time"))
     has_universe = bool(re.search(r"\btop\s+\d+\b", lowered)) or (
         "top" in lowered and any(token in lowered for token in ("coins", "assets", "altcoins"))
+    ) or ("coin" in lowered and any(stem in lowered for stem in ("find", "show", "rank", "list")))
+    has_rank = any(
+        word in lowered for word in ("rank", "list", "sort", "biggest", "highest", "find me", "show me")
     )
-    has_rank = any(word in lowered for word in ("rank", "list", "sort", "biggest"))
-    return has_btc and has_drop and has_universe and (has_rank or "check" in lowered or "analyze" in lowered)
+    if not (has_drop and has_percent):
+        return False
+    if has_when and has_universe and has_rank:
+        return True
+    return has_universe and (has_rank or "check" in lowered or "analyze" in lowered)
+
+
+def _is_btc_reaction(lowered: str) -> bool:
+    return _is_reaction_watch(lowered) and ("btc" in lowered or "bitcoin" in lowered)
 
 
 def _is_compare_now(lowered: str) -> bool:
@@ -193,13 +204,81 @@ def _percent(text: str, default: float) -> float:
     return float(found[0]) if found else default
 
 
-def _btc_reaction(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition, WorkflowDefinition, IntelligencePolicy]:
-    threshold = -abs(_percent(text, 2.0))
-    limit = extract_listing_limit(text)
+def _reaction_workflow(
+    asset: str,
+    threshold: float,
+    limit: int,
+    order: str = "ascending",
+    metric: str = "price_change_24h",
+    operator: str = "<=",
+) -> WorkflowDefinition:
+    asset = (asset or "BTC").upper()
+    return WorkflowDefinition(
+        trigger=WorkflowTrigger(
+            type="asset_condition",
+            asset=asset,
+            metric=metric,
+            operator=operator,  # type: ignore[arg-type]
+            value=threshold,
+        ),
+        steps=[
+            WorkflowStep(type="get_universe", source="cmc", universe=f"top_{limit}", limit=limit),
+            WorkflowStep(
+                type="get_market_data",
+                fields=["price_change_24h", "market_cap", "cmc_rank"],
+            ),
+            WorkflowStep(type="calculate", operation="percentage_change"),
+            WorkflowStep(type="sort", field="price_change_24h", order=order),  # type: ignore[arg-type]
+            WorkflowStep(type="present", format="ranked_table"),
+        ],
+    )
+
+
+def _snapshot_workflow(symbols: list[str]) -> WorkflowDefinition:
+    return WorkflowDefinition(
+        trigger=None,
+        steps=[
+            WorkflowStep(type="get_quotes", symbols=list(symbols)),
+            WorkflowStep(type="present", format="comparison"),
+        ],
+    )
+
+
+def _listings_rank_workflow(direction: str, limit: int) -> WorkflowDefinition:
+    gains = direction == "gainers"
+    return WorkflowDefinition(
+        trigger=None,
+        steps=[
+            WorkflowStep(type="get_universe", source="cmc", universe=f"top_{limit}", limit=limit),
+            WorkflowStep(
+                type="get_market_data",
+                fields=["price_change_24h", "market_cap", "cmc_rank"],
+            ),
+            WorkflowStep(
+                type="filter",
+                field="price_change_24h",
+                operator=">" if gains else "<",
+                value=0,
+            ),
+            WorkflowStep(type="sort", field="price_change_24h", order="descending" if gains else "ascending"),
+            WorkflowStep(type="present", format="ranked_table", operation=direction, limit=10),
+        ],
+    )
+
+
+def _asset_reaction(
+    text: str,
+    policy: IntelligencePolicy,
+    asset: str,
+    threshold: float,
+    limit: int,
+    order: str = "ascending",
+) -> tuple[JobDefinition, WorkflowDefinition, IntelligencePolicy]:
+    asset = (asset or "BTC").upper()
     policy = IntelligencePolicy.model_validate(
         {
             **policy.model_dump(),
-            "name": "BTC Reaction Watcher",
+            "name": f"{asset} Reaction Watcher",
             "universe": {
                 "type": "listings",
                 "limit": limit,
@@ -214,45 +293,38 @@ def _btc_reaction(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition,
             "asset_conditions": [],
             "market_context": [],
             "summary": text.strip(),
-            "interesting_event": f"BTC 24h move <= {threshold}% then rank top {limit} declines",
+            "interesting_event": f"{asset} 24h move <= {threshold}% then rank top {limit} declines",
             "assumptions": list(policy.assumptions)
-            + [f"Trigger is BTC 24h change <= {threshold}%. Ranking uses live listings."],
+            + [f"Trigger is {asset} 24h change <= {threshold}%. Ranking uses live listings."],
         }
     )
-    workflow = WorkflowDefinition(
-        trigger=WorkflowTrigger(
-            type="asset_condition",
-            asset="BTC",
-            metric="price_change_24h",
-            operator="<=",
-            value=threshold,
-        ),
-        steps=[
-            WorkflowStep(type="get_universe", source="cmc", universe=f"top_{limit}", limit=limit),
-            WorkflowStep(
-                type="get_market_data",
-                fields=["price_change_24h", "market_cap", "cmc_rank"],
-            ),
-            WorkflowStep(type="calculate", operation="percentage_change"),
-            WorkflowStep(type="sort", field="price_change_24h", order="ascending"),
-            WorkflowStep(type="present", format="ranked_table"),
-        ],
-    )
+    workflow = _reaction_workflow(asset, threshold, limit, order=order)
+    verb = "Check" if "check" in text.lower() else "Analyze"
     job = JobDefinition(
-        purpose="Monitor Bitcoin and analyze how the broader market reacts to major BTC moves.",
+        purpose=f"Monitor {asset} and analyze how the broader market reacts to major {asset} moves.",
         summary=text.strip(),
         execution_model="watch_plus_workflow",
         routine_kind="event_triggered",
-        trigger_summary=f"BTC 24h change <= {threshold}%",
+        trigger_summary=f"{asset} 24h change <= {threshold}%",
         workflow_summary=f"Rank top {limit} by 24h decline",
         you_asked=[
-            f"When BTC drops by {abs(threshold)}%",
-            f"{'Check' if 'check' in text.lower() else 'Analyze'} the top {limit} coins",
+            f"When {asset} drops by {abs(threshold)}%",
+            f"{verb} the top {limit} coins",
             "Rank them from biggest drop to smallest",
         ],
         steps_explained=workflow.explained_steps(),
     )
     return job, workflow, policy
+
+
+def _reaction_from_text(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition, WorkflowDefinition, IntelligencePolicy]:
+    symbols = _extract_symbols(text)
+    asset = symbols[0] if symbols else "BTC"
+    return _asset_reaction(text, policy, asset, -abs(_percent(text, 2.0)), extract_listing_limit(text))
+
+
+def _btc_reaction(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition, WorkflowDefinition, IntelligencePolicy]:
+    return _asset_reaction(text, policy, "BTC", -abs(_percent(text, 2.0)), extract_listing_limit(text))
 
 
 def _snapshot_symbols(text: str, policy: IntelligencePolicy) -> list[str]:
@@ -283,13 +355,7 @@ def _status_now(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition, W
             "interesting_event": f"Live {', '.join(symbols)} snapshot",
         }
     )
-    workflow = WorkflowDefinition(
-        trigger=None,
-        steps=[
-            WorkflowStep(type="get_quotes", symbols=symbols),
-            WorkflowStep(type="present", format="comparison"),
-        ],
-    )
+    workflow = _snapshot_workflow(symbols)
     names = " and ".join(symbols)
     job = JobDefinition(
         purpose=f"Report how {names} is doing from live CMC quotes.",
@@ -319,13 +385,7 @@ def _compare_now(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition, 
             "universe": policy.universe.model_copy(update={"type": "symbols", "symbols": symbols}),
         }
     )
-    workflow = WorkflowDefinition(
-        trigger=None,
-        steps=[
-            WorkflowStep(type="get_quotes", symbols=symbols),
-            WorkflowStep(type="present", format="comparison"),
-        ],
-    )
+    workflow = _snapshot_workflow(symbols)
     job = JobDefinition(
         purpose=f"Compare {' and '.join(symbols)} from live CMC quotes.",
         summary=text.strip(),
@@ -355,24 +415,7 @@ def _listings_rank(
             "interesting_event": f"Live top {limit} ranked by 24h {label}",
         }
     )
-    workflow = WorkflowDefinition(
-        trigger=None,
-        steps=[
-            WorkflowStep(type="get_universe", source="cmc", universe=f"top_{limit}", limit=limit),
-            WorkflowStep(
-                type="get_market_data",
-                fields=["price_change_24h", "market_cap", "cmc_rank"],
-            ),
-            WorkflowStep(
-                type="filter",
-                field="price_change_24h",
-                operator=">" if gains else "<",
-                value=0,
-            ),
-            WorkflowStep(type="sort", field="price_change_24h", order=order),
-            WorkflowStep(type="present", format="ranked_table", operation=direction, limit=10),
-        ],
-    )
+    workflow = _listings_rank_workflow(direction, limit)
     job = JobDefinition(
         purpose=f"Rank top listings by 24h {label} from live CMC data.",
         summary=text.strip(),
@@ -573,3 +616,87 @@ def _news_job(text: str) -> dict:
 
 def _news_unavailable(text: str) -> dict:
     return _news_job(text)
+
+
+def workflow_from_task(task) -> WorkflowDefinition:
+    """Build a workflow from ClarifiedTask fields. Does not re-parse natural language."""
+    from apps.intelligence.clarified_task import ClarifiedTask
+
+    if not isinstance(task, ClarifiedTask):
+        task = ClarifiedTask.model_validate(task)
+    limit = task.scope.listing_limit or 100
+    assets = list(task.scope.assets)
+    if task.task_type == "news_brief":
+        return WorkflowDefinition(
+            trigger=None,
+            steps=[
+                WorkflowStep(type="get_content", source="news", symbols=list(assets), limit=20),
+                WorkflowStep(type="get_quotes", symbols=list(assets)),
+                WorkflowStep(type="present", format="news_brief"),
+            ],
+        )
+    if task.task_type == "scheduled_brief":
+        return WorkflowDefinition(
+            trigger=WorkflowTrigger(type="scheduled"),
+            steps=[
+                WorkflowStep(type="get_universe", source="cmc", universe=f"top_{limit}", limit=limit),
+                WorkflowStep(type="get_market_data", fields=["price_change_24h", "market_cap"]),
+                WorkflowStep(type="get_global_metrics"),
+                WorkflowStep(type="aggregate", operation="mean"),
+                WorkflowStep(type="present", format="market_summary"),
+            ],
+        )
+    if _task_is_reaction(task):
+        cond = task.trigger.conditions[0] if task.trigger.conditions else {}
+        asset = task.trigger_asset() or (assets[0] if assets else "BTC")
+        threshold = cond.get("value", -2.0)
+        try:
+            threshold = float(threshold)
+        except (TypeError, ValueError):
+            threshold = -2.0
+        metric = cond.get("metric") or "price_change_24h"
+        operator = cond.get("operator") or "<="
+        return _reaction_workflow(asset, threshold, limit, metric=metric, operator=operator)
+    if task.mode == "work":
+        cond = task.trigger.conditions[0] if task.trigger.conditions else None
+        asset = task.trigger_asset() or (assets[0] if assets else "BTC")
+        trigger = None
+        if cond and cond.get("value") is not None:
+            trigger = WorkflowTrigger(
+                type="asset_condition",
+                asset=asset,
+                metric=cond.get("metric") or "price_change_24h",
+                operator=cond.get("operator") or "<=",
+                value=float(cond.get("value")),
+            )
+        return WorkflowDefinition(trigger=trigger, steps=[])
+    if task.action in {"rank_gains", "rank_declines"} or task.requested_output == "ranked_table":
+        direction = "gainers" if task.action == "rank_gains" else "losers"
+        return _listings_rank_workflow(direction, limit)
+    symbols = assets[:4] or ["BTC"]
+    if len(assets) >= 2:
+        symbols = assets[:4]
+    workflow = _snapshot_workflow(symbols)
+    if task.scope.window or "historical" in task.capabilities:
+        steps = list(workflow.steps)
+        insert_at = next((i for i, step in enumerate(steps) if step.type == "present"), len(steps))
+        steps.insert(
+            insert_at,
+            WorkflowStep(
+                type="get_quotes_historical",
+                symbols=list(symbols),
+                operation=task.scope.window or "30d",
+            ),
+        )
+        workflow = workflow.model_copy(update={"steps": steps})
+    return workflow
+
+
+def _task_is_reaction(task) -> bool:
+    if task.task_type == "watch_plus_investigate":
+        return True
+    if task.action == "investigate_market_reaction":
+        return True
+    if task.mode == "work" and "reaction" in (task.capabilities or []):
+        return True
+    return False

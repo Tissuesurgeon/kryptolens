@@ -1,10 +1,18 @@
 # KryptoLens
 
-Tell KryptoLens what matters. Give it a job. It keeps watch for you.
+Tell KryptoLens what you want. A Lens keeps watch for you.
 
-KryptoLens is a persistent crypto intelligence workspace where users create **Agents** (the UI name for a Lens), talk to them in natural language, give them crypto-market jobs, and leave those jobs running against live market data.
+KryptoLens is a persistent crypto intelligence workspace. Users create a **Lens**, talk to it in natural language, and leave jobs running against live CoinMarketCap data.
 
-An **Agent** is the only visible teammate. Planning logic stays inside the Lens. The user sees **Agents**. This iteration is not a multi-agent OS and not a specialist graph.
+The user does not pick capabilities or specialists. They create a Lens, tell it what they want, clarify when asked, and continue the same conversation.
+
+```
+Create a Lens.
+Tell it what you want.
+Clarify when asked.
+Let it investigate.
+Continue the conversation.
+```
 
 ## Platform
 
@@ -16,32 +24,58 @@ product
 
 ## Core loop
 
-chat → ConversationAgent → ClarifiedTask → Chief Agent plan → live CMC → verify → Response LLM.
+```
+User
+  → Lens conversation
+  → Understanding Agent (LLM JSON)
+  → ClarifiedTask
+  → Chief Agent
+  → CapabilityPlan
+  → Capabilities + CMC tools
+  → Workflow
+  → Deterministic analysis
+  → Verification
+  → Response
+  → Same Lens thread
+```
 
-Create Agent → named teammate → chat a job → work starts in the thread. A Routine is the standing watch that follows from that message, not a setup wizard. Unattended Beat writes back into the same conversation. Jobs are LensRuns. Market numbers come from live CoinMarketCap only.
+Create a Lens (name only) → open an empty conversation → send the first message. A Routine is the standing watch that follows from that message. Unattended Beat writes back into the same conversation. Jobs are LensRuns. Market numbers come from live CoinMarketCap only. `IntelligencePolicy` is a compiled artifact, not the user mental model.
 
 ## Core concepts
 
-- **Agent** — UI name for a Lens: persistent crypto teammate
+- **Lens** — persistent crypto teammate
 - **Job** — a run of work (`LensRun`) plus a standing assignment snapshot
-- **AgentPlan** — what the agent intends (schema-validated). Does not call CMC.
+- **ClarifiedTask** — what the user actually asked for
+- **CapabilityPlan** — Chief Agent's validated capabilities, tools, and workflow
 - **Workflow** — how approved operations run (`get_quotes`, `get_market_listings`, `get_content`, `calculate`, `sort`, `present`)
 - **Routine** — when it should work; Pause is per-routine
-- **Tools** — CoinMarketCap read/analyze tools in this build, including Content Latest for headlines
+- **Tools** — CoinMarketCap read/analyze tools, including Content Latest for headlines
 - **Evidence / Verification** — compact claims and checkmarks in the same thread
-- **Capabilities** — hidden Market / Anomaly / Reaction / Historical / Discovery / Regime modules
+- **Capabilities** — internal Market / Anomaly / Reaction / Historical / Discovery / Regime modules selected by the Chief Agent
 - **Result** — ranked table, comparison, summary, news brief, event, no-result, or error
 - **Execution receipt** — what triggered, what ran, evidence, verification
-- **Event** — one kind of Result: a trigger-fired condition
+
+## Internal capabilities
+
+These are not bots the user manages:
+
+| Capability | What the Chief uses it for |
+| --- | --- |
+| Market | Live quotes, listings, summaries |
+| Anomaly | Unusual activity against a stated definition |
+| Reaction | How the universe moves when a trigger asset moves |
+| Historical | Comparable prior observations, not predictions |
+| Discovery | Attention, gainers, new listings |
+| Regime | Breadth, dominance, Fear & Greed context |
 
 ## Capability
 
 | Capability | Status |
 | --- | --- |
-| Chief Agent | Implemented |
-| Market capability | Implemented |
+| Understanding Agent | Implemented, LLM-first |
+| Chief Agent / CapabilityPlan | Implemented |
+| Market / Anomaly / Reaction / Historical / Discovery / Regime | Implemented |
 | CoinMarketCap | Implemented (live listings, quotes, Fear & Greed, global metrics, Content Latest news) |
-| Research | Implemented, limited to CMC |
 | Evidence / Verification | Implemented |
 | Approvals | Foundation only |
 | Onchain / DeFi / Risk / Security | Architectural boundary |
@@ -54,16 +88,16 @@ Someone who can name a crypto-market job in language and wants a teammate that s
 
 ## Scene
 
-Night desk. A researcher gives an Agent a job, leaves it watching live CoinMarketCap, and comes back to a verified result with evidence.
+Night desk. A researcher creates Crypto Scout, tells it what to watch, leaves it on live CoinMarketCap, and comes back to a verified result with evidence.
 
 ## Voice
 
-Direct. Specific. Tell → Define → Watch → Act → Return. Never claims real-time or literal continuous observation. Monitoring happens every 15 minutes. Never calls itself a demo. Never claims unsupported specialists.
+Direct. Specific. Tell → Clarify → Watch → Act → Return. Never claims real-time or literal continuous observation. Monitoring happens every 15 minutes. Never calls itself a demo. Never invents market numbers.
 
 ## Surfaces
 
-Landing (Get Started / Log In) → signup or login → Agent home → Create Agent → chat a job (Ask {name}, You asked / KryptoLens assumed / I'll do, watching, CMC activity). Pause and check now are messages. Live CMC strip on the workspace. Settings / Log Out.
+Landing (Get Started / Log In) → signup or login → Your Lenses → Create a Lens → empty conversation → Ask KryptoLens…. Pause, resume, and check now are messages. Live CMC strip on the workspace. Settings / Log Out.
 
 ## Out of scope
 
-- Trading, charts, wallets, third-party news APIs, fake demo mode, fake specialist agents, LLM scoring or invented ticks.
+- Trading, charts, wallets, third-party news APIs, fake demo mode, specialist pickers, LLM scoring or invented ticks.

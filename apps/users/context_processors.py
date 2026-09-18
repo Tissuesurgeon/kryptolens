@@ -15,7 +15,7 @@ def _roster_preview(lens: Lens) -> str:
     )
     if not item:
         if not lens.current_version():
-            return "Give this agent a job."
+            return "Give this Lens a job."
         return (lens.purpose or lens.natural_language_request or lens.name)[:72]
     payload = item.payload_json or {}
     text = payload.get("text") or payload.get("purpose") or payload.get("objective") or ""

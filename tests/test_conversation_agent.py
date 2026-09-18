@@ -4,6 +4,15 @@ from apps.intelligence.job import JobDefinition
 from apps.intelligence.task_compiler import compile_from_task
 
 
+class _JsonStub:
+    def __init__(self, payload: str):
+        self.payload = payload
+
+    def generate(self, prompt, kind=""):
+        _ = prompt
+        return self.payload
+
+
 def test_compare_btc_eth_30d_is_ready_ask():
     turn = ConversationAgent.understand("Compare BTC and ETH over the last 30 days.")
     assert turn.status == "ready"
@@ -30,10 +39,18 @@ def test_eth_now_is_eth_even_after_a_btc_job():
     assert report["job"].purpose.lower().startswith("report how eth")
 
 
-def test_named_asset_in_message_beats_llm_copied_btc():
+def test_llm_assets_are_not_overwritten_by_heuristics():
     task = _task_from_llm(
         "what is ETH doing right now",
-        {"assets": ["BTC"], "mode": "ask", "task_type": "one_shot_research"},
+        {"assets": ["ETH"], "mode": "ask", "task_type": "one_shot_research"},
+    )
+    assert task.scope.assets == ["ETH"]
+
+
+def test_empty_llm_assets_fill_from_the_message():
+    task = _task_from_llm(
+        "what is ETH doing right now",
+        {"assets": [], "mode": "ask", "task_type": "one_shot_research"},
     )
     assert task.scope.assets == ["ETH"]
 
@@ -55,22 +72,37 @@ def test_highest_gains_is_a_listings_rank_not_btc():
     assert present.operation == "gainers"
 
 
-def test_llm_cannot_turn_highest_gains_into_a_btc_watch():
-    from apps.intelligence.conversation_agent import _apply_movers_override
+def test_heuristic_highest_gains_is_ranked_table_ask():
+    turn = ConversationAgent.understand("find me the coins with the highest gains within 24hrs")
+    assert turn.task.mode == "ask"
+    assert turn.task.action == "rank_gains"
+    assert turn.task.requested_output == "ranked_table"
+    assert turn.task.scope.assets == []
+    assert turn.task.scope.universe.startswith("top")
 
-    task = _task_from_llm(
+
+def test_stubbed_llm_highest_gains_is_respected():
+    class Stub:
+        def generate(self, prompt, kind=""):
+            return """{
+              "status": "ready",
+              "mode": "ask",
+              "task_type": "one_shot_research",
+              "assets": [],
+              "universe": "top_100",
+              "action": "rank_gains",
+              "requested_output": "ranked_table",
+              "capabilities": ["market"]
+            }"""
+
+    turn = ConversationAgent.understand(
         "find me the coins with the highest gains within 24hrs",
-        {
-            "assets": ["BTC"],
-            "mode": "work",
-            "task_type": "persistent_monitor",
-            "universe": "symbols",
-        },
+        provider=Stub(),
     )
-    task = _apply_movers_override("find me the coins with the highest gains within 24hrs", task)
-    assert task.mode == "ask"
-    assert task.scope.assets == []
-    assert task.scope.universe.startswith("top")
+    assert turn.status == "ready"
+    assert turn.task.mode == "ask"
+    assert turn.task.action == "rank_gains"
+    assert turn.task.requested_output == "ranked_table"
 
 
 def test_watch_unusual_needs_input():
@@ -97,3 +129,114 @@ def test_golden_watch_is_ready_immediately():
     assert turn.task.mode == "work"
     report = compile_from_task(turn.task)
     assert report["job"].is_persistent() is True
+    assert report["workflow"].trigger.asset == "BTC"
+    assert report["workflow"].trigger.value == -2.0
+
+
+def test_eth_reaction_uses_eth_trigger():
+    text = "When ETH drops by 2%, check all the top 100 coins and list their declines from biggest to smallest."
+    turn = ConversationAgent.understand(text)
+    assert turn.status == "ready"
+    assert turn.task.mode == "work"
+    assert turn.task.trigger_asset() == "ETH"
+    assert "reaction" in turn.task.capabilities
+    report = compile_from_task(turn.task)
+    assert report["job"].is_persistent() is True
+    assert report["workflow"].trigger.asset == "ETH"
+    assert report["workflow"].trigger.value == -2.0
+    assert report["workflow"].steps[0].limit == 100
+    sort = next(step for step in report["workflow"].steps if step.type == "sort")
+    assert sort.order == "ascending"
+
+
+def test_stubbed_llm_unusual_clarification_then_ready():
+    first = ConversationAgent.understand(
+        "Watch BTC for unusual activity.",
+        provider=_JsonStub(
+            """{
+              "status": "needs_input",
+              "question": "What should count as unusual activity — a large price move, unusual volume, or both?",
+              "pending_field": "unusual_definition",
+              "mode": "work",
+              "task_type": "persistent_monitor",
+              "assets": ["BTC"],
+              "capabilities": ["anomaly", "market"]
+            }"""
+        ),
+    )
+    assert first.status == "needs_input"
+    assert first.question
+    assert first.task is not None
+    assert first.task.pending_field
+    second = ConversationAgent.understand(
+        "Consider a 3% move with unusually high volume.",
+        pending={"task": first.task.model_dump(mode="json"), "pending_field": first.task.pending_field},
+        provider=_JsonStub(
+            """{
+              "status": "ready",
+              "mode": "work",
+              "task_type": "persistent_monitor",
+              "assets": ["BTC"],
+              "action": "notify",
+              "trigger_conditions": [
+                {"metric": "price_change_24h", "operator": ">=", "value": 3, "asset": "BTC"},
+                {"metric": "volume_change_24h", "operator": ">=", "value": 80, "asset": "BTC"}
+              ],
+              "capabilities": ["anomaly", "market"]
+            }"""
+        ),
+    )
+    assert second.status == "ready"
+    assert second.task.mode == "work"
+    assert second.task.trigger.conditions
+
+
+def test_compare_now_is_one_shot():
+    turn = ConversationAgent.understand("Compare BTC and ETH right now.")
+    assert turn.status == "ready"
+    assert turn.task.mode == "ask"
+    report = compile_from_task(turn.task)
+    assert report["job"].is_persistent() is False
+    assert report["job"].routine_kind is None
+
+
+def test_btc_drop_highest_drop_is_reaction_watch_not_gains():
+    text = "when btc drops by 2%, find me the coins with the highest drop"
+    turn = ConversationAgent.understand(text)
+    assert turn.status == "ready"
+    assert turn.task.mode == "work"
+    assert turn.task.task_type == "watch_plus_investigate"
+    report = compile_from_task(turn.task)
+    assert report["job"].is_persistent() is True
+    assert report["workflow"].trigger.asset == "BTC"
+    assert report["workflow"].trigger.value == -2.0
+    assert report["workflow"].steps[0].type == "get_universe"
+    sort = next(step for step in report["workflow"].steps if step.type == "sort")
+    assert sort.order == "ascending"
+    assert not any(step.type == "filter" and step.operator == ">" for step in report["workflow"].steps)
+
+
+def test_highest_drop_watch_does_not_keep_a_prior_gains_filter():
+    gains = ConversationAgent.understand("find me the coins with the highest gains within 24hrs")
+    gain_report = compile_from_task(gains.task)
+    drop = ConversationAgent.understand("when btc drops by 2%, find me the coins with the highest drop")
+    report = compile_from_task(
+        drop.task,
+        current_policy=gain_report["policy"],
+        current_workflow=gain_report["workflow"],
+    )
+    assert report["workflow"].trigger.value == -2.0
+    sort = next(step for step in report["workflow"].steps if step.type == "sort")
+    assert sort.order == "ascending"
+    assert not any(step.type == "filter" and step.operator == ">" for step in report["workflow"].steps)
+
+
+def test_no_result_reply_stays_grounded():
+    from types import SimpleNamespace
+
+    from apps.intelligence.response import compose_reply
+
+    result = SimpleNamespace(kind="no_result", title="Quiet", payload_json={})
+    text = compose_reply(result)
+    assert "CoinMarketCap" in text
+    assert "No matching" in text

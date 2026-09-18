@@ -58,7 +58,7 @@ def _default_requirements(workflow: WorkflowDefinition | None, result) -> list[s
 
 
 def _run_check(req: str, result, rows: list[dict], trigger: dict, assets: int, workflow) -> dict:
-    if req in {"btc_trigger_verified", "trigger_verified"}:
+    if req in {"btc_trigger_verified", "trigger_verified", "verify_trigger"}:
         actual = trigger.get("actual")
         if result.kind == "no_result":
             return {"id": req, "label": "Trigger verified", "passed": True}
@@ -74,12 +74,12 @@ def _run_check(req: str, result, rows: list[dict], trigger: dict, assets: int, w
         if expected and assets and result.kind == "ranked_table":
             passed = assets > 0
         return {"id": req, "label": label, "passed": passed}
-    if req == "decline_calculation_verified":
+    if req in {"decline_calculation_verified", "verify_percentage_calculations"}:
         if result.kind == "no_result":
             return {"id": req, "label": "Decline calculation verified", "passed": True, "skipped": True}
         passed = bool(rows) and all("price_change_24h" in row for row in rows)
         return {"id": req, "label": "Decline calculation verified", "passed": passed}
-    if req == "ranking_verified":
+    if req in {"ranking_verified", "verify_rank_order"}:
         if result.kind == "no_result":
             return {"id": req, "label": "Ranking verified", "passed": True, "skipped": True}
         changes = [row["price_change_24h"] for row in rows if row.get("price_change_24h") is not None]

@@ -128,6 +128,8 @@ def test_chief_plan_from_clarified_task():
     assert "market" in plan.capabilities
     assert "get_quotes" in plan.tools
     assert plan.persistent is False
+    compat = plan.to_agent_plan(task)
+    assert compat.specialist in {None, "market", "research"}
 
 
 def test_chief_plan_does_not_call_cmc(monkeypatch):

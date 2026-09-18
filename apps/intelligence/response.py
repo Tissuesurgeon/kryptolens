@@ -16,7 +16,19 @@ Return plain text only.
 """
 
 
-def compose_reply(result, verification: dict | None = None, evidence: list | None = None, provider=None) -> str:
+def compose_reply(
+    result,
+    verification: dict | None = None,
+    evidence: list | None = None,
+    provider=None,
+    task=None,
+) -> str:
+    _ = task
+    if result and getattr(result, "kind", "") == "no_result":
+        message = spoken_result(result)
+        if message:
+            return message
+        return "No matching result was found based on the available CoinMarketCap data."
     fallback = spoken_result(result) or (result.title if result else "I finished this check.")
     payload = (result.payload_json or {}) if result else {}
     claims = list(payload.get("claims") or [])

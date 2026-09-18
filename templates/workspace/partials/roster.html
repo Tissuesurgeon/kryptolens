@@ -1,20 +1,20 @@
 {% load static humanize %}
-<aside class="roster" aria-label="Agents">
+<aside class="roster" aria-label="Your Lenses">
   <a class="brand roster-brand" href="{% url 'agent_home' %}">
     <img src="{% static 'img/mark.svg' %}" alt="">
     <span>KryptoLens</span>
   </a>
   <div class="roster-head">
-    <p class="roster-kicker">Agents</p>
-    <a class="roster-new" href="{% url 'agent_create' %}">+ Create Agent</a>
+    <p class="roster-kicker">Your Lenses</p>
+    <a class="roster-new" href="{% url 'agent_create' %}">+ New Lens</a>
   </div>
   {% if workspace_lenses %}
-  <label class="visually-hidden" for="roster-search">Search agents</label>
+  <label class="visually-hidden" for="roster-search">Search lenses</label>
   <input
     id="roster-search"
     class="roster-search"
     type="search"
-    placeholder="Search agents"
+    placeholder="Search lenses"
     autocomplete="off"
   >
   {% endif %}
@@ -41,7 +41,7 @@
         {% include "workspace/partials/delete_agent.html" with agent=item form_class="roster-delete" %}
       </div>
     {% empty %}
-      <p class="roster-empty">No agents yet</p>
+      <p class="roster-empty">No Lenses yet</p>
     {% endfor %}
   </nav>
   <div class="roster-foot">

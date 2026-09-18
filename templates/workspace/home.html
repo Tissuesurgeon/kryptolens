@@ -1,25 +1,25 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Your crypto agents · KryptoLens{% endblock %}
-{% block workspace_title %}Your crypto agents{% endblock %}
+{% block title %}Your Lenses · KryptoLens{% endblock %}
+{% block workspace_title %}Your Lenses{% endblock %}
 
 {% block content %}
 <div class="thread agent-home{% if first_run %} first-run{% endif %}">
   {% if first_run %}
   <div class="first-run-stage">
-    <h1>Your crypto teammates</h1>
-    <p class="lede">Create a named teammate — not a disposable chat. Then message the job.</p>
-    <button class="btn btn-primary" type="button" id="open-create-agent">Create Agent</button>
+    <h1>Your Lenses</h1>
+    <p class="lede">Create a named Lens — not a disposable chat. Then tell it what you want.</p>
+    <button class="btn btn-primary" type="button" id="open-create-agent">Create a Lens</button>
   </div>
   {% else %}
   <div class="thread-scroll">
     <header class="conversation-head">
       <div>
-        <h1>Your agents</h1>
+        <h1>Your Lenses</h1>
         <p class="lede">Who they are, what they watch, and whether they are working.</p>
       </div>
-      <button class="btn btn-primary" type="button" id="open-create-agent">Create Agent</button>
+      <button class="btn btn-primary" type="button" id="open-create-agent">Create a Lens</button>
     </header>
     <div class="agent-list">
       {% for item in lenses %}
@@ -28,7 +28,7 @@
             {% include "workspace/partials/bot_face.html" with face_id=item.id kind=item.agent_state.kind %}
             <span class="agent-row-body">
               <strong>{{ item.name }}</strong>
-              <p>{{ item.purpose|default:"Give this agent a job." }}</p>
+              <p>{{ item.purpose|default:item.agent_state.label }}</p>
               <p class="agent-row-meta">
                 {{ item.agent_state.label }}
                 · {{ item.active_routine_count|default:item.routine_count|default:0 }} routines
@@ -47,19 +47,15 @@
 <dialog class="create-modal" id="create-agent-modal">
   <form method="post" action="{% url 'agent_create' %}" class="form-narrow create-agent">
     {% csrf_token %}
-    <h1>Create your agent</h1>
-    <p class="lede">Give it a name and a job. You can message it after this.</p>
+    <h1>Create a Lens</h1>
+    <p class="lede">Give it a name. You can tell it what to do after this.</p>
     <p>
-      <label for="agent-name">Name</label>
-      <input id="agent-name" type="text" name="name" required placeholder="Name" autocomplete="off">
-    </p>
-    <p>
-      <label for="agent-purpose">What is its job?</label>
-      <textarea id="agent-purpose" name="purpose" rows="4" placeholder="Standing job (optional)"></textarea>
+      <label for="agent-name">Lens name</label>
+      <input id="agent-name" type="text" name="name" required placeholder="Lens name" autocomplete="off">
     </p>
     <div class="actions">
       <button class="btn btn-ghost" type="button" id="close-create-agent">Cancel</button>
-      <button class="btn btn-primary" type="submit">Create Agent</button>
+      <button class="btn btn-primary" type="submit">Create a Lens</button>
     </div>
   </form>
 </dialog>

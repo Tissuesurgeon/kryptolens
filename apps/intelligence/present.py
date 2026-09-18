@@ -54,7 +54,10 @@ def spoken_result(result) -> str | None:
             return f"{headlines} CoinMarketCap headlines, related to live quotes."
         return "CoinMarketCap returned no News/Headlines for this request."
     if kind == "no_result":
-        return payload.get("message") or None
+        return (
+            payload.get("message")
+            or "No matching result was found based on the available CoinMarketCap data."
+        )
     return None
 
 

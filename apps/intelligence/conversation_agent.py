@@ -14,29 +14,45 @@ from apps.intelligence.compiler import (
     is_now_status,
 )
 from apps.intelligence.job import JobDefinition
-from apps.intelligence.job_compiler import _is_btc_reaction, _is_compare_now, _is_scheduled_brief, is_news_request
+from apps.intelligence.job_compiler import (
+    _is_compare_now,
+    _is_reaction_watch,
+    _is_scheduled_brief,
+    is_news_request,
+)
 from apps.intelligence.llm import get_provider
 from apps.intelligence.understanding import provider_is_llm
 
 TURN_SYSTEM = """You clarify a crypto-market request for KryptoLens.
 Return ONLY valid JSON. No markdown. No tools. No file edits. Do not invent prices.
 
-Ask a question only when the answer would change the job, the data, the execution, or the output.
-Do not ask when the request is already a live snapshot, a comparison, news, or a watch with a stated threshold.
+Reason about: user objective, asset/entity, metric, threshold, timeframe, universe,
+persistence, frequency, output format, constraints, and missing information.
+
+Ask a question only when missing information would change the job, the data, the
+execution, or the output. Write that question from the user's task. Do not use a
+canned phrase.
+
+Do not ask when the request is already a live snapshot, a comparison, news, or a
+watch with a stated threshold.
+
+Prefer the current user message over any current job JSON. If the user names ETH
+and the current job is about BTC, the new task is about ETH.
 
 {
   "status": "needs_input" | "ready",
-  "question": "only if needs_input",
+  "question": "only if needs_input, generated from the missing information",
   "pending_field": "unusual_definition" | "action" | "",
   "mode": "ask" | "work",
   "task_type": "one_shot_research" | "persistent_monitor" | "scheduled_brief" | "watch_plus_investigate" | "news_brief",
   "objective": "one sentence",
-  "assets": ["BTC"],
+  "assets": ["ETH"],
   "universe": "top_100" | "symbols" | "",
   "window": "30d" | "",
   "listing_limit": 100,
-  "trigger_conditions": [{"metric": "price_change_24h", "operator": "<=", "value": -2}],
-  "action": "report" | "notify" | "investigate_market_reaction",
+  "trigger_conditions": [{"metric": "price_change_24h", "operator": "<=", "value": -2, "asset": "ETH"}],
+  "action": "report" | "notify" | "investigate_market_reaction" | "rank_gains" | "rank_declines",
+  "requested_output": "natural_language_report" | "ranked_table" | "comparison" | "market_summary",
   "you_asked": ["the user's wording"],
   "assumptions": ["only real interpretation, never invented thresholds"],
   "capabilities": ["market"]
@@ -44,14 +60,24 @@ Do not ask when the request is already a live snapshot, a comparison, news, or a
 
 Rules:
 - "Compare BTC and ETH over the last 30 days." → ready, mode=ask, historical+market.
-- "How is BTC doing?" / "how is bitcoin doing on the market today" → ready, mode=ask.
-- "Find me the coins with the highest gains within 24hrs." → ready, mode=ask, universe=top_100. Not a BTC quote.
-- "Watch BTC for unusual activity." → needs_input (unusual = price / volume / relative / combination).
+- "Compare BTC and ETH right now." → ready, mode=ask, one-shot, no routine.
+- "How is BTC doing?" / "what is ETH doing right now" → ready, mode=ask. Use the named asset.
+- "Find me the coins with the highest gains within 24hrs." → ready, mode=ask, universe=top_100, action=rank_gains, requested_output=ranked_table. Not a BTC quote.
+- "Watch BTC for unusual activity." → needs_input. Ask what unusual means for this task.
 - "Watch BTC and tell me when something important happens." → needs_input.
-- "When BTC drops by 2%, check the top 100..." → ready, mode=work immediately.
+- "When BTC drops by 2%, check the top 100..." → ready, mode=work, watch_plus_investigate immediately.
+- "When ETH drops by 2%, rank the top 100 declines." → ready, mode=work, trigger asset ETH, not BTC.
+- "When BTC drops by 2%, find me the coins with the highest drop." → ready, mode=work, watch_plus_investigate. Rank declines.
 - News/headlines → ready, mode=ask, news_brief.
 - Every morning summarize → ready, mode=work, scheduled_brief.
 - Never call CMC. Never invent a percent the user did not state.
+"""
+
+MERGE_SYSTEM = """You merge a user's clarification answer into a pending KryptoLens task.
+Return ONLY valid JSON using the same schema as a conversation turn.
+You receive the original task, the clarification question, the user's answer, and recent conversation.
+Reinterpret the combined context. Prefer status=ready when the answer supplies the missing information.
+Write any follow-up question from the remaining gap. Do not invent prices or thresholds the user did not state.
 """
 
 UNUSUAL_QUESTION = (
@@ -74,9 +100,9 @@ def understand(
     provider=None,
 ) -> TurnResult:
     text = (text or "").strip()
-    if pending:
-        return _merge_answer(text, pending, current_job=current_job)
     provider = provider or get_provider()
+    if pending:
+        return _merge_answer(text, pending, current_job=current_job, provider=provider, history=history)
     if provider_is_llm(provider):
         try:
             return _understand_llm(text, history=history, current_job=current_job, provider=provider)
@@ -99,27 +125,29 @@ def _understand_llm(text: str, *, history, current_job, provider) -> TurnResult:
         prompt += "\n\nRecent conversation:\n" + json.dumps(history[-8:], default=str)[:4000]
     raw = provider.generate(prompt, kind="conversation_turn")
     data = _extract_json(raw)
-    status = data.get("status") or "ready"
+    task = _task_from_llm(text, data)
+    status = data.get("status") or task.status or "ready"
     if status == "needs_input":
-        question = (data.get("question") or "").strip() or UNUSUAL_QUESTION
-        task = _apply_movers_override(text, _task_from_llm(text, data))
-        if task.mode == "ask" and (is_gainers_ask(text) or is_losers_ask(text)):
-            task.status = "ready"
-            return TurnResult(status="ready", task=task)
+        question = (data.get("question") or task.question or "").strip()
+        if not question:
+            raise ValueError("LLM asked for input without a question")
         task.status = "needs_input"
         task.question = question
-        task.pending_field = data.get("pending_field") or "unusual_definition"
+        task.pending_field = data.get("pending_field") or task.pending_field or "unusual_definition"
         return TurnResult(status="needs_input", question=question, task=task)
-    task = _task_from_llm(text, data)
     task.status = "ready"
-    return TurnResult(status="ready", task=_apply_movers_override(text, task))
+    return TurnResult(status="ready", task=task)
 
 
 def _task_from_llm(text: str, data: dict) -> ClarifiedTask:
     mentioned = _extract_symbols(text)
     llm_assets = [str(item).upper() for item in (data.get("assets") or []) if item]
-    assets = mentioned or llm_assets or ["BTC"]
+    assets = llm_assets if llm_assets else list(mentioned)
     capabilities = list(data.get("capabilities") or _default_capabilities(data.get("task_type") or "", data.get("window") or ""))
+    conditions = list(data.get("trigger_conditions") or [])
+    for item in conditions:
+        if isinstance(item, dict) and not item.get("asset") and assets:
+            item["asset"] = assets[0]
     return ClarifiedTask(
         status="ready",
         mode=data.get("mode") or "ask",
@@ -131,8 +159,9 @@ def _task_from_llm(text: str, data: dict) -> ClarifiedTask:
             window=data.get("window") or "",
             listing_limit=data.get("listing_limit"),
         ),
-        trigger=TaskTrigger(conditions=list(data.get("trigger_conditions") or [])),
+        trigger=TaskTrigger(conditions=conditions),
         action=data.get("action") or "report",
+        requested_output=data.get("requested_output") or data.get("output_format") or "natural_language_report",
         you_asked=list(data.get("you_asked") or [text.strip()]),
         assumptions=list(data.get("assumptions") or []),
         capabilities=capabilities,
@@ -168,22 +197,24 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             capabilities=["market", "regime"],
             objective="Summarize overnight crypto using live CMC listings.",
         )
-    if _is_btc_reaction(lowered) or (_has_threshold(text) and _has_universe(lowered) and _has_rank(lowered)):
+    if _is_reaction_watch(lowered) or (_has_threshold(text) and _has_universe(lowered) and _has_rank(lowered)):
         threshold = _signed_percent(text, -2.0)
+        asset = assets[0] if assets else "BTC"
         return _ready(
             text,
             mode="work",
             task_type="watch_plus_investigate",
-            assets=["BTC"] if "btc" in lowered or "bitcoin" in lowered else assets,
+            assets=[asset],
             universe="top_100",
             listing_limit=_listing_limit(text),
             action="investigate_market_reaction",
             capabilities=["reaction", "market", "anomaly"],
             objective="Monitor the trigger and analyze how the market reacts.",
+            requested_output="ranked_table",
             trigger_conditions=[
-                {"metric": "price_change_24h", "operator": "<=", "value": threshold, "asset": "BTC"}
+                {"metric": "price_change_24h", "operator": "<=", "value": threshold, "asset": asset}
             ],
-            assumptions=[f"Trigger is BTC 24h change <= {threshold}%."],
+            assumptions=[f"Trigger is {asset} 24h change <= {threshold}%."],
         )
     if is_now_status(text) or _is_plain_status(lowered):
         return _ready(
@@ -218,9 +249,10 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             assets=[],
             universe="top_100",
             listing_limit=_listing_limit(text),
-            action="report",
-            capabilities=["market"],
+            action="rank_gains" if gains else "rank_declines",
+            capabilities=["market", "discovery"],
             objective=f"Rank top listings by 24h {'gain' if gains else 'decline'} from live CMC data.",
+            requested_output="ranked_table",
         )
     if _is_discovery(lowered):
         return _ready(
@@ -262,7 +294,11 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
         )
     if _looks_like_watch(lowered) and _has_threshold(text):
         threshold = _signed_percent(text, -2.0)
-        action = "investigate_market_reaction" if "investigat" in lowered or "check" in lowered else "notify"
+        action = (
+            "investigate_market_reaction"
+            if any(word in lowered for word in ("investigat", "check", "find me", "highest drop", "rank"))
+            else "notify"
+        )
         return _ready(
             text,
             mode="work",
@@ -291,7 +327,58 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
     )
 
 
-def _merge_answer(text: str, pending: dict, current_job: JobDefinition | None = None) -> TurnResult:
+def _merge_answer(
+    text: str,
+    pending: dict,
+    current_job: JobDefinition | None = None,
+    provider=None,
+    history: list[dict] | None = None,
+) -> TurnResult:
+    provider = provider or get_provider()
+    if provider_is_llm(provider):
+        try:
+            return _merge_answer_llm(text, pending, current_job=current_job, provider=provider, history=history)
+        except Exception:
+            pass
+    return _merge_answer_heuristic(text, pending, current_job=current_job)
+
+
+def _merge_answer_llm(text: str, pending: dict, *, current_job, provider, history) -> TurnResult:
+    draft = ClarifiedTask.model_validate(pending.get("task") or pending)
+    prompt = MERGE_SYSTEM
+    prompt += "\n\nOriginal task JSON:\n" + draft.model_dump_json()
+    prompt += "\n\nClarification question:\n" + (draft.question or pending.get("pending_field") or "")
+    prompt += "\n\nUser answer:\n" + text
+    if current_job:
+        prompt += "\n\nCurrent job JSON:\n" + current_job.model_dump_json()
+    if history:
+        prompt += "\n\nRecent conversation:\n" + json.dumps(history[-8:], default=str)[:4000]
+    raw = provider.generate(prompt, kind="conversation_merge")
+    data = _extract_json(raw)
+    source = (draft.source_text + " " + text).strip()
+    task = _task_from_llm(source, data)
+    task.you_asked = list(dict.fromkeys(list(draft.you_asked) + list(task.you_asked) + [text.strip()]))
+    task.source_text = source
+    status = data.get("status") or task.status or "ready"
+    if status == "needs_input":
+        question = (data.get("question") or task.question or "").strip()
+        if not question:
+            raise ValueError("LLM merge asked for input without a question")
+        task.status = "needs_input"
+        task.question = question
+        task.pending_field = data.get("pending_field") or task.pending_field or draft.pending_field
+        return TurnResult(status="needs_input", question=question, task=task)
+    if not task.trigger.conditions and draft.trigger.conditions:
+        task.trigger = draft.trigger
+    if task.mode == "work" and not task.capabilities:
+        task.capabilities = list(draft.capabilities) or ["anomaly", "market"]
+    task.status = "ready"
+    task.question = ""
+    task.pending_field = ""
+    return TurnResult(status="ready", task=task)
+
+
+def _merge_answer_heuristic(text: str, pending: dict, current_job: JobDefinition | None = None) -> TurnResult:
     draft = ClarifiedTask.model_validate(pending.get("task") or pending)
     field = pending.get("pending_field") or draft.pending_field or "unusual_definition"
     lowered = text.lower()
@@ -353,22 +440,6 @@ def _finish_work(draft: ClarifiedTask, text: str) -> TurnResult:
     return TurnResult(status="ready", task=draft)
 
 
-def _apply_movers_override(text: str, task: ClarifiedTask) -> ClarifiedTask:
-    if not (is_gainers_ask(text) or is_losers_ask(text)):
-        return task
-    gains = is_gainers_ask(text)
-    task.mode = "ask"
-    task.task_type = "one_shot_research"
-    task.scope.assets = []
-    task.scope.universe = task.scope.universe if str(task.scope.universe).startswith("top") else "top_100"
-    task.scope.window = ""
-    task.scope.listing_limit = task.scope.listing_limit or 100
-    task.action = "report"
-    task.capabilities = ["market"]
-    task.objective = f"Rank top listings by 24h {'gain' if gains else 'decline'} from live CMC data."
-    return task
-
-
 def _ready(
     text: str,
     *,
@@ -383,6 +454,7 @@ def _ready(
     listing_limit: int | None = None,
     trigger_conditions: list | None = None,
     assumptions: list[str] | None = None,
+    requested_output: str = "natural_language_report",
 ) -> TurnResult:
     task = ClarifiedTask(
         status="ready",
@@ -392,6 +464,7 @@ def _ready(
         scope=TaskScope(assets=assets, universe=universe, window=window, listing_limit=listing_limit),
         trigger=TaskTrigger(conditions=list(trigger_conditions or [])),
         action=action,
+        requested_output=requested_output,
         you_asked=[text.strip()] if text.strip() else [],
         assumptions=list(assumptions or []),
         capabilities=capabilities,
@@ -445,11 +518,13 @@ def _has_threshold_text(lowered: str) -> bool:
 
 
 def _has_universe(lowered: str) -> bool:
-    return bool(re.search(r"\btop\s+\d+\b", lowered)) or ("top" in lowered and "coin" in lowered)
+    return bool(re.search(r"\btop\s+\d+\b", lowered)) or (
+        "top" in lowered and "coin" in lowered
+    ) or ("find" in lowered and "coin" in lowered)
 
 
 def _has_rank(lowered: str) -> bool:
-    return any(word in lowered for word in ("rank", "list", "sort", "biggest"))
+    return any(word in lowered for word in ("rank", "list", "sort", "biggest", "highest"))
 
 
 def _is_plain_status(lowered: str) -> bool:

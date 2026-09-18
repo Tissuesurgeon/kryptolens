@@ -58,7 +58,7 @@ class AgentPlan(BaseModel):
     plan_id: str
     objective: str
     job_type: JobType
-    specialist: Specialist
+    specialist: Specialist | None = None
     steps: list[str] = Field(default_factory=list)
     required_inputs: list[str] = Field(default_factory=list)
     tools: list[str] = Field(default_factory=list)
@@ -106,6 +106,8 @@ def validate_agent_plan(plan: AgentPlan, permissions: dict | None = None) -> Age
         if plan.steps or plan.tools:
             raise PlanValidationError("unavailable specialists cannot emit an executable plan")
         return plan
+    if not plan.specialist:
+        plan.specialist = "market"
     for tool in plan.tools:
         if not tool_in_registry(tool):
             raise PlanValidationError(f"unknown tool: {tool}")
@@ -341,16 +343,65 @@ class ChiefAgent:
         plan_to_workflow(plan, workflow)
         return plan
 
-    def plan_from_task(self, task, report: dict) -> AgentPlan:
-        plan = build_agent_plan(report["job"], report["workflow"], task.objective or report["job"].purpose)
-        plan.capabilities = list(task.capabilities or report.get("capabilities") or plan.capabilities)
-        plan.persistent = task.mode == "work"
+    def plan_from_task(self, task, report: dict | None = None):
         from apps.intelligence.capabilities import required_tools
+        from apps.intelligence.capability_plan import (
+            CapabilityPlan,
+            tools_from_workflow,
+            verification_for_workflow,
+        )
+        from apps.intelligence.job_compiler import workflow_from_task
 
-        extra = required_tools(task, plan.capabilities)
-        plan.tools = _unique(list(plan.tools) + extra)
-        _apply_capability_steps(plan)
-        validate_agent_plan(plan, report.get("tool_permissions"))
-        if report.get("workflow"):
-            plan_to_workflow(plan, report["workflow"])
+        capabilities = list(task.capabilities or _default_capabilities_for_task(task))
+        workflow = workflow_from_task(task)
+        if report and report.get("workflow") and (report["workflow"].steps or report["workflow"].trigger):
+            if not workflow.steps and not workflow.trigger:
+                workflow = report["workflow"]
+        tools = _unique(required_tools(task, capabilities) + tools_from_workflow(workflow))
+        reason = _reason_for_task(task, capabilities)
+        verification = verification_for_workflow(workflow, task)
+        plan = CapabilityPlan(
+            capabilities=capabilities,
+            tools=tools,
+            workflow=workflow,
+            reason=reason,
+            verification_requirements=verification,
+            persistent=task.mode == "work",
+        )
+        if report is not None:
+            agent_plan = plan.to_agent_plan(task, task.objective or (report.get("job").purpose if report.get("job") else ""))
+            if report.get("tool_permissions"):
+                validate_agent_plan(agent_plan, report.get("tool_permissions"))
+            if report.get("workflow"):
+                plan_to_workflow(agent_plan, report["workflow"])
         return plan
+
+
+def _default_capabilities_for_task(task) -> list[str]:
+    names: list[str] = []
+    if task.task_type == "watch_plus_investigate" or task.action == "investigate_market_reaction":
+        names.extend(["market", "reaction"])
+    elif task.task_type == "persistent_monitor":
+        names.extend(["anomaly", "market"])
+    elif task.task_type == "scheduled_brief":
+        names.extend(["market", "regime"])
+    else:
+        names.append("market")
+    if task.scope.window or "historical" in (task.capabilities or []):
+        if "historical" not in names:
+            names.append("historical")
+    if "discovery" in (task.capabilities or []) and "discovery" not in names:
+        names.append("discovery")
+    return _unique(names)
+
+
+def _reason_for_task(task, capabilities: list[str]) -> str:
+    joined = ", ".join(capabilities) or "market"
+    if task.trigger_asset() and "reaction" in capabilities:
+        return (
+            f"The request requires detecting a {task.trigger_asset()} trigger "
+            f"and comparing reactions across the selected universe ({joined})."
+        )
+    if task.scope.window:
+        return f"The request compares live quotes with previous observations ({joined})."
+    return f"The request is served by {joined}."

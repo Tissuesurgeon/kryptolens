@@ -104,6 +104,27 @@ def test_severity_bands():
     assert severity_from_score(4) == "high"
 
 
+def test_missing_price_change_is_not_treated_as_zero():
+    obs = MarketObservation(asset_id=1, symbol="SOL", name="Solana", price=10, price_change_24h=None)
+    policy = IntelligencePolicy.model_validate(
+        {
+            "name": "Missing",
+            "universe": {"type": "symbols", "symbols": ["SOL"]},
+            "metrics": {"observed": ["price_change_24h"], "context": [], "derived": []},
+            "asset_conditions": [{"metric": "price_change_24h", "operator": "<=", "value": -2}],
+            "logic": "AND",
+            "min_notify_severity": "low",
+            "actions": ["store_event"],
+        }
+    )
+    candidate = evaluate_policy(obs, policy)
+    actuals = [item["actual"] for item in candidate.condition_results]
+    assert None in actuals
+    assert 0 not in actuals
+    assert "price_change_24h" in candidate.skipped_metrics
+    assert candidate.logic_passed is False
+
+
 def test_query_plan_listings():
     plan = plan_query(_policy())
     assert "/v3/cryptocurrency/listings/latest" in plan.endpoints

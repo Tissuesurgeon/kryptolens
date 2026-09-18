@@ -47,6 +47,19 @@ class ClarifiedTask(BaseModel):
     def is_persistent(self) -> bool:
         return self.status == "ready" and self.mode == "work"
 
+    def trigger_asset(self) -> str | None:
+        for item in self.trigger.conditions:
+            asset = str(item.get("asset") or "").strip().upper()
+            if asset:
+                return asset
+        if self.scope.assets:
+            return str(self.scope.assets[0]).upper()
+        return None
+
+    @property
+    def output_format(self) -> str:
+        return self.requested_output or "natural_language_report"
+
 
 class TurnResult(BaseModel):
     status: TaskStatus

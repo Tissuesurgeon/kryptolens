@@ -238,6 +238,32 @@ def test_highest_gains_ranks_listings_instead_of_quoting_btc():
     assert any(item.item_type == "scan_result" for item in visible)
 
 
+@respx.mock
+@pytest.mark.django_db
+def test_btc_drop_highest_drop_ranks_declines_not_prior_gains():
+    respx.get("https://pro-api.coinmarketcap.com/v3/cryptocurrency/listings/latest").mock(
+        return_value=httpx.Response(200, json=LISTINGS)
+    )
+    user = _user()
+    lens = AgentService.create(user, "analyst", "")
+    ConversationService.handle(lens, "find me the coins with the highest gains within 24hrs")
+    later = ConversationService.handle(lens, "when btc drops by 2%, find me the coins with the highest drop")
+    assert later.kind == "run"
+    lens.refresh_from_db()
+    workflow = lens.current_version().as_workflow()
+    assert workflow.trigger.asset == "BTC"
+    assert workflow.trigger.value == -2.0
+    assert any(step.type == "sort" and step.order == "ascending" for step in workflow.steps)
+    assert not any(step.type == "filter" and step.operator == ">" for step in workflow.steps)
+    types = list(lens.conversation_items.values_list("item_type", flat=True))
+    assert "policy_diff" not in types
+    assert "workflow_created" in types
+    result = Result.objects.filter(lens=lens).order_by("-id").first()
+    assert result.kind == "ranked_table"
+    changes = [row["price_change_24h"] for row in result.payload_json["rows"]]
+    assert changes == sorted(changes)
+
+
 @pytest.mark.django_db
 def test_chat_run_finishes_without_celery_worker(monkeypatch):
     monkeypatch.setattr("apps.lenses.run_service.run_lens_task.delay", lambda *args, **kwargs: None)
@@ -314,7 +340,7 @@ def test_web_chat_still_uses_conversation_service():
     lens.refresh_from_db()
     assert lens.current_version() is not None
     assert b"You asked" in follow.content
-    assert b"keep watch" in follow.content
+    assert b"Routine activated" in follow.content
     assert b"Create routine" not in follow.content
     lens.refresh_from_db()
     assert lens.status == "active"
@@ -342,7 +368,7 @@ def test_telegram_inbound_writes_the_same_conversation():
     assert ConversationItem.objects.filter(lens=lens, item_type="routine_created").exists()
     assert ConversationItem.objects.filter(lens=lens, item_type="user_message").exists()
     assert not ConversationItem.objects.filter(lens=lens, item_type="routine_proposal").exists()
-    assert any("I'll keep watch" in text or "is working" in text for _, text in sent)
+    assert any("Routine activated" in text or "is working" in text or "Run queued" in text for _, text in sent)
     assert not any("drafted a routine" in text for _, text in sent)
     assert any(str(chat) == "4242" for chat, _ in sent)
 
@@ -359,6 +385,38 @@ def test_telegram_webhook_rejects_bad_secret(settings):
         content_type="application/json",
     )
     assert ok.status_code == 200
+
+
+@pytest.mark.django_db
+def test_pause_resume_check_now_are_state_messages():
+    user = _user()
+    lens = AgentService.create(user, "Scout", "")
+    ConversationService.handle(lens, GOLDEN)
+    paused = ConversationService.handle(lens, "pause")
+    assert paused.flash == "Routine paused."
+    resumed = ConversationService.handle(lens, "resume")
+    assert resumed.flash == "Routine activated."
+    check = ConversationService.handle(lens, "check now")
+    assert check.flash == "Run queued."
+    evidence = ConversationService.handle(lens, "show evidence")
+    assert evidence.kind == "replied"
+
+
+@pytest.mark.django_db
+def test_eth_reaction_creates_persistent_routine():
+    user = _user()
+    lens = AgentService.create(user, "Crypto Scout", "")
+    result = ConversationService.handle(
+        lens,
+        "When ETH drops by 2%, check the top 100 coins and rank their declines from biggest to smallest.",
+    )
+    assert result.kind == "run"
+    lens.refresh_from_db()
+    job = lens.current_version().as_job()
+    workflow = lens.current_version().as_workflow()
+    assert job.is_persistent() is True
+    assert workflow.trigger.asset == "ETH"
+    assert lens.current_routine() is not None
 
 
 @pytest.mark.django_db

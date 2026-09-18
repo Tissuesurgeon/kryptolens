@@ -63,11 +63,12 @@ def test_first_run_home_is_create_new_agent():
     client, user = _client()
     home = client.get("/home")
     assert home.status_code == 200
-    assert b"Agents" in home.content
-    assert b"Create Agent" in home.content
-    assert b"named teammate" in home.content
-    assert b"No agents yet" in home.content
-    assert b"+ Create Agent" in home.content
+    assert b"Your Lenses" in home.content
+    assert b"Create a Lens" in home.content
+    assert b"What is its job?" not in home.content
+    assert b"named Lens" in home.content
+    assert b"No Lenses yet" in home.content
+    assert b"+ New Lens" in home.content
     assert b"Settings" in home.content
     assert user.email.encode() in home.content
     assert b"What should this Lens handle?" not in home.content
@@ -81,9 +82,11 @@ def test_first_run_home_is_create_new_agent():
     assert Lens.objects.filter(user=user).count() == 0
     opened = client.get("/agents/new")
     assert opened.status_code == 200
+    assert b"What is its job?" not in opened.content
+    assert b"Create a Lens" in opened.content
     created = client.post(
         "/agents/new",
-        {"name": "Market Scout", "purpose": "Watch BTC for a 5% move"},
+        {"name": "Market Scout"},
         follow=True,
     )
     assert created.status_code == 200
@@ -94,7 +97,7 @@ def test_first_run_home_is_create_new_agent():
     assert "Hi. I" not in html
     assert "Market Scout" in html
     assert "What would you like me to watch?" not in html
-    assert "Ask Market Scout" in html
+    assert "Ask KryptoLens" in html
     assert lens.conversation_items.count() == 0
     assert 'id="work-preview"' not in html
     assert 'id="scan-mount"' in html
@@ -140,7 +143,7 @@ def test_new_creates_empty_draft_lens():
     assert draft.name == "New Lens" or draft.name
     assert b"You asked" in attached.content
     assert b"KryptoLens assumed" in attached.content
-    assert b"keep watch" in attached.content
+    assert b"Routine activated" in attached.content
     assert b"Create routine" not in attached.content
     assert draft.status == "active"
     assert b"Watching" in attached.content
@@ -160,12 +163,12 @@ def test_signup_login_logout():
     )
     assert created.status_code == 200
     assert User.objects.filter(email="fresh@kryptolens.app").exists()
-    assert b"Agents" in created.content
-    assert b"Create Agent" in created.content
+    assert b"Your Lenses" in created.content
+    assert b"Create a Lens" in created.content
     client.post("/sign-out")
     logged = client.post("/login", {"email": "fresh@kryptolens.app", "password": PASSWORD}, follow=True)
     assert logged.status_code == 200
-    assert b"Agents" in logged.content
+    assert b"Your Lenses" in logged.content
 
 
 @pytest.mark.django_db
@@ -379,7 +382,6 @@ def test_create_surfaces_routine_kind():
     assert b"DO" in response.content
     assert b"DATA" in response.content
     assert b"FAILURE" in response.content
-    assert b"keep watch" in response.content
     assert b"Watching" in response.content
     assert b"Checks every" in response.content
     assert b"without another prompt" in response.content

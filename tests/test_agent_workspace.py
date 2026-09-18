@@ -86,7 +86,7 @@ def test_agents_home_lists_named_agents():
     create_lens_from_intent(user, GOLDEN)
     home = client.get("/agents")
     assert home.status_code == 200
-    assert b"Your crypto agents" in home.content
+    assert b"Your Lenses" in home.content
     assert Lens.objects.get(user=user).name.encode() in home.content
     assert b"agent-row" in home.content
     assert b"agent-list" in home.content
@@ -252,11 +252,11 @@ def test_empty_agents_home_only_create():
     client, _ = _client()
     home = client.get("/agents")
     assert home.status_code == 200
-    assert b"Your crypto agents" in home.content
-    assert b"Create Agent" in home.content
+    assert b"Your Lenses" in home.content
+    assert b"Create a Lens" in home.content
     assert b"agent-card" not in home.content
-    assert b"+ Create Agent" in home.content
-    assert b"No agents yet" in home.content
+    assert b"+ New Lens" in home.content
+    assert b"No Lenses yet" in home.content
     assert b"first-run" in home.content
 
 
@@ -272,7 +272,7 @@ def test_chat_first_message_attaches_job():
     assert "Hi. I" not in created_html
     assert "What would you like me to watch?" not in created_html
     assert "Night Desk" in created_html
-    assert "Ask Night Desk" in created_html
+    assert "Ask KryptoLens" in created_html
     assert lens.conversation_items.count() == 0
     chat = client.post(
         f"/agents/{lens.id}",
@@ -290,9 +290,9 @@ def test_chat_first_message_attaches_job():
     assert b"DATA" in chat.content
     assert b"FAILURE" in chat.content
     assert b"Historical" not in chat.content
-    assert b"keep watch" in chat.content
+    assert b"Routine activated" in chat.content
     assert b"Create routine" not in chat.content
-    assert b"Ask Night Desk" in chat.content
+    assert b"Ask KryptoLens" in chat.content
     assert lens.status == "active"
     assert b"Watching" in chat.content
 
@@ -304,7 +304,7 @@ def test_home_with_agents_does_not_redirect():
     home = client.get("/home")
     assert home.status_code == 200
     assert b"agent-row" in home.content
-    assert b"Your agents" in home.content
+    assert b"Your Lenses" in home.content
     assert b"Delete" in home.content
     assert b"agent-remove" in home.content
 
