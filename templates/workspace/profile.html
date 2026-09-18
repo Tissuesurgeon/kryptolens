@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ lens.name }} profile · KryptoLens{% endblock %}
+{% block workspace_title %}{{ lens.name }}{% endblock %}
+
+{% block content %}
+<div class="thread">
+  <div class="thread-scroll">
+    <header class="conversation-head">
+      <div>
+        <p class="page-id"><a href="{% url 'agent_chat' lens.id %}">← {{ lens.name }}</a></p>
+        <p class="lede">{{ lens.purpose }}</p>
+      </div>
+    </header>
+    <form method="post" class="form-narrow">
+      {% csrf_token %}
+      <p>
+        <label for="profile-name">Name</label>
+        <input id="profile-name" type="text" name="name" value="{{ lens.name }}" required>
+      </p>
+      <p>
+        <label for="profile-purpose">Job</label>
+        <textarea id="profile-purpose" name="purpose" rows="4">{{ lens.purpose }}</textarea>
+      </p>
+      <p class="quiet">{{ routine_count }} routines · {{ jobs_completed }} jobs completed · {{ lens_state.label }}</p>
+      <button class="btn btn-primary" type="submit">Save</button>
+    </form>
+    {% include "workspace/partials/delete_agent.html" with agent=lens form_class="agent-delete profile-delete" labeled=True %}
+  </div>
+</div>
+{% endblock %}

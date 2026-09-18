@@ -1,0 +1,152 @@
+{% if item.item_type == "user_message" %}
+<section class="turn turn-user">
+  <p class="turn-name">You</p>
+  <p>{{ item.payload_json.text }}</p>
+</section>
+{% elif item.item_type == "lens_created" %}
+<section class="turn turn-bot">
+  {% include "workspace/partials/bot_face.html" with face_id=lens.id kind=lens_state.kind %}
+  <div class="turn-body">
+    <p class="turn-name">{{ lens.name }}</p>
+    <h2>{{ item.payload_json.name }}</h2>
+    <p class="quiet">{{ item.payload_json.purpose }}</p>
+  </div>
+</section>
+{% elif item.item_type == "job_created" %}
+<section class="turn turn-bot">
+  {% include "workspace/partials/bot_face.html" with face_id=lens.id kind=lens_state.kind %}
+  <div class="turn-body">
+    <p class="turn-name">{{ lens.name }}</p>
+    <h2>I understand the job.</h2>
+    {% if item.payload_json.news_unavailable %}
+      <p>News monitoring isn't available yet.</p>
+    {% endif %}
+    <div class="ask-split">
+      <div>
+        <h3>You asked</h3>
+        <ul class="plain-list">
+          {% for row in item.payload_json.you_asked %}<li>{{ row }}</li>{% empty %}
+            <li>{{ lens.natural_language_request }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div>
+        <h3>KryptoLens assumed</h3>
+        <ul class="plain-list">
+          {% for row in item.payload_json.assumptions %}<li>{{ row }}</li>{% empty %}
+            <li>No extra assumptions recorded.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% if item.payload_json.clarification %}
+      <p class="quiet">{{ item.payload_json.clarification }}</p>
+    {% endif %}
+  </div>
+</section>
+{% elif item.item_type == "workflow_created" %}
+<section class="turn turn-bot">
+  {% include "workspace/partials/bot_face.html" with face_id=lens.id kind=lens_state.kind %}
+  <div class="turn-body">
+    <p class="turn-name">{{ lens.name }}</p>
+    <h2>I'll do</h2>
+    <ol class="plain-list">
+      {% for step in item.payload_json.steps %}<li>{{ step }}</li>{% endfor %}
+    </ol>
+  </div>
+</section>
+{% elif item.item_type == "routine_proposal" or item.item_type == "routine_created" %}
+<section class="turn turn-bot">
+  {% include "workspace/partials/bot_face.html" with face_id=lens.id kind=lens_state.kind %}
+  <div class="turn-body">
+    <p class="turn-name">{{ lens.name }}</p>
+    <p>{{ item.payload_json.text|default:"I'll keep watch." }}</p>
+    <p><strong>WHEN</strong> {{ item.payload_json.when|default:"when the condition occurs" }}</p>
+    <p><strong>DO</strong></p>
+    <ol class="plain-list">
+      {% for step in item.payload_json.do %}<li>{{ step }}</li>{% empty %}
+        <li>Investigate with live CoinMarketCap data.</li>
+      {% endfor %}
+    </ol>
+    <p><strong>DATA</strong> {{ item.payload_json.data|default:"CoinMarketCap only" }}</p>
+    {% if item.payload_json.output %}
+      <p><strong>OUTPUT</strong> {{ item.payload_json.output }}</p>
+    {% endif %}
+    <p><strong>FAILURE</strong> {{ item.payload_json.failure|default:"Report failure if current CoinMarketCap data is unavailable." }}</p>
+    {% if item.payload_json.interval_minutes %}
+      <p class="quiet">Checks every {{ item.payload_json.interval_minutes }} minutes without another prompt.</p>
+    {% endif %}
+  </div>
+</section>
+{% elif item.item_type == "status_update" %}
+  {% if item.payload_json.status != "working" and item.payload_json.text != "Working" %}
+<section class="turn turn-status">
+  <p>{{ item.payload_json.text }}</p>
+</section>
+  {% endif %}
+{% elif item.item_type == "assistant_message" %}
+<section class="turn turn-bot">
+  {% include "workspace/partials/bot_face.html" with face_id=lens.id kind=lens_state.kind %}
+  <div class="turn-body">
+    <p class="turn-name">{{ lens.name }}</p>
+    <p>{{ item.payload_json.text }}</p>
+  </div>
+</section>
+{% elif item.item_type == "policy_diff" %}
+<section class="card">
+  <h2>I'll update the job</h2>
+  <p class="quiet">Version {{ item.payload_json.version }}</p>
+  {% if item.payload_json.diffs %}
+    <div class="diff-list">
+      {% for row in item.payload_json.diffs %}
+        <div class="diff-row">
+          <strong class="mono">{{ row.metric }}</strong>
+          <span class="quiet">{{ row.from }}</span>
+          <span>{{ row.to }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% elif item.item_type == "execution_error" %}
+<section class="card card-error">
+  <h2>Needs attention</h2>
+  <p>I couldn't complete this run because CoinMarketCap data was unavailable or the run failed.</p>
+  <p class="quiet">{{ item.payload_json.message }}</p>
+</section>
+{% elif item.item_type == "scan_result" %}
+  {% if item.result %}
+    {% include "workspace/partials/result_artifact.html" with result=item.result %}
+  {% endif %}
+{% elif item.item_type == "evidence" %}
+<section class="turn turn-bot">
+  {% include "workspace/partials/bot_face.html" with face_id=lens.id kind=lens_state.kind %}
+  <div class="turn-body">
+    <p class="turn-name">{{ lens.name }}</p>
+    <h2>Evidence</h2>
+    <ul class="plain-list">
+      {% for row in item.payload_json.claims %}
+        <li>{% if row.status == "supported" %}✓{% elif row.status == "unsupported" %}✕{% else %}○{% endif %} {{ row.claim }}</li>
+      {% empty %}
+        <li class="quiet">No evidence claims on this run.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% elif item.item_type == "verification" %}
+<section class="turn turn-bot">
+  {% include "workspace/partials/bot_face.html" with face_id=lens.id kind=lens_state.kind %}
+  <div class="turn-body">
+    <p class="turn-name">{{ lens.name }}</p>
+    <h2>Verification</h2>
+    <p class="quiet">{% if item.payload_json.status == "supported" %}verified{% else %}{{ item.payload_json.status }}{% endif %}</p>
+    <ul class="plain-list">
+      {% for check in item.payload_json.checks %}
+        <li>{% if check.passed %}✓{% else %}○{% endif %} {{ check.label|default:check.id }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% elif item.item_type == "event_result" and item.event %}
+  {% include "workspace/partials/event_card.html" with event=item.event %}
+{% endif %}

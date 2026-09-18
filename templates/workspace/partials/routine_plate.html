@@ -1,0 +1,15 @@
+{% load humanize %}
+<div class="routine-plate">
+  <p class="starter-label">Routine</p>
+  <p>
+    {{ routine_kind_label|default:"manual" }}
+    {% if next_run_at %}
+      · next {{ next_run_at|naturaltime }}
+    {% elif routine.interval_minutes %}
+      · every {{ routine.interval_minutes }} minutes
+    {% endif %}
+  </p>
+  {% if lens.status != "active" %}
+    <p class="quiet">Activate so I keep watch when you leave.</p>
+  {% endif %}
+</div>

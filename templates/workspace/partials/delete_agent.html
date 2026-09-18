@@ -1,0 +1,30 @@
+<form
+  method="post"
+  action="{% url 'agent_delete' agent.id %}"
+  class="{{ form_class|default:'agent-delete' }}"
+  onsubmit="return confirm('Delete {{ agent.name|escapejs }}?');"
+>
+  {% csrf_token %}
+  <button
+    class="agent-remove{% if labeled %} is-labeled{% endif %}"
+    type="submit"
+    aria-label="Delete {{ agent.name }}"
+    title="Delete {{ agent.name }}"
+  >
+    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+      <path
+        d="M3 4.5h10M6.25 4.5V3.25h3.5V4.5M5.25 4.5v8.25h5.5V4.5M7 7v4M9 7v4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.4"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+    {% if labeled %}
+      <span>Remove</span>
+    {% else %}
+      <span class="visually-hidden">Delete</span>
+    {% endif %}
+  </button>
+</form>

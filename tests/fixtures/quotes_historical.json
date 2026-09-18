@@ -1,0 +1,14 @@
+{
+  "status": {"error_code": 0, "credit_count": 1},
+  "data": {
+    "BTC": {
+      "id": 1,
+      "name": "Bitcoin",
+      "symbol": "BTC",
+      "quotes": [
+        {"timestamp": "2026-08-18T00:00:00Z", "quote": {"USD": {"price": 60000}}},
+        {"timestamp": "2026-09-17T00:00:00Z", "quote": {"USD": {"price": 64000, "percent_change_24h": 1.4}}}
+      ]
+    }
+  }
+}

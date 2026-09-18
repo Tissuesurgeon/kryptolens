@@ -1,0 +1,12 @@
+{% load humanize %}
+{% if group %}
+<section>
+  <p class="starter-label">{{ heading }}</p>
+  {% for run in group %}
+    <a class="job-line" href="{% url 'job_detail' run.id %}">
+      <strong>{{ run.lens.name }}</strong>
+      <span>{{ run.trigger }} · {{ run.status }} · {{ run.stage }} · {{ run.started_at|naturaltime }}</span>
+    </a>
+  {% endfor %}
+</section>
+{% endif %}

@@ -1,0 +1,47 @@
+{
+  "status": {
+    "timestamp": "2026-09-17T18:00:00.000Z",
+    "error_code": 0,
+    "error_message": "",
+    "elapsed": 10,
+    "credit_count": 0
+  },
+  "data": [
+    {
+      "cover": "https://academy-public.coinmarketcap.com/cover.gif",
+      "assets": [
+        {
+          "id": 1,
+          "name": "Bitcoin",
+          "symbol": "BTC",
+          "slug": "bitcoin"
+        }
+      ],
+      "created_at": "2026-09-17T12:00:00Z",
+      "released_at": "2026-09-17T12:00:00Z",
+      "title": "Bitcoin holds near session highs as ETF inflows continue",
+      "subtitle": "Spot bitcoin products added capital during the latest session.",
+      "type": "news",
+      "source_name": "CoinMarketCap",
+      "source_url": "https://coinmarketcap.com/alexandria/article/bitcoin-etf-inflows"
+    },
+    {
+      "cover": "",
+      "assets": [
+        {
+          "id": 1027,
+          "name": "Ethereum",
+          "symbol": "ETH",
+          "slug": "ethereum"
+        }
+      ],
+      "created_at": "2026-09-17T11:00:00Z",
+      "released_at": "2026-09-17T11:00:00Z",
+      "title": "Ethereum staking queue shortens",
+      "subtitle": "Validators are exiting the wait list.",
+      "type": "news",
+      "source_name": "Connor Sephton",
+      "source_url": "https://coinmarketcap.com/alexandria/article/ethereum-staking-queue"
+    }
+  ]
+}

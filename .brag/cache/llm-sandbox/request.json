@@ -1,0 +1,753 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "Interpret evidence into ProjectBrainUpdate JSON. Every claim needs evidence ids. README-only claims are inferred, never verified. Do not invent features that lack evidence."
+    },
+    {
+      "role": "user",
+      "content": "Evidence pack:\n{\"root\": \"/home/richy/Desktop/kryptolens\", \"files\": {\"config/settings.py\": \"import os\\nimport re\\nimport socket\\nimport sys\\nimport urllib.parse as urlparse\\nfrom pathlib import Path\\n\\nfrom dotenv import load_dotenv\\n\\nload_dotenv()\\n\\nBASE_DIR = Path(__file__).resolve().parent.parent\\n\\nSECRET_KEY=<redacted> \\\"dev-only-kryptolens-secret\\\")\\nDEBUG = os.getenv(\\\"DEBUG\\\", \\\"1\\\") == \\\"1\\\"\\nALLOWED_HOSTS = [item.strip() for item in os.getenv(\\\"ALLOWED_HOSTS\\\", \\\"localhost,127.0.0.1\\\").split(\\\",\\\") if item.strip()]\\nCSRF_TRUSTED_ORIGINS = [\\n    item.strip()\\n    for item in os.getenv(\\n        \\\"CSRF_TRUSTED_ORIGINS\\\",\\n        \\\"http://localhost:8000,http://127.0.0.1:8000,http://localhost:8080,http://127.0.0.1:8080\\\",\\n    ).split(\\\",\\\")\\n    if item.strip()\\n]\\n\\nINSTALLED_APPS = [\\n    \\\"django.contrib.admin\\\",\\n    \\\"django.contrib.auth\\\",\\n    \\\"django.contrib.contenttypes\\\",\\n    \\\"django.contrib.sessions\\\",\\n    \\\"django.contrib.messages\\\",\\n    \\\"django.contrib.staticfiles\\\",\\n    \\\"django.contrib.humanize\\\",\\n    \\\"apps.users.apps.UsersConfig\\\",\\n    \\\"apps.lenses.apps.LensesConfig\\\",\\n    \\\"apps.intelligence.apps.IntelligenceConfig\\\",\\n    \\\"apps.monitoring.apps.MonitoringConfig\\\",\\n    \\\"apps.events.apps.EventsConfig\\\",\\n    \\\"apps.notifications.apps.NotificationsConfig\\\",\\n    \\\"apps.cmc.apps.CmcConfig\\\",\\n]\\n\\nMIDDLEWARE = [\\n    \\\"django.middleware.security.SecurityMiddleware\\\",\\n    \\\"whitenoise.middleware.WhiteNoiseMiddleware\\\",\\n    \\\"django.contrib.sessions.middleware.SessionMiddleware\\\",\\n    \\\"django.middleware.common.CommonMiddleware\\\",\\n    \\\"django.middleware.csrf.CsrfViewMiddleware\\\",\\n    \\\"django.contrib.auth.middleware.AuthenticationMiddleware\\\",\\n    \\\"django.contrib.messages.middleware.MessageMiddleware\\\",\\n    \\\"django.middleware.clickjacking.XFrameOptionsMiddleware\\\",\\n]\\n\\nROOT_URLCONF = \\\"config.urls\\\"\\nWSGI_APPLICATION = \\\"config.wsgi.application\\\"\\nAUTH_USER_MODEL = \\\"users.User\\\"\\n\\nTEMPLATES = [\\n    {\\n        \\\"BACKEND\\\": \\\"django.template.backends.django.DjangoTemplates\\\",\\n        \\\"DIRS\\\": [BASE_DIR / \\\"templates\\\"],\\n        \\\"APP_DIRS\\\": True,\\n        \\\"OPTIONS\\\": {\\n            \\\"context_processors\\\": [\\n                \\\"django.template.context_processors.request\\\",\\n                \\\"django.contrib.auth.context_processors.auth\\\",\\n                \\\"django.contrib.messages.context_processors.messages\\\",\\n                \\\"apps.users.context_processors.agent_status\\\",\\n            ],\\n        },\\n    }\\n]\\n\\ndef _sqlite_default():\\n    return {\\n        \\\"default\\\": {\\n            \\\"ENGINE\\\": \\\"django.db.backends.sqlite3\\\",\\n            \\\"NAME\\\": BASE_DIR / \\\"db.sqlite3\\\",\\n        }\\n    }\\n\\n\\ndef _supabase_ipv4_url(database_url: str) -> str:\\n    \\\"\\\"\\\"Direct db.<ref>.supabase.co hosts are IPv6-only. Use the IPv4 pooler when needed.\\\"\\\"\\\"\\n    parsed = urlparse.urlparse(database_url)\\n    host = parsed.hostname or \\\"\\\"\\n    match = re.fullmatch(r\\\"db\\\\.([a-z0-9]+)\\\\.supabase\\\\.co\\\", host)\\n    if not match:\\n        return database_url\\n    try:\\n        socket.getaddrinfo(host, parsed.port or 5432, socket.AF_INET)\\n        return database_url\\n    except OSError:\\n        pass\\n    ref = match.group(1)\\n    pooler = os.getenv(\\\"SUPABASE_POOLER_HOST\\\", \\\"aws-1-eu-west-1.pooler.supabase.com\\\")\\n    user = f\\\"postgres.{ref}\\\"\\n    password=<redacted> or \\\"\\\"), safe=\\\"\\\")\\n    return (\\n        f\\\"{parsed.scheme}://{user}:{password}@{pooler}:6543/postgres?sslmode=require\\\"\\n    )\\n\\n\\ndef _postgres_from_url(database_url: str):\\n    parsed = urlparse.urlparse(_supabase_ipv4_url(database_url))\\n    query = dict(urlparse.parse_qsl(parsed.query))\\n    name = parsed.path.lstrip(\\\"/\\\").split(\\\"?\\\", 1)[0] or \\\"postgres\\\"\\n    host = parsed.hostname or \\\"\\\"\\n    port = parsed.port or 5432\\n    sslmode = query.get(\\\"sslmode\\\")\\n    if not sslmode and \\\"supabase\\\" in host:\\n        sslmode = \\\"require\\\"\\n    config = {\\n        \\\"ENGINE\\\": \\\"django.db.backends.postgresql\\\",\\n        \\\"NAME\\\": name,\\n        \\\"USER\\\": urlparse.unquote(parsed.username or \\\"\\\"),\\n        \\\"PASSWORD\\\": urlparse.unquote(parsed.password or \\\"\\\"),\\n        \\\"HOST\\\": host,\\n        \\\"PORT\\\": port,\\n        \\\"CONN_MAX_AGE\\\": 0 if port == 6543 else 60,\\n        \\\"CONN_HEALTH_CHECKS\\\": True,\\n        \\\"DISABLE_SERVER_SIDE_CURSORS\\\": port == 6543,\\n    }\\n    if sslmode:\\n     ...\", \"requirements.txt\": \"Django>=5.1,<5.3\\ndjangorestframework>=3.15,<3.17\\npsycopg2-binary>=2.9,<3\\nredis>=5.0,<6\\ncelery>=5.4,<6\\ndjango-celery-beat>=2.7,<3\\nhttpx>=0.27,<0.29\\npydantic>=2.9,<3\\ngunicorn>=23,<24\\nwhitenoise>=6.7,<7\\npython-dotenv>=1.0,<2\\npytest>=8.3,<9\\npytest-django>=4.9,<5\\npytest-cov>=5,<7\\nrespx>=0.21,<0.23\\n# Optional when CURSOR_API_KEY is set: pip install cursor-sdk\\n# cursor-sdk>=0.1.0\\n\", \"apps/lenses/models.py\": \"from django.conf import settings\\nfrom django.db import models\\n\\nfrom apps.intelligence.job import JobDefinition\\nfrom apps.intelligence.policy import IntelligencePolicy\\nfrom apps.intelligence.tools import DEFAULT_TOOL_PERMISSIONS\\nfrom apps.intelligence.workflow import WorkflowDefinition\\n\\n\\nclass Lens(models.Model):\\n    \\\"\\\"\\\"A Lens is a persistent crypto agent with a job, workflow, routines, tools, conversation, and results.\\\"\\\"\\\"\\n\\n    STATUS = ((\\\"draft\\\", \\\"Draft\\\"), (\\\"active\\\", \\\"Active\\\"), (\\\"paused\\\", \\\"Paused\\\"))\\n\\n    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name=\\\"lenses\\\")\\n    name = models.CharField(max_length=160)\\n    purpose = models.TextField(blank=True)\\n    natural_language_request = models.TextField()\\n    status = models.CharField(max_length=16, choices=STATUS, default=\\\"draft\\\")\\n    last_run_at = models.DateTimeField(null=True, blank=True)\\n    last_assets_checked = models.PositiveIntegerField(default=0)\\n    rank_snapshot = models.JSONField(default=dict, blank=True)\\n    context_json = models.JSONField(default=dict, blank=True)\\n    created_at = models.DateTimeField(auto_now_add=True)\\n    updated_at = models.DateTimeField(auto_now=True)\\n\\n    class Meta:\\n        ordering = [\\\"-updated_at\\\"]\\n\\n    def __str__(self) -> str:\\n        return self.name\\n\\n    def current_version(self):\\n        return self.versions.order_by(\\\"-version\\\").first()\\n\\n    def current_policy(self) -> IntelligencePolicy | None:\\n        version = self.current_version()\\n        if not version:\\n            return None\\n        return version.as_policy()\\n\\n    def current_routine(self):\\n        return self.routines.order_by(\\\"-id\\\").first()\\n\\n    def live_job(self):\\n        try:\\n            return self.assignment\\n        except Job.DoesNotExist:\\n            return None\\n\\n\\nclass LensVersion(models.Model):\\n    lens = models.ForeignKey(Lens, on_delete=models.CASCADE, related_name=\\\"versions\\\")\\n    version = models.PositiveIntegerField()\\n    source_intent = models.TextField()\\n    job_definition_json = models.JSONField(default=dict, blank=True)\\n    policy_json = models.JSONField()\\n    workflow_json = models.JSONField(default=dict, blank=True)\\n    tool_permissions_json = models.JSONField(default=dict, blank=True)\\n    compile_report_json = models.JSONField(default=dict, blank=True)\\n    created_at = models.DateTimeField(auto_now_add=True)\\n\\n    class Meta:\\n        unique_together = (\\\"lens\\\", \\\"version\\\")\\n        ordering = [\\\"-version\\\"]\\n\\n    def as_policy(self) -> IntelligencePolicy:\\n        return IntelligencePolicy.model_validate(self.policy_json)\\n\\n    def as_job(self) -> JobDefinition | None:\\n        if not self.job_definition_json:\\n            return None\\n        return JobDefinition.model_validate(self.job_definition_json)\\n\\n    def as_workflow(self) -> WorkflowDefinition:\\n        if not self.workflow_json:\\n            return WorkflowDefinition()\\n        return WorkflowDefinition.model_validate(self.workflow_json)\\n\\n    def tool_permissions(self) -> dict:\\n        return self.tool_permissions_json or dict(DEFAULT_TOOL_PERMISSIONS)\\n\\n    def __str__(self) -> str:\\n        return f\\\"{self.lens.name} v{self.version}\\\"\\n\\n\\nclass LensRun(models.Model):\\n    STATUS = ((\\\"running\\\", \\\"Running\\\"), (\\\"ok\\\", \\\"OK\\\"), (\\\"error\\\", \\\"Error\\\"))\\n    STAGES = (\\n        (\\\"queued\\\", \\\"Queued\\\"),\\n        (\\\"loading_policy\\\", \\\"Loading policy\\\"),\\n        (\\\"planning\\\", \\\"Planning\\\"),\\n        (\\\"trigger_check\\\", \\\"Trigger check\\\"),\\n        (\\\"fetching_cmc\\\", \\\"Fetching CMC\\\"),\\n        (\\\"evaluating\\\", \\\"Evaluating\\\"),\\n        (\\\"analyzing\\\", \\\"Analyzing\\\"),\\n        (\\\"scoring\\\", \\\"Scoring\\\"),\\n        (\\\"investigating\\\", \\\"Investigating\\\"),\\n        (\\\"generating_report\\\", \\\"Generating report\\\"),\\n        (\\\"verifying\\\", \\\"Verifying\\\"),\\n        (\\\"repairing\\\", \\\"Repairing\\\"),\\n        (\\\"notifying\\\", \\\"Notifying\\\"),\\n        (\\\"complete\\\", \\\"Complete\\\"),\\n        (\\\"error\\\", \\\"Error\\\"),\\n    )\\n\\n    lens = models.ForeignKey(Lens, on_delete=models.CASCADE, related_name=\\\"runs\\\")\\n    lens_version = models.ForeignKey(LensVersion, on_delete=models.SET_NULL, null=T...\", \"apps/lenses/runtime.py\": \"from __future__ import annotations\\n\\nimport logging\\n\\nfrom django.conf import settings\\nfrom django.utils import timezone\\n\\nfrom apps.cmc.adapter import CMCAdapter, CMCError\\nfrom apps.events.models import Event\\nfrom apps.intelligence.engine import fallback_explanation\\nfrom apps.intelligence.explain import explain_event\\nfrom apps.intelligence.observations import Candidate\\nfrom apps.intelligence.tools import ToolPermissionError\\nfrom apps.intelligence.workflow_executor import (\\n    WorkflowExecutionError,\\n    execute_steps,\\n    fetch_trigger_asset,\\n    trigger_fired,\\n)\\nfrom apps.lenses.conversation import add_item, record_cmc_activity, record_error, record_result\\nfrom apps.lenses.models import Lens, LensRun, Result\\nfrom apps.monitoring.services import MonitoringService, event_fingerprint\\nfrom apps.notifications.telegram import notify_event, notify_result\\n\\nlogger = logging.getLogger(\\\"kryptolens.runtime\\\")\\n\\n\\nclass LensRuntime:\\n    \\\"\\\"\\\"Single runtime for Check now, Beat, and conversation commands.\\\"\\\"\\\"\\n\\n    def __init__(self, adapter: CMCAdapter | None = None, as_of=None):\\n        if adapter is not None:\\n            self.adapter = adapter\\n        else:\\n            self.adapter = CMCAdapter(api_key=<redacted> as_of=as_of)\\n\\n    def run_now(\\n        self,\\n        lens_id: int,\\n        trigger: str = \\\"manual\\\",\\n        run: LensRun | None = None,\\n        *,\\n        record_conversation: bool = True,\\n    ) -> LensRun:\\n        return self._execute(\\n            lens_id, trigger=trigger, run=run, honor_trigger=False, record_conversation=record_conversation\\n        )\\n\\n    def trigger_routine(\\n        self,\\n        lens_id: int,\\n        trigger: str = \\\"scheduled\\\",\\n        run: LensRun | None = None,\\n        *,\\n        record_conversation: bool = True,\\n    ) -> LensRun:\\n        return self._execute(\\n            lens_id, trigger=trigger, run=run, honor_trigger=True, record_conversation=record_conversation\\n        )\\n\\n    def execute_workflow(\\n        self,\\n        lens_id: int,\\n        trigger: str = \\\"manual\\\",\\n        run: LensRun | None = None,\\n        *,\\n        record_conversation: bool = True,\\n    ) -> LensRun:\\n        return self._execute(\\n            lens_id, trigger=trigger, run=run, honor_trigger=False, record_conversation=record_conversation\\n        )\\n\\n    def handle_instruction(self, lens: Lens, text: str):\\n        from apps.lenses.services import apply_intent_edit\\n\\n        return apply_intent_edit(lens, text)\\n\\n    def _execute(\\n        self,\\n        lens_id: int,\\n        trigger: str,\\n        run: LensRun | None,\\n        honor_trigger: bool,\\n        record_conversation: bool = True,\\n    ) -> LensRun:\\n        lens = Lens.objects.select_related(\\\"user\\\").get(pk=lens_id)\\n        version = lens.current_version()\\n        if run is None:\\n            run = LensRun.objects.create(\\n                lens=lens,\\n                lens_version=version,\\n                trigger=trigger,\\n                status=\\\"running\\\",\\n                stage=\\\"queued\\\",\\n            )\\n        else:\\n            run.trigger = trigger\\n            run.status = \\\"running\\\"\\n            run.lens_version = version\\n            run.save(update_fields=[\\\"trigger\\\", \\\"status\\\", \\\"lens_version\\\"])\\n        if getattr(self.adapter, \\\"as_of\\\", None) and not run.as_of:\\n            run.as_of = self.adapter.as_of\\n            run.trigger = run.trigger or \\\"historical\\\"\\n            run.save(update_fields=[\\\"as_of\\\", \\\"trigger\\\"])\\n\\n        if not version:\\n            return self._fail(lens, run, \\\"Lens has no version\\\")\\n\\n        workflow = version.as_workflow()\\n        run.workflow_json = workflow.model_dump(mode=\\\"json\\\")\\n        run.save(update_fields=[\\\"workflow_json\\\"])\\n\\n        if not workflow.steps:\\n            monitor = MonitoringService(adapter=self.adapter).run_lens(lens.id, trigger=trigger, run=run)\\n            self._wrap_monitor_result(lens, version, monitor, record_conversation=record_conversation)\\n            return monitor\\n\\n        try:\\n            run.set_stage(\\\"loading_policy\\\")\\n            permissions = vers...\", \"apps/lenses/views.py\": \"from django.contrib import messages\\nfrom django.contrib.auth.decorators import login_required\\nfrom django.http import Http404, JsonResponse\\nfrom django.shortcuts import redirect, render\\nfrom django.urls import reverse\\nfrom django.views.decorators.http import require_POST\\n\\nfrom apps.lenses.agent_service import AgentService\\nfrom apps.lenses.conversation_service import ConversationService\\nfrom apps.lenses.models import Lens, Routine\\nfrom apps.lenses.routine_service import RoutineService\\nfrom apps.lenses.run_service import RunService\\nfrom apps.lenses.templates_catalog import LENS_TEMPLATES\\nfrom apps.monitoring.tasks import run_lens as run_lens_task  # tests patch .delay\\n\\n\\ndef _owned(request, lens_id: int) -> Lens:\\n    lens = Lens.objects.filter(pk=lens_id, user=request.user).first()\\n    if not lens:\\n        raise Http404()\\n    return lens\\n\\n\\ndef _owned_routine(request, lens: Lens, routine_id: int) -> Routine:\\n    routine = lens.routines.filter(pk=routine_id).first()\\n    if not routine:\\n        raise Http404()\\n    return routine\\n\\n\\ndef _flash(request, result) -> None:\\n    if not result.flash:\\n        return\\n    getattr(messages, result.flash_level, messages.info)(request, result.flash)\\n\\n\\ndef _run_response(request, lens, run):\\n    if request.headers.get(\\\"HX-Request\\\"):\\n        return render(\\n            request,\\n            \\\"workspace/partials/run_status.html\\\",\\n            {\\\"lens\\\": lens, \\\"run\\\": run, \\\"working_cards\\\": RunService.working_cards(run)},\\n        )\\n    if request.accepts(\\\"application/json\\\") and not request.accepts(\\\"text/html\\\"):\\n        return JsonResponse({\\\"run_id\\\": run.id, \\\"stage\\\": run.stage})\\n    return redirect(f\\\"{reverse('lens_detail', args=[lens.id])}?run={run.id}\\\")\\n\\n\\n@login_required\\ndef lens_list(request):\\n    return redirect(\\\"agent_home\\\")\\n\\n\\n@login_required\\ndef lens_create(request):\\n    if request.method == \\\"POST\\\":\\n        text = (request.POST.get(\\\"intent\\\") or \\\"\\\").strip()\\n        if not text:\\n            messages.error(request, \\\"Describe the job you want this agent to handle.\\\")\\n            return redirect(\\\"lens_create\\\")\\n        lens, version, policy = AgentService.create_from_intent(request.user, text)\\n        messages.success(request, f\\\"Created {policy.name} as Lens v{version.version}.\\\")\\n        return redirect(\\\"lens_detail\\\", lens_id=lens.id)\\n    preset = request.GET.get(\\\"template\\\", \\\"\\\")\\n    intent = next((item[\\\"intent\\\"] for item in LENS_TEMPLATES if item[\\\"slug\\\"] == preset), \\\"\\\")\\n    if intent:\\n        lens, version, policy = AgentService.create_from_intent(request.user, intent)\\n        messages.success(request, f\\\"Created {policy.name} as Lens v{version.version}.\\\")\\n        return redirect(\\\"lens_detail\\\", lens_id=lens.id)\\n    lens = AgentService.create_draft(request.user)\\n    return redirect(\\\"lens_detail\\\", lens_id=lens.id)\\n\\n\\n@login_required\\ndef lens_detail(request, lens_id: int):\\n    lens = _owned(request, lens_id)\\n    AgentService.select(request.user, lens)\\n    preview = None\\n    diffs = []\\n    draft = \\\"\\\"\\n    if request.method == \\\"POST\\\":\\n        result = ConversationService.handle(\\n            lens,\\n            request.POST.get(\\\"intent\\\") or \\\"\\\",\\n            action=request.POST.get(\\\"action\\\") or \\\"\\\",\\n        )\\n        _flash(request, result)\\n        if result.kind == \\\"run\\\":\\n            return _run_response(request, lens, result.run)\\n        if result.kind == \\\"preview\\\":\\n            preview, diffs, draft = result.preview, result.diffs, result.draft\\n        else:\\n            return redirect(\\\"lens_detail\\\", lens_id=lens.id)\\n    context = ConversationService.context(lens, request)\\n    context.update({\\\"preview\\\": preview, \\\"diffs\\\": diffs, \\\"draft\\\": draft})\\n    return render(request, \\\"workspace/lens.html\\\", context)\\n\\n\\n@login_required\\n@require_POST\\ndef lens_activate(request, lens_id: int):\\n    lens = _owned(request, lens_id)\\n    status = AgentService.activate(lens)\\n    if status == \\\"no_job\\\":\\n        messages.error(request, \\\"Give this agent a job before activating.\\\")\\n    elif status == \\\"news\\\":\\n        messages.info(request, \\\"News monitor...\", \"apps/intelligence/agent.py\": \"from __future__ import annotations\\n\\nimport uuid\\nfrom typing import Literal\\n\\nfrom pydantic import BaseModel, Field, field_validator\\n\\nfrom apps.intelligence.job import JobDefinition\\nfrom apps.intelligence.job_compiler import compile_job_report\\nfrom apps.intelligence.permissions import require_sensitivity\\nfrom apps.intelligence.tool_registry import tool_in_registry\\nfrom apps.intelligence.tools import DEFAULT_TOOL_PERMISSIONS, tool_allowed\\nfrom apps.intelligence.workflow import WorkflowDefinition\\n\\nJobType = Literal[\\\"monitor\\\", \\\"investigate\\\", \\\"research\\\"]\\nSpecialist = Literal[\\\"market\\\", \\\"research\\\", \\\"unavailable\\\"]\\nApprovalRequirement = Literal[\\\"not_required\\\", \\\"pending\\\", \\\"denied\\\"]\\n\\nALLOWED_PLAN_STEPS = frozenset(\\n    {\\n        \\\"check_btc\\\",\\n        \\\"load_top_100\\\",\\n        \\\"load_top_50\\\",\\n        \\\"calculate_declines\\\",\\n        \\\"rank_results\\\",\\n        \\\"compare_quotes\\\",\\n        \\\"summarize_market\\\",\\n        \\\"evaluate_policy\\\",\\n        \\\"watch_trigger\\\",\\n        \\\"load_listings\\\",\\n        \\\"get_global_metrics\\\",\\n    }\\n)\\n\\n\\nclass RepairPolicy(BaseModel):\\n    max_retries: int = 1\\n\\n\\nclass AgentPlan(BaseModel):\\n    plan_id: str\\n    objective: str\\n    job_type: JobType\\n    specialist: Specialist\\n    steps: list[str] = Field(default_factory=list)\\n    required_inputs: list[str] = Field(default_factory=list)\\n    tools: list[str] = Field(default_factory=list)\\n    verification_requirements: list[str] = Field(default_factory=list)\\n    completion_criteria: list[str] = Field(default_factory=list)\\n    repair_policy: RepairPolicy = Field(default_factory=RepairPolicy)\\n    approval_requirement: ApprovalRequirement = \\\"not_required\\\"\\n\\n    @field_validator(\\\"steps\\\")\\n    @classmethod\\n    def known_steps(cls, value: list[str]) -> list[str]:\\n        unknown = [step for step in value if step not in ALLOWED_PLAN_STEPS]\\n        if unknown:\\n            raise ValueError(f\\\"unknown plan step: {unknown[0]}\\\")\\n        return value\\n\\n\\nclass PlanValidationError(ValueError):\\n    pass\\n\\n\\ndef job_category(definition: JobDefinition | None) -> str:\\n    if not definition:\\n        return \\\"monitor\\\"\\n    if definition.execution_model == \\\"watch_plus_workflow\\\":\\n        return \\\"investigate\\\"\\n    if definition.execution_model == \\\"scheduled\\\":\\n        return \\\"research\\\"\\n    if definition.execution_model == \\\"task\\\":\\n        if \\\"summar\\\" in (definition.purpose or \\\"\\\").lower() or \\\"brief\\\" in (definition.summary or \\\"\\\").lower():\\n            return \\\"research\\\"\\n        return \\\"investigate\\\"\\n    return \\\"monitor\\\"\\n\\n\\ndef validate_agent_plan(plan: AgentPlan, permissions: dict | None = None) -> AgentPlan:\\n    perms = permissions or dict(DEFAULT_TOOL_PERMISSIONS)\\n    if plan.specialist == \\\"unavailable\\\":\\n        if plan.steps or plan.tools:\\n            raise PlanValidationError(\\\"unavailable specialists cannot emit an executable plan\\\")\\n        return plan\\n    for tool in plan.tools:\\n        if not tool_in_registry(tool):\\n            raise PlanValidationError(f\\\"unknown tool: {tool}\\\")\\n        if not tool_allowed(perms, tool):\\n            raise PlanValidationError(f\\\"Lens is not permitted to use {tool}\\\")\\n        require_sensitivity(tool)\\n    for step in plan.steps:\\n        if step not in ALLOWED_PLAN_STEPS:\\n            raise PlanValidationError(f\\\"unknown plan step: {step}\\\")\\n    return plan\\n\\n\\ndef plan_to_workflow(plan: AgentPlan, existing: WorkflowDefinition | None = None) -> WorkflowDefinition:\\n    validate_agent_plan(plan)\\n    if existing is not None:\\n        return existing\\n    if plan.specialist == \\\"unavailable\\\" or \\\"evaluate_policy\\\" in plan.steps:\\n        return WorkflowDefinition()\\n    raise PlanValidationError(\\\"no validated workflow is available for this plan\\\")\\n\\n\\ndef build_agent_plan(job: JobDefinition | None, workflow: WorkflowDefinition | None, objective: str = \\\"\\\") -> AgentPlan:\\n    if job and job.news_unavailable:\\n        return AgentPlan(\\n            plan_id=uuid.uuid4().hex,\\n            objective=job.purpose or \\\"News monitoring isn't available yet.\\\",\\n            job_type=\\\"investigate\\\",\\n            specialist=\\\"unavailable\\\"...\", \"apps/intelligence/agent_runtime.py\": \"from __future__ import annotations\\n\\nimport logging\\n\\nfrom django.conf import settings\\n\\nfrom apps.cmc.adapter import CMCAdapter\\nfrom apps.intelligence.agent import AgentPlan, ChiefAgent, job_category\\nfrom apps.intelligence.verification import claim_supported, verify_result\\nfrom apps.lenses.conversation import add_item, record_cmc_activity, record_result\\nfrom apps.lenses.models import (\\n    AgentTask,\\n    ApprovalRequest,\\n    Artifact,\\n    Evidence,\\n    Job,\\n    Lens,\\n    LensRun,\\n    Result,\\n    VerificationRecord,\\n)\\nfrom apps.lenses.runtime import LensRuntime\\nfrom apps.notifications.telegram import notify_artifact\\n\\nlogger = logging.getLogger(\\\"kryptolens.agent_runtime\\\")\\n\\nENDPOINT_TOOLS = (\\n    (\\\"listings/latest\\\", \\\"get_market_listings\\\"),\\n    (\\\"quotes/latest\\\", \\\"get_quotes\\\"),\\n    (\\\"global-metrics\\\", \\\"get_global_metrics\\\"),\\n    (\\\"fear-and-greed\\\", \\\"get_fear_and_greed\\\"),\\n)\\n\\n\\nclass AgentRuntime:\\n    \\\"\\\"\\\"PLAN \\u2192 ACT \\u2192 OBSERVE \\u2192 VERIFY \\u2192 REPAIR? \\u2192 COMPLETE. Wraps LensRuntime.\\\"\\\"\\\"\\n\\n    def __init__(self, adapter: CMCAdapter | None = None, as_of=None):\\n        if adapter is not None:\\n            self.adapter = adapter\\n        else:\\n            self.adapter = CMCAdapter(api_key=<redacted> as_of=as_of)\\n        self.lens_runtime = LensRuntime(adapter=self.adapter)\\n        self.chief = ChiefAgent()\\n\\n    def run_now(self, lens_id: int, trigger: str = \\\"manual\\\", run: LensRun | None = None) -> LensRun:\\n        return self._loop(lens_id, trigger=trigger, run=run, honor_trigger=False)\\n\\n    def trigger_routine(self, lens_id: int, trigger: str = \\\"scheduled\\\", run: LensRun | None = None) -> LensRun:\\n        return self._loop(lens_id, trigger=trigger, run=run, honor_trigger=True)\\n\\n    def _loop(self, lens_id: int, trigger: str, run: LensRun | None, honor_trigger: bool) -> LensRun:\\n        lens = Lens.objects.select_related(\\\"user\\\").get(pk=lens_id)\\n        version = lens.current_version()\\n        if run is None:\\n            run = LensRun.objects.create(\\n                lens=lens,\\n                lens_version=version,\\n                trigger=trigger,\\n                status=\\\"running\\\",\\n                stage=\\\"queued\\\",\\n            )\\n        if getattr(self.adapter, \\\"as_of\\\", None) and not run.as_of:\\n            run.as_of = self.adapter.as_of\\n            run.trigger = run.trigger or \\\"historical\\\"\\n            run.save(update_fields=[\\\"as_of\\\", \\\"trigger\\\"])\\n        if not version:\\n            return self.lens_runtime._fail(lens, run, \\\"Lens has no version\\\")\\n\\n        job = _ensure_job(lens, version)\\n        plan = self.chief.plan_from_version(version)\\n        job.current_run = run\\n        job.status = \\\"active\\\" if lens.status == \\\"active\\\" else job.status\\n        job.save(update_fields=[\\\"current_run\\\", \\\"status\\\", \\\"updated_at\\\"])\\n\\n        run.set_stage(\\\"investigating\\\")\\n        plan_artifact = _persist_plan(lens, version, run, plan)\\n        chief_task, market_task = _seed_tasks(lens, run, plan, plan_artifact)\\n        add_item(\\n            lens,\\n            \\\"plan\\\",\\n            {\\n                \\\"objective\\\": plan.objective,\\n                \\\"job_type\\\": plan.job_type,\\n                \\\"steps\\\": plan.steps,\\n                \\\"tools\\\": plan.tools,\\n                \\\"specialist\\\": plan.specialist,\\n            },\\n            version=version,\\n            run=run,\\n            artifact=plan_artifact,\\n        )\\n        add_item(lens, \\\"status_update\\\", {\\\"text\\\": \\\"Working\\\", \\\"status\\\": \\\"working\\\"}, run=run, version=version)\\n\\n        retries = plan.repair_policy.max_retries\\n        attempt = 0\\n        result = None\\n        verification = {\\\"status\\\": \\\"unsupported\\\", \\\"checks\\\": [], \\\"passed\\\": False}\\n\\n        while True:\\n            if attempt:\\n                run.set_stage(\\\"repairing\\\")\\n                market_task.status = \\\"acting\\\"\\n                market_task.next_gate = \\\"observe\\\"\\n                market_task.save(update_fields=[\\\"status\\\", \\\"next_gate\\\", \\\"updated_at\\\"])\\n            else:\\n                market_task.status = \\\"acting\\\"\\n                market_task.save(update_fields=[\\\"status\\\", \\\"updated_at\\\"])\\n\\n            if...\", \"apps/intelligence/workflow.py\": \"from __future__ import annotations\\n\\nfrom typing import Any, Literal\\n\\nfrom pydantic import BaseModel, Field, field_validator, model_validator\\n\\nfrom apps.intelligence.policy import Operator\\n\\nTriggerType = Literal[\\\"asset_condition\\\", \\\"manual\\\", \\\"scheduled\\\"]\\nStepType = Literal[\\n    \\\"get_universe\\\",\\n    \\\"get_market_data\\\",\\n    \\\"get_quotes\\\",\\n    \\\"get_global_metrics\\\",\\n    \\\"get_fear_and_greed\\\",\\n    \\\"calculate\\\",\\n    \\\"sort\\\",\\n    \\\"filter\\\",\\n    \\\"aggregate\\\",\\n    \\\"present\\\",\\n]\\nALLOWED_STEP_TYPES = set(StepType.__args__)\\nPresentFormat = Literal[\\\"ranked_table\\\", \\\"market_summary\\\", \\\"comparison\\\"]\\n\\n\\nclass WorkflowTrigger(BaseModel):\\n    type: TriggerType\\n    asset: str | None = None\\n    metric: str = \\\"price_change_24h\\\"\\n    operator: Operator = \\\"<=\\\"\\n    value: float | None = None\\n\\n\\nclass WorkflowStep(BaseModel):\\n    type: StepType\\n    source: str | None = None\\n    universe: str | None = None\\n    limit: int | None = Field(default=None, ge=1, le=500)\\n    symbols: list[str] = Field(default_factory=list)\\n    fields: list[str] = Field(default_factory=list)\\n    operation: str | None = None\\n    field: str | None = None\\n    order: Literal[\\\"ascending\\\", \\\"descending\\\"] | None = None\\n    operator: Operator | None = None\\n    value: float | bool | int | None = None\\n    relative_to: str | None = None\\n    format: PresentFormat | None = None\\n\\n    @field_validator(\\\"type\\\")\\n    @classmethod\\n    def known_type(cls, value: str) -> str:\\n        if value not in ALLOWED_STEP_TYPES:\\n            raise ValueError(f\\\"unknown workflow step: {value}\\\")\\n        return value\\n\\n\\nclass WorkflowDefinition(BaseModel):\\n    trigger: WorkflowTrigger | None = None\\n    steps: list[WorkflowStep] = Field(default_factory=list)\\n\\n    @model_validator(mode=\\\"after\\\")\\n    def reject_empty_unknown(self):\\n        for step in self.steps:\\n            if step.type not in ALLOWED_STEP_TYPES:\\n                raise ValueError(f\\\"unknown workflow step: {step.type}\\\")\\n        return self\\n\\n    def explained_steps(self) -> list[str]:\\n        labels = []\\n        if self.trigger and self.trigger.type == \\\"asset_condition\\\":\\n            labels.append(\\n                f\\\"Watch {self.trigger.asset or 'asset'} until \\\"\\n                f\\\"{self.trigger.metric} {self.trigger.operator} {self.trigger.value}\\\"\\n            )\\n        for step in self.steps:\\n            labels.append(_step_label(step))\\n        return labels\\n\\n\\ndef _step_label(step: WorkflowStep) -> str:\\n    if step.type == \\\"get_universe\\\":\\n        return f\\\"Retrieve {step.universe or ('top_' + str(step.limit or 100))}\\\"\\n    if step.type == \\\"get_market_data\\\":\\n        return \\\"Retrieve market observations\\\"\\n    if step.type == \\\"get_quotes\\\":\\n        return \\\"Retrieve quotes for \\\" + \\\", \\\".join(step.symbols or [])\\n    if step.type == \\\"calculate\\\":\\n        return f\\\"Calculate {step.operation or 'values'}\\\"\\n    if step.type == \\\"sort\\\":\\n        direction = \\\"largest decline first\\\" if step.order == \\\"ascending\\\" else \\\"sort\\\"\\n        return f\\\"Sort by {step.field or 'price_change_24h'} ({direction})\\\"\\n    if step.type == \\\"filter\\\":\\n        if step.relative_to:\\n            return f\\\"Keep assets that moved more than {step.relative_to}\\\"\\n        return f\\\"Filter {step.field} {step.operator} {step.value}\\\"\\n    if step.type == \\\"present\\\":\\n        return f\\\"Return {step.format or 'ranked_table'}\\\"\\n    if step.type == \\\"get_global_metrics\\\":\\n        return \\\"Retrieve global market metrics\\\"\\n    if step.type == \\\"get_fear_and_greed\\\":\\n        return \\\"Retrieve Fear & Greed\\\"\\n    if step.type == \\\"aggregate\\\":\\n        return f\\\"Aggregate {step.operation or 'summary'}\\\"\\n    return step.type\\n\\n\\ndef validate_workflow_dict(data: dict[str, Any]) -> WorkflowDefinition:\\n    steps = data.get(\\\"steps\\\") or []\\n    for step in steps:\\n        step_type = (step or {}).get(\\\"type\\\")\\n        if step_type not in ALLOWED_STEP_TYPES:\\n            raise ValueError(f\\\"unknown workflow step: {step_type}\\\")\\n        if step_type in {\\\"eval\\\", \\\"exec\\\", \\\"code\\\", \\\"http\\\"}:\\n            raise ValueError(\\\"arbitrary code is not allowed\\\")\\n    return WorkflowDefinition.m...\", \"apps/intelligence/workflow_executor.py\": \"from __future__ import annotations\\n\\nfrom apps.cmc.adapter import CMCAdapter, CMCError\\nfrom apps.cmc.logging import persist_call\\nfrom apps.cmc.normalize import is_stablecoin, normalize_fear_greed, normalize_global_metrics, normalize_listings\\nfrom apps.intelligence.calculations import aggregate_mean, filter_threshold, rank_assets, sort_assets\\nfrom apps.intelligence.engine import compare\\nfrom apps.intelligence.observations import MarketObservation\\nfrom apps.intelligence.tools import ToolPermissionError, dispatch_cmc\\nfrom apps.intelligence.workflow import WorkflowDefinition, WorkflowTrigger\\n\\n\\nclass WorkflowExecutionError(Exception):\\n    pass\\n\\n\\ndef trigger_fired(trigger: WorkflowTrigger | None, observations: list[MarketObservation]) -> tuple[bool, MarketObservation | None]:\\n    if not trigger or trigger.type != \\\"asset_condition\\\":\\n        return True, None\\n    asset = (trigger.asset or \\\"\\\").upper()\\n    match = next((item for item in observations if item.symbol.upper() == asset), None)\\n    if match is None:\\n        return False, None\\n    actual = match.metric_value(trigger.metric)\\n    if actual is None or trigger.value is None:\\n        return False, match\\n    return compare(actual, trigger.operator, trigger.value), match\\n\\n\\ndef execute_steps(\\n    adapter: CMCAdapter,\\n    workflow: WorkflowDefinition,\\n    permissions: dict,\\n    run,\\n    *,\\n    exclude_stablecoins: bool = True,\\n    previous_ranks: dict | None = None,\\n) -> dict:\\n    observations: list[MarketObservation] = []\\n    tools_used: list[str] = []\\n    context = None\\n    btc_observation = None\\n    present_format = \\\"ranked_table\\\"\\n    limit = 100\\n    listings_fetched = False\\n\\n    for step in workflow.steps:\\n        if step.type in {\\\"get_universe\\\", \\\"get_market_data\\\"}:\\n            limit = step.limit or limit\\n            if listings_fetched:\\n                continue\\n            run.set_stage(\\\"fetching_cmc\\\")\\n            call = dispatch_cmc(adapter, \\\"get_market_listings\\\", permissions, limit=limit)\\n            persist_call(call, run)\\n            tools_used.append(\\\"get_market_listings\\\")\\n            observations = normalize_listings(call.payload, previous_ranks)\\n            if exclude_stablecoins:\\n                observations = [item for item in observations if not is_stablecoin(item)]\\n            listings_fetched = True\\n        elif step.type == \\\"get_quotes\\\":\\n            run.set_stage(\\\"fetching_cmc\\\")\\n            symbols = step.symbols or []\\n            call = dispatch_cmc(adapter, \\\"get_quotes\\\", permissions, symbols=symbols)\\n            persist_call(call, run)\\n            tools_used.append(\\\"get_quotes\\\")\\n            observations = normalize_listings(call.payload, previous_ranks)\\n        elif step.type == \\\"get_global_metrics\\\":\\n            call = dispatch_cmc(adapter, \\\"get_global_metrics\\\", permissions)\\n            persist_call(call, run)\\n            tools_used.append(\\\"get_global_metrics\\\")\\n            context = normalize_global_metrics(call.payload, context)\\n        elif step.type == \\\"get_fear_and_greed\\\":\\n            call = dispatch_cmc(adapter, \\\"get_fear_and_greed\\\", permissions)\\n            persist_call(call, run)\\n            tools_used.append(\\\"get_fear_and_greed\\\")\\n            context = normalize_fear_greed(call.payload, context)\\n        elif step.type == \\\"calculate\\\":\\n            run.set_stage(\\\"analyzing\\\")\\n            # percent_change_24h is already on each observation from CMC\\n            if step.operation and step.operation not in {\\n                \\\"percentage_change\\\",\\n                \\\"difference\\\",\\n                \\\"ratio\\\",\\n                \\\"ranking\\\",\\n                \\\"sorting\\\",\\n                \\\"threshold\\\",\\n                \\\"aggregation\\\",\\n            }:\\n                raise WorkflowExecutionError(f\\\"unknown calculation: {step.operation}\\\")\\n        elif step.type == \\\"sort\\\":\\n            run.set_stage(\\\"analyzing\\\")\\n            observations = sort_assets(observations, field=step.field or \\\"price_change_24h\\\", order=step.order or \\\"ascending\\\")\\n        elif step.type == \\\"filter\\\":\\n            run.set_stag...\", \"apps/intelligence/tools.py\": \"from __future__ import annotations\\n\\nfrom typing import Callable\\n\\nfrom apps.cmc.adapter import CMCAdapter, CMCCall\\n\\nDEFAULT_TOOL_PERMISSIONS = {\\n    \\\"get_market_listings\\\": True,\\n    \\\"get_quotes\\\": True,\\n    \\\"get_global_metrics\\\": True,\\n    \\\"get_fear_and_greed\\\": True,\\n    \\\"news\\\": False,\\n    \\\"on_chain\\\": False,\\n}\\n\\nCMC_TOOL_NAMES = (\\n    \\\"get_market_listings\\\",\\n    \\\"get_quotes\\\",\\n    \\\"get_global_metrics\\\",\\n    \\\"get_fear_and_greed\\\",\\n)\\n\\n\\nclass ToolPermissionError(PermissionError):\\n    pass\\n\\n\\ndef tool_allowed(permissions: dict | None, name: str) -> bool:\\n    perms = permissions or DEFAULT_TOOL_PERMISSIONS\\n    return bool(perms.get(name))\\n\\n\\ndef require_tool(permissions: dict | None, name: str) -> None:\\n    if name in {\\\"news\\\", \\\"on_chain\\\"} or not tool_allowed(permissions, name):\\n        raise ToolPermissionError(f\\\"Lens is not permitted to use {name}\\\")\\n\\n\\ndef dispatch_cmc(adapter: CMCAdapter, name: str, permissions: dict | None, **kwargs) -> CMCCall:\\n    require_tool(permissions, name)\\n    handlers: dict[str, Callable[..., CMCCall]] = {\\n        \\\"get_market_listings\\\": lambda: adapter.get_listings(\\n            start=int(kwargs.get(\\\"start\\\", 1)),\\n            limit=int(kwargs.get(\\\"limit\\\", 100)),\\n        ),\\n        \\\"get_quotes\\\": lambda: adapter.get_quotes(list(kwargs.get(\\\"symbols\\\") or [])),\\n        \\\"get_global_metrics\\\": lambda: adapter.get_global_metrics(),\\n        \\\"get_fear_and_greed\\\": lambda: adapter.get_fear_greed(),\\n    }\\n    handler = handlers.get(name)\\n    if handler is None:\\n        raise ToolPermissionError(f\\\"Unknown CMC tool: {name}\\\")\\n    return handler()\\n\", \"apps/cmc/adapter.py\": \"from __future__ import annotations\\n\\nimport logging\\nimport os\\nimport time\\nfrom dataclasses import dataclass, field\\nfrom datetime import date, datetime, timedelta, timezone\\n\\nimport httpx\\n\\nlogger = logging.getLogger(\\\"kryptolens.cmc\\\")\\n\\nBASE_URL = \\\"https://pro-api.coinmarketcap.com\\\"\\n\\n\\nclass CMCError(Exception):\\n    def __init__(self, message: str, status_code: int | None = None, payload: dict | None = None):\\n        super().__init__(message)\\n        self.status_code = status_code\\n        self.payload = payload or {}\\n\\n\\n@dataclass\\nclass CMCCall:\\n    endpoint: str\\n    params: dict\\n    status_code: int\\n    credit_count: int | None\\n    payload: dict\\n    elapsed_ms: int\\n    error: str = \\\"\\\"\\n    fields_used: list[str] = field(default_factory=list)\\n\\n\\ndef parse_as_of(value) -> datetime | None:\\n    if value in (None, \\\"\\\"):\\n        return None\\n    if isinstance(value, datetime):\\n        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)\\n    if isinstance(value, date):\\n        return datetime(value.year, value.month, value.day, tzinfo=timezone.utc)\\n    text = str(value).strip()\\n    if not text:\\n        return None\\n    if text.endswith(\\\"Z\\\"):\\n        text = text[:-1] + \\\"+00:00\\\"\\n    try:\\n        parsed = datetime.fromisoformat(text)\\n    except ValueError:\\n        parsed = datetime.strptime(text[:10], \\\"%Y-%m-%d\\\")\\n    if parsed.tzinfo is None:\\n        parsed = parsed.replace(tzinfo=timezone.utc)\\n    return parsed\\n\\n\\nclass CMCAdapter:\\n    def __init__(\\n        self,\\n        api_key=<redacted> | None = None,\\n        client: httpx.Client | None = None,\\n        as_of=None,\\n    ):\\n        self.api_key=<redacted> if api_key is not None else os.getenv(\\\"CMC_API_KEY\\\", \\\"\\\")\\n        self.client = client or httpx.Client(timeout=20.0)\\n        self.as_of = parse_as_of(as_of)\\n        self._cache: dict[str, tuple[float, CMCCall]] = {}\\n\\n    def close(self) -> None:\\n        self.client.close()\\n\\n    def get_listings(self, start: int = 1, limit: int = 100, convert: str = \\\"USD\\\") -> CMCCall:\\n        if self.as_of:\\n            return self.get_listings_historical(self.as_of.date(), limit=limit, convert=convert)\\n        return self._get(\\n            \\\"/v3/cryptocurrency/listings/latest\\\",\\n            {\\\"start\\\": start, \\\"limit\\\": limit, \\\"convert\\\": convert},\\n            fields=[\\\"price\\\", \\\"percent_change_24h\\\", \\\"volume_24h\\\", \\\"volume_change_24h\\\", \\\"market_cap\\\", \\\"cmc_rank\\\"],\\n        )\\n\\n    def get_quotes(self, symbols: list[str], convert: str = \\\"USD\\\") -> CMCCall:\\n        if self.as_of:\\n            return self.get_quotes_historical(symbols, self.as_of, convert=convert)\\n        return self._get(\\n            \\\"/v3/cryptocurrency/quotes/latest\\\",\\n            {\\\"symbol\\\": \\\",\\\".join(symbols), \\\"convert\\\": convert},\\n            fields=[\\\"price\\\", \\\"percent_change_24h\\\", \\\"volume_24h\\\", \\\"volume_change_24h\\\", \\\"market_cap\\\", \\\"cmc_rank\\\"],\\n        )\\n\\n    def get_quotes_historical(self, symbols: list[str], as_of, convert: str = \\\"USD\\\") -> CMCCall:\\n        moment = parse_as_of(as_of)\\n        if moment is None:\\n            raise CMCError(\\\"Historical quotes require an as_of date\\\")\\n        start = moment.replace(hour=0, minute=0, second=0, microsecond=0)\\n        end = start + timedelta(days=1)\\n        call = self._get(\\n            \\\"/v2/cryptocurrency/quotes/historical\\\",\\n            {\\n                \\\"symbol\\\": \\\",\\\".join(symbols),\\n                \\\"time_start\\\": start.strftime(\\\"%Y-%m-%dT%H:%M:%SZ\\\"),\\n                \\\"time_end\\\": end.strftime(\\\"%Y-%m-%dT%H:%M:%SZ\\\"),\\n                \\\"interval\\\": \\\"hourly\\\",\\n                \\\"convert\\\": convert,\\n            },\\n            fields=[\\\"price\\\", \\\"percent_change_24h\\\", \\\"volume_24h\\\", \\\"volume_change_24h\\\", \\\"market_cap\\\", \\\"cmc_rank\\\"],\\n        )\\n        from apps.cmc.normalize import flatten_historical_quotes\\n\\n        call.payload = flatten_historical_quotes(call.payload)\\n        return call\\n\\n    def get_listings_historical(self, as_of, limit: int = 100, convert: str = \\\"USD\\\") -> CMCCall:\\n        moment = parse_as_of(as_of)\\n        if moment is None:\\n            raise CMCError(\\\"Hist...\", \"apps/monitoring/tasks.py\": \"from celery import shared_task\\nfrom django.utils import timezone\\n\\nfrom apps.lenses.models import Lens\\n\\n\\ndef _due_for_schedule(routine) -> bool:\\n    from apps.lenses.routine_service import RoutineService\\n\\n    return RoutineService.due_for_schedule(routine)\\n\\n\\ndef _should_run(lens: Lens) -> bool:\\n    from apps.lenses.routine_service import RoutineService\\n\\n    return RoutineService.should_run(lens)\\n\\n\\n@shared_task\\ndef run_active_lenses():\\n    from apps.lenses.routine_service import RoutineService\\n\\n    for routine in RoutineService.due_routines():\\n        run_lens.delay(routine.lens_id, \\\"scheduled\\\")\\n    return \\\"LensRuntime\\\"\\n\\n\\n@shared_task\\ndef run_lens(lens_id: int, trigger: str = \\\"scheduled\\\", run_id: int | None = None, as_of: str | None = None):\\n    from apps.intelligence.agent_runtime import AgentRuntime\\n    from apps.lenses.models import LensRun\\n\\n    existing = LensRun.objects.filter(pk=run_id).first() if run_id else None\\n    runtime = AgentRuntime(as_of=as_of)\\n    if as_of or trigger in {\\\"manual\\\", \\\"historical\\\", \\\"chat\\\"}:\\n        return runtime.run_now(lens_id, trigger=trigger, run=existing).id\\n    return runtime.trigger_routine(lens_id, trigger=trigger, run=existing).id\\n\", \"README.md\": \"# KryptoLens\\n\\nTell KryptoLens what matters. Give it a job. It keeps watch for you.\\n\\nKryptoLens is a persistent crypto intelligence workspace where users create **Agents** (the UI name for a Lens), talk to them in natural language, give them crypto-market jobs, and leave those jobs running against live market data. A **Routine** starts work without another prompt. Celery Beat runs unattended through **AgentRuntime** \\u2192 LensRuntime \\u2192 CMC. The conversation is a structured work log: Plan \\u2192 Evidence \\u2192 Verification \\u2192 Result.\\n\\nIt is not a chatbot, not a market dashboard, not a demo, and not a trading bot. Cadence is **15 minutes**. Quiet markets are a valid result.\\n\\nBuilt for the [Build with CMC](https://coinmarketcap.com/api/resources/api-hackathon/) hackathon \\u00b7 **AI Agents and Automation** \\u00b7 `#BuildwithCMC`\\n\\n## How it works\\n\\n```\\nHuman intent\\n  \\u2192 Chief Agent (understand \\u2192 AgentPlan)\\n  \\u2192 Validator \\u2192 Workflow\\n  \\u2192 AgentRuntime \\u2192 LensRuntime\\n  \\u2192 CMC adapter (live listings / quotes / Fear & Greed / optional global metrics)\\n  \\u2192 Observations \\u2192 Evidence \\u2192 Verification \\u2192 Result\\n  \\u2192 Execution receipt (web + optional Telegram)\\n```\\n\\nChief Agent does not call CMC. Only Workflow hits the market. News, on-chain, DeFi, risk, security, and wallet execution are architectural boundaries \\u2014 they refuse honestly.\\n\\n| Piece | Status | Role |\\n| --- | --- | --- |\\n| Chief Agent | Implemented | Understands the job and emits a validated AgentPlan |\\n| Market capability | Implemented | Closed CMC workflow |\\n| Research | Implemented, CMC-only | Morning brief and scheduled summaries |\\n| Evidence / Verification | Implemented | Observation ids, claims, deterministic checks |\\n| Approvals | Foundation only | READ/ANALYZE not required; EXECUTE denied |\\n| Onchain / News / DeFi / Risk / Security | Boundary | Honest refusal, no fake agents |\\n| Wallet / Execution | Future | Not available yet |\\n| Intent compile | Implemented | Language \\u2192 `IntelligencePolicy` + asked-vs-assumed |\\n| Explanation Agent | Implemented | Short brief from already-scored facts |\\n| Query planner | Implemented | Chooses listings vs quotes, Fear & Greed, and global metrics only when the policy needs them |\\n| CMC adapter | Implemented | Auth, 60s cache, `CmcCallLog`. Raw JSON never enters the engine |\\n| Policy engine | Implemented | Deterministic `evaluate_policy` |\\n| Scoring | Implemented | Extracted service (`apps/intelligence/scoring.py`). The LLM does not rank events |\\n| `AgentRuntime` / `LensRuntime` | Implemented | Check now and Beat share one path |\\n\\n**You asked / KryptoLens assumed** is interpretation of the compile, never a market prediction. `confidence` on the compile report is how sure the compiler is that it understood the request.\\n\\nPolicy JSON field names are frozen: `metrics`, `asset_conditions`, `market_context`. UI copy may say \\u201cSignals.\\u201d Storage must not.\\n\\n## Product path\\n\\n1. Landing composer stashes the instruction. **No Agent and no CMC job before authentication.**\\n2. **Get Started** (`/signup`) or **Log In** (`/login`). Password reset is Django's built-in flow.\\n3. After auth, a pending landing instruction creates **your** Agent. Otherwise **Create Agent** on Agent Home, then message the job.\\n4. Confirm the Routine card (WHEN / DO / DATA / FAILURE). Monitoring starts without another prompt.\\n5. Close the laptop. Beat ticks every 15 minutes, calls the same Celery `run_lens` task as **Check now** (`AgentRuntime` \\u2192 `LensRuntime` \\u2192 live CMC), and writes the result into the conversation. No extra LLM. No invented ticks.\\n6. **Check now** creates a `LensRun` (`stage=queued`) and returns `run_id` immediately. HTMX polls `LensRun.stage` until `complete` or `error`. CMC activity cards in the transcript show real endpoints, status, and elapsed_ms.\\n7. Conversation artifacts appear in order: Plan \\u2192 Evidence \\u2192 Verification \\u2192 Result \\u2192 Execution receipt. True Events still open a Receipt. Jobs open an execution trace at `/jobs/<id>`.\\n8. Settings: Connect / test / disconnect Telegram. Telegram inbound...\", \"Dockerfile\": \"FROM python:3.12-slim\\n\\nENV PYTHONDONTWRITEBYTECODE=1\\nENV PYTHONUNBUFFERED=1\\n\\nWORKDIR /app\\nRUN apt-get update && apt-get install -y --no-install-recommends build-essential libpq-dev && rm -rf /var/lib/apt/lists/*\\n\\nCOPY requirements.txt /app/requirements.txt\\nRUN pip install --no-cache-dir -r /app/requirements.txt || \\\\\\n    pip install --no-cache-dir $(grep -v cursor-sdk /app/requirements.txt)\\n\\nCOPY . /app\\nRUN chmod +x /app/docker/entrypoint.sh\\nEXPOSE 8000\\nENTRYPOINT [\\\"/app/docker/entrypoint.sh\\\"]\\n\", \"docker-compose.yml\": \"services:\\n  postgres:\\n    image: postgres:16-alpine\\n    environment:\\n      POSTGRES_DB: kryptolens\\n      POSTGRES_USER: kryptolens\\n      POSTGRES_PASSWORD=<redacted>\\n    volumes:\\n      - pgdata:/var/lib/postgresql/data\\n    healthcheck:\\n      test: [\\\"CMD-SHELL\\\", \\\"pg_isready -U kryptolens\\\"]\\n      interval: 5s\\n      timeout: 5s\\n      retries: 10\\n\\n  redis:\\n    image: redis:7-alpine\\n\\n  web:\\n    build: .\\n    command: [\\\"web\\\"]\\n    env_file:\\n      - .env\\n    environment:\\n      DATABASE_URL: postgres://kryptolens:kryptolens@postgres:5432/kryptolens\\n      REDIS_URL: redis://redis:6379/0\\n    depends_on:\\n      postgres:\\n        condition: service_healthy\\n      redis:\\n        condition: service_started\\n    expose:\\n      - \\\"8000\\\"\\n\\n  worker:\\n    build: .\\n    command: [\\\"worker\\\"]\\n    env_file:\\n      - .env\\n    environment:\\n      DATABASE_URL: postgres://kryptolens:kryptolens@postgres:5432/kryptolens\\n      REDIS_URL: redis://redis:6379/0\\n    depends_on:\\n      postgres:\\n        condition: service_healthy\\n      redis:\\n        condition: service_started\\n\\n  beat:\\n    build: .\\n    command: [\\\"beat\\\"]\\n    env_file:\\n      - .env\\n    environment:\\n      DATABASE_URL: postgres://kryptolens:kryptolens@postgres:5432/kryptolens\\n      REDIS_URL: redis://redis:6379/0\\n    depends_on:\\n      postgres:\\n        condition: service_healthy\\n      redis:\\n        condition: service_started\\n\\n  nginx:\\n    image: nginx:1.27-alpine\\n    volumes:\\n      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro\\n    ports:\\n      - \\\"8080:80\\\"\\n    depends_on:\\n      - web\\n\\nvolumes:\\n  pgdata:\\n\", \"PRODUCT.md\": \"# KryptoLens\\n\\nTell KryptoLens what matters. Give it a job. It keeps watch for you.\\n\\nKryptoLens is a persistent crypto intelligence workspace where users create **Agents** (the UI name for a Lens), talk to them in natural language, give them crypto-market jobs, and leave those jobs running against live market data.\\n\\nAn **Agent** is the only visible teammate. Planning logic stays inside the Lens. The user sees **Agents**. This iteration is not a multi-agent OS and not a specialist graph.\\n\\n## Platform\\n\\nweb\\n\\n## Register\\n\\nproduct\\n\\n## Core loop\\n\\nchat \\u2192 instruction \\u2192 persistent job \\u2192 trigger \\u2192 live CMC \\u2192 verify \\u2192 report.\\n\\nCreate Agent \\u2192 named teammate \\u2192 chat a job \\u2192 confirm a Routine \\u2192 transcript. Unattended Beat writes back into the same conversation. Jobs are LensRuns. Market numbers come from live CoinMarketCap only.\\n\\n## Core concepts\\n\\n- **Agent** \\u2014 UI name for a Lens: persistent crypto teammate\\n- **Job** \\u2014 a run of work (`LensRun`) plus a standing assignment snapshot\\n- **AgentPlan** \\u2014 what the agent intends (schema-validated). Does not call CMC.\\n- **Workflow** \\u2014 how approved operations run (`get_quotes`, `get_market_listings`, `calculate`, `sort`, `present`)\\n- **Routine** \\u2014 when it should work; Pause is per-routine\\n- **Tools** \\u2014 CoinMarketCap read/analyze tools in this build\\n- **Evidence / Verification** \\u2014 why a result is believed\\n- **Result** \\u2014 ranked table, comparison, summary, event, no-result, or error\\n- **Execution receipt** \\u2014 what triggered, what ran, evidence, verification\\n- **Event** \\u2014 one kind of Result: a trigger-fired condition\\n\\n## Capability\\n\\n| Capability | Status |\\n| --- | --- |\\n| Chief Agent | Implemented |\\n| Market capability | Implemented |\\n| CoinMarketCap | Implemented (live listings, quotes, Fear & Greed, global metrics) |\\n| Research | Implemented, limited to CMC |\\n| Evidence / Verification | Implemented |\\n| Approvals | Foundation only |\\n| Onchain / News / DeFi / Risk / Security | Architectural boundary |\\n| Wallet / Execution | Future |\\n\\n## Who it is for\\n\\nSomeone who can name a crypto-market job in language and wants a teammate that stays on it \\u2014 not a dashboard they have to configure.\\n\\n## Scene\\n\\nNight desk. A researcher gives an Agent a job, leaves it watching live CoinMarketCap, and comes back to a verified result with evidence.\\n\\n## Voice\\n\\nDirect. Specific. Tell \\u2192 Define \\u2192 Watch \\u2192 Act \\u2192 Return. Never claims real-time or literal continuous observation. Monitoring happens every 15 minutes. Never calls itself a demo. Never claims unsupported specialists.\\n\\n## Surfaces\\n\\nLanding (Get Started / Log In) \\u2192 signup or login \\u2192 Agent home \\u2192 Create Agent \\u2192 chat (Ask {name}, You asked / KryptoLens assumed, Routine card, CMC activity). Pause and check now are messages. Live CMC strip on the workspace. Settings / Log Out.\\n\\n## Out of scope\\n\\nTrading, charts, wallets, news providers, fake demo mode, fake specialist agents, LLM scoring or invented ticks.\\n\"}, \"refs\": [{\"id\": \"ev-config-settings.py\", \"kind\": \"source_code\", \"path\": \"config/settings.py\", \"uri\": null, \"locator\": null, \"hash\": \"c7e1d632f07845355ad3a352a8088274f337d053217118e464aad03a2aa8e6e2\", \"collected_at\": \"2026-09-17T01:41:50.330766Z\", \"excerpt\": \"import os\\nimport re\\nimport socket\\nimport sys\\nimport urllib.parse as urlparse\\nfrom pathlib import Path\\n\\nfrom dotenv import load_dotenv\\n\\nload_dotenv()\\n\\nBASE_DIR = Path(__file__).resolve().parent.parent\\n\\nSECRET_KEY=<redacted> \\\"dev-only-kryptolens-secret\\\")\\nDEBUG = os.getenv(\\\"DEBUG\\\", \\\"1\\\") == \\\"1\\\"\\nALLOWED_HOSTS = [item.strip() for item in os.getenv(\\\"ALLOWED_HOSTS\\\", \\\"localhost,127.0.0.1\\\").split(\\\",\\\") if item.strip()]\\nCSRF_TRUSTED_ORIGINS = [\\n    item.strip()\\n    for item in os.getenv(\\n        \\\"CSRF_TRUSTED_ORIGINS\\\",\\n        \\\"http://localhost:8000,http://127.0.0.1:8000,http://localhost:8080,http://127.0.0.1:8080\\\",\\n    ).split(\\\",\\\")\\n    if item.strip()\\n]\\n\\nINSTALLED_APPS = [\\n    \\\"django.contrib.admin\\\",\\n    \\\"django.contrib.auth\\\",\\n    \\\"django.contrib.contenttypes\\\",\\n    \\\"django.contrib.sessions\\\",\\n    \\\"...\"}, {\"id\": \"ev-requirements.txt\", \"kind\": \"docs\", \"path\": \"requirements.txt\", \"uri\": null, \"locator\": null, \"hash\": \"d3cb5e0b4cd6b490ea554abc44e9ae9f58601a2e27fa0fad00ffbd386a11b89d\", \"collected_at\": \"2026-09-17T01:41:50.336919Z\", \"excerpt\": \"Django>=5.1,<5.3\\ndjangorestframework>=3.15,<3.17\\npsycopg2-binary>=2.9,<3\\nredis>=5.0,<6\\ncelery>=5.4,<6\\ndjango-celery-beat>=2.7,<3\\nhttpx>=0.27,<0.29\\npydantic>=2.9,<3\\ngunicorn>=23,<24\\nwhitenoise>=6.7,<7\\npython-dotenv>=1.0,<2\\npytest>=8.3,<9\\npytest-django>=4.9,<5\\npytest-cov>=5,<7\\nrespx>=0.21,<0.23\\n# Optional when CURSOR_API_KEY is set: pip install cursor-sdk\\n# cursor-sdk>=0.1.0\\n\"}, {\"id\": \"ev-apps-lenses-models.py\", \"kind\": \"source_code\", \"path\": \"apps/lenses/models.py\", \"uri\": null, \"locator\": null, \"hash\": \"a772e6e59a7f974d4d3e6087162f96cba0a8e66975e0445d7e9714e8074ad791\", \"collected_at\": \"2026-09-17T01:41:50.352693Z\", \"excerpt\": \"from django.conf import settings\\nfrom django.db import models\\n\\nfrom apps.intelligence.job import JobDefinition\\nfrom apps.intelligence.policy import IntelligencePolicy\\nfrom apps.intelligence.tools import DEFAULT_TOOL_PERMISSIONS\\nfrom apps.intelligence.workflow import WorkflowDefinition\\n\\n\\nclass Lens(models.Model):\\n    \\\"\\\"\\\"A Lens is a persistent crypto agent with a job, workflow, routines, tools, conversation, and results.\\\"\\\"\\\"\\n\\n    STATUS = ((\\\"draft\\\", \\\"Draft\\\"), (\\\"active\\\", \\\"Active\\\"), (\\\"paused\\\", \\\"Paused\\\"))\\n\\n    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name=\\\"lenses\\\")\\n    name = models.CharField(max_length=160)\\n    purpose = models.TextField(blank=True)\\n    natural_language_request = models.TextField()\\n    status = models.CharField(max_length=16, choic...\"}, {\"id\": \"ev-apps-lenses-runtime.py\", \"kind\": \"source_code\", \"path\": \"apps/lenses/runtime.py\", \"uri\": null, \"locator\": null, \"hash\": \"abfc745faed4ba08ae93f93e9df395373c64cb0ec0b5cd30c1d564c23907adeb\", \"collected_at\": \"2026-09-17T01:41:50.367728Z\", \"excerpt\": \"from __future__ import annotations\\n\\nimport logging\\n\\nfrom django.conf import settings\\nfrom django.utils import timezone\\n\\nfrom apps.cmc.adapter import CMCAdapter, CMCError\\nfrom apps.events.models import Event\\nfrom apps.intelligence.engine import fallback_explanation\\nfrom apps.intelligence.explain import explain_event\\nfrom apps.intelligence.observations import Candidate\\nfrom apps.intelligence.tools import ToolPermissionError\\nfrom apps.intelligence.workflow_executor import (\\n    WorkflowExecutionError,\\n    execute_steps,\\n    fetch_trigger_asset,\\n    trigger_fired,\\n)\\nfrom apps.lenses.conversation import add_item, record_cmc_activity, record_error, record_result\\nfrom apps.lenses.models import Lens, LensRun, Result\\nfrom apps.monitoring.services import MonitoringService, event_fingerprint\\nfrom ...\"}, {\"id\": \"ev-apps-lenses-views.py\", \"kind\": \"source_code\", \"path\": \"apps/lenses/views.py\", \"uri\": null, \"locator\": null, \"hash\": \"829a0a6a1f50773bf225edc3388d2dce02c2287b3e062cb98f23dc10e446b414\", \"collected_at\": \"2026-09-17T01:41:50.382373Z\", \"excerpt\": \"from django.contrib import messages\\nfrom django.contrib.auth.decorators import login_required\\nfrom django.http import Http404, JsonResponse\\nfrom django.shortcuts import redirect, render\\nfrom django.urls import reverse\\nfrom django.views.decorators.http import require_POST\\n\\nfrom apps.lenses.agent_service import AgentService\\nfrom apps.lenses.conversation_service import ConversationService\\nfrom apps.lenses.models import Lens, Routine\\nfrom apps.lenses.routine_service import RoutineService\\nfrom apps.lenses.run_service import RunService\\nfrom apps.lenses.templates_catalog import LENS_TEMPLATES\\nfrom apps.monitoring.tasks import run_lens as run_lens_task  # tests patch .delay\\n\\n\\ndef _owned(request, lens_id: int) -> Lens:\\n    lens = Lens.objects.filter(pk=lens_id, user=request.user).first()\\n    if ...\"}, {\"id\": \"ev-apps-intelligence-agent.py\", \"kind\": \"source_code\", \"path\": \"apps/intelligence/agent.py\", \"uri\": null, \"locator\": null, \"hash\": \"d7a5429f7073fb6e8384884380b0a4aec0cefa21f6600f86aed694d5a67622bd\", \"collected_at\": \"2026-09-17T01:41:50.393465Z\", \"excerpt\": \"from __future__ import annotations\\n\\nimport uuid\\nfrom typing import Literal\\n\\nfrom pydantic import BaseModel, Field, field_validator\\n\\nfrom apps.intelligence.job import JobDefinition\\nfrom apps.intelligence.job_compiler import compile_job_report\\nfrom apps.intelligence.permissions import require_sensitivity\\nfrom apps.intelligence.tool_registry import tool_in_registry\\nfrom apps.intelligence.tools import DEFAULT_TOOL_PERMISSIONS, tool_allowed\\nfrom apps.intelligence.workflow import WorkflowDefinition\\n\\nJobType = Literal[\\\"monitor\\\", \\\"investigate\\\", \\\"research\\\"]\\nSpecialist = Literal[\\\"market\\\", \\\"research\\\", \\\"unavailable\\\"]\\nApprovalRequirement = Literal[\\\"not_required\\\", \\\"pending\\\", \\\"denied\\\"]\\n\\nALLOWED_PLAN_STEPS = frozenset(\\n    {\\n        \\\"check_btc\\\",\\n        \\\"load_top_100\\\",\\n        \\\"load_top_50\\\",\\n        \\\"c...\"}, {\"id\": \"ev-apps-intelligence-agent_runtime.py\", \"kind\": \"source_code\", \"path\": \"apps/intelligence/agent_runtime.py\", \"uri\": null, \"locator\": null, \"hash\": \"1442e8d4b4cd557ceef2bfab0de940543576e884d4579e68846d85f877a5600d\", \"collected_at\": \"2026-09-17T01:41:50.405221Z\", \"excerpt\": \"from __future__ import annotations\\n\\nimport logging\\n\\nfrom django.conf import settings\\n\\nfrom apps.cmc.adapter import CMCAdapter\\nfrom apps.intelligence.agent import AgentPlan, ChiefAgent, job_category\\nfrom apps.intelligence.verification import claim_supported, verify_result\\nfrom apps.lenses.conversation import add_item, record_cmc_activity, record_result\\nfrom apps.lenses.models import (\\n    AgentTask,\\n    ApprovalRequest,\\n    Artifact,\\n    Evidence,\\n    Job,\\n    Lens,\\n    LensRun,\\n    Result,\\n    VerificationRecord,\\n)\\nfrom apps.lenses.runtime import LensRuntime\\nfrom apps.notifications.telegram import notify_artifact\\n\\nlogger = logging.getLogger(\\\"kryptolens.agent_runtime\\\")\\n\\nENDPOINT_TOOLS = (\\n    (\\\"listings/latest\\\", \\\"get_market_listings\\\"),\\n    (\\\"quotes/latest\\\", \\\"get_quotes\\\"),\\n    (\\\"global-me...\"}, {\"id\": \"ev-apps-intelligence-workflow.py\", \"kind\": \"source_code\", \"path\": \"apps/intelligence/workflow.py\", \"uri\": null, \"locator\": null, \"hash\": \"961351be8f2dbf1eec3d8f832807b8477077aeb6753860750c3b112fa5dc1d9b\", \"collected_at\": \"2026-09-17T01:41:50.408926Z\", \"excerpt\": \"from __future__ import annotations\\n\\nfrom typing import Any, Literal\\n\\nfrom pydantic import BaseModel, Field, field_validator, model_validator\\n\\nfrom apps.intelligence.policy import Operator\\n\\nTriggerType = Literal[\\\"asset_condition\\\", \\\"manual\\\", \\\"scheduled\\\"]\\nStepType = Literal[\\n    \\\"get_universe\\\",\\n    \\\"get_market_data\\\",\\n    \\\"get_quotes\\\",\\n    \\\"get_global_metrics\\\",\\n    \\\"get_fear_and_greed\\\",\\n    \\\"calculate\\\",\\n    \\\"sort\\\",\\n    \\\"filter\\\",\\n    \\\"aggregate\\\",\\n    \\\"present\\\",\\n]\\nALLOWED_STEP_TYPES = set(StepType.__args__)\\nPresentFormat = Literal[\\\"ranked_table\\\", \\\"market_summary\\\", \\\"comparison\\\"]\\n\\n\\nclass WorkflowTrigger(BaseModel):\\n    type: TriggerType\\n    asset: str | None = None\\n    metric: str = \\\"price_change_24h\\\"\\n    operator: Operator = \\\"<=\\\"\\n    value: float | None = None\\n\\n\\nclass WorkflowStep(BaseModel):\\n...\"}, {\"id\": \"ev-apps-intelligence-workflow_executor.py\", \"kind\": \"source_code\", \"path\": \"apps/intelligence/workflow_executor.py\", \"uri\": null, \"locator\": null, \"hash\": \"1d17f7cf2b9922a361b02e114ee3fa35601e7b29c28c8e12b6db1bb8a3956b57\", \"collected_at\": \"2026-09-17T01:41:50.414157Z\", \"excerpt\": \"from __future__ import annotations\\n\\nfrom apps.cmc.adapter import CMCAdapter, CMCError\\nfrom apps.cmc.logging import persist_call\\nfrom apps.cmc.normalize import is_stablecoin, normalize_fear_greed, normalize_global_metrics, normalize_listings\\nfrom apps.intelligence.calculations import aggregate_mean, filter_threshold, rank_assets, sort_assets\\nfrom apps.intelligence.engine import compare\\nfrom apps.intelligence.observations import MarketObservation\\nfrom apps.intelligence.tools import ToolPermissionError, dispatch_cmc\\nfrom apps.intelligence.workflow import WorkflowDefinition, WorkflowTrigger\\n\\n\\nclass WorkflowExecutionError(Exception):\\n    pass\\n\\n\\ndef trigger_fired(trigger: WorkflowTrigger | None, observations: list[MarketObservation]) -> tuple[bool, MarketObservation | None]:\\n    if not trigge...\"}, {\"id\": \"ev-apps-intelligence-tools.py\", \"kind\": \"source_code\", \"path\": \"apps/intelligence/tools.py\", \"uri\": null, \"locator\": null, \"hash\": \"855724955d8f915fbf7649a36f1a0b9a141dac9a8c7d96316f1246c3af0dbd43\", \"collected_at\": \"2026-09-17T01:41:50.416179Z\", \"excerpt\": \"from __future__ import annotations\\n\\nfrom typing import Callable\\n\\nfrom apps.cmc.adapter import CMCAdapter, CMCCall\\n\\nDEFAULT_TOOL_PERMISSIONS = {\\n    \\\"get_market_listings\\\": True,\\n    \\\"get_quotes\\\": True,\\n    \\\"get_global_metrics\\\": True,\\n    \\\"get_fear_and_greed\\\": True,\\n    \\\"news\\\": False,\\n    \\\"on_chain\\\": False,\\n}\\n\\nCMC_TOOL_NAMES = (\\n    \\\"get_market_listings\\\",\\n    \\\"get_quotes\\\",\\n    \\\"get_global_metrics\\\",\\n    \\\"get_fear_and_greed\\\",\\n)\\n\\n\\nclass ToolPermissionError(PermissionError):\\n    pass\\n\\n\\ndef tool_allowed(permissions: dict | None, name: str) -> bool:\\n    perms = permissions or DEFAULT_TOOL_PERMISSIONS\\n    return bool(perms.get(name))\\n\\n\\ndef require_tool(permissions: dict | None, name: str) -> None:\\n    if name in {\\\"news\\\", \\\"on_chain\\\"} or not tool_allowed(permissions, name):\\n        raise ToolPermi...\"}, {\"id\": \"ev-apps-cmc-adapter.py\", \"kind\": \"source_code\", \"path\": \"apps/cmc/adapter.py\", \"uri\": null, \"locator\": null, \"hash\": \"5da594c7a9739a0d9940d7bf90af23572f734a0eb547a52a503c76a681a50d7f\", \"collected_at\": \"2026-09-17T01:41:50.418841Z\", \"excerpt\": \"from __future__ import annotations\\n\\nimport logging\\nimport os\\nimport time\\nfrom dataclasses import dataclass, field\\nfrom datetime import date, datetime, timedelta, timezone\\n\\nimport httpx\\n\\nlogger = logging.getLogger(\\\"kryptolens.cmc\\\")\\n\\nBASE_URL = \\\"https://pro-api.coinmarketcap.com\\\"\\n\\n\\nclass CMCError(Exception):\\n    def __init__(self, message: str, status_code: int | None = None, payload: dict | None = None):\\n        super().__init__(message)\\n        self.status_code = status_code\\n        self.payload = payload or {}\\n\\n\\n@dataclass\\nclass CMCCall:\\n    endpoint: str\\n    params: dict\\n    status_code: int\\n    credit_count: int | None\\n    payload: dict\\n    elapsed_ms: int\\n    error: str = \\\"\\\"\\n    fields_used: list[str] = field(default_factory=list)\\n\\n\\ndef parse_as_of(value) -> datetime | None:\\n    if ...\"}, {\"id\": \"ev-apps-monitoring-tasks.py\", \"kind\": \"source_code\", \"path\": \"apps/monitoring/tasks.py\", \"uri\": null, \"locator\": null, \"hash\": \"af5440e60f27d9a598f1b36079ee9a4bccfc5628f8c277311ecc7da23a3ef33a\", \"collected_at\": \"2026-09-17T01:41:50.420913Z\", \"excerpt\": \"from celery import shared_task\\nfrom django.utils import timezone\\n\\nfrom apps.lenses.models import Lens\\n\\n\\ndef _due_for_schedule(routine) -> bool:\\n    from apps.lenses.routine_service import RoutineService\\n\\n    return RoutineService.due_for_schedule(routine)\\n\\n\\ndef _should_run(lens: Lens) -> bool:\\n    from apps.lenses.routine_service import RoutineService\\n\\n    return RoutineService.should_run(lens)\\n\\n\\n@shared_task\\ndef run_active_lenses():\\n    from apps.lenses.routine_service import RoutineService\\n\\n    for routine in RoutineService.due_routines():\\n        run_lens.delay(routine.lens_id, \\\"scheduled\\\")\\n    return \\\"LensRuntime\\\"\\n\\n\\n@shared_task\\ndef run_lens(lens_id: int, trigger: str = \\\"scheduled\\\", run_id: int | None = None, as_of: str | None = None):\\n    from apps.intelligence.agent_runtime import...\"}, {\"id\": \"ev-README.md\", \"kind\": \"docs\", \"path\": \"README.md\", \"uri\": null, \"locator\": null, \"hash\": \"ae5fe93af07a96bb948b9a1b1d371a3cdca12b6398fd804ac0dc9b3de44ae22b\", \"collected_at\": \"2026-09-17T01:41:50.424562Z\", \"excerpt\": \"# KryptoLens\\n\\nTell KryptoLens what matters. Give it a job. It keeps watch for you.\\n\\nKryptoLens is a persistent crypto intelligence workspace where users create **Agents** (the UI name for a Lens), talk to them in natural language, give them crypto-market jobs, and leave those jobs running against live market data. A **Routine** starts work without another prompt. Celery Beat runs unattended through **AgentRuntime** \\u2192 LensRuntime \\u2192 CMC. The conversation is a structured work log: Plan \\u2192 Evidence \\u2192 Verification \\u2192 Result.\\n\\nIt is not a chatbot, not a market dashboard, not a demo, and not a trading bot. Cadence is **15 minutes**. Quiet markets are a valid result.\\n\\nBuilt for the [Build with CMC](https://coinmarketcap.com/api/resources/api-hackathon/) hackathon \\u00b7 **AI Agents and Automation** \\u00b7 ...\"}, {\"id\": \"ev-Dockerfile\", \"kind\": \"config\", \"path\": \"Dockerfile\", \"uri\": null, \"locator\": null, \"hash\": \"160a593a6d14de7bd50258f33a11f91346cb1fa6c3ee863c51f5579432e8dfe6\", \"collected_at\": \"2026-09-17T01:41:50.426347Z\", \"excerpt\": \"FROM python:3.12-slim\\n\\nENV PYTHONDONTWRITEBYTECODE=1\\nENV PYTHONUNBUFFERED=1\\n\\nWORKDIR /app\\nRUN apt-get update && apt-get install -y --no-install-recommends build-essential libpq-dev && rm -rf /var/lib/apt/lists/*\\n\\nCOPY requirements.txt /app/requirements.txt\\nRUN pip install --no-cache-dir -r /app/requirements.txt || \\\\\\n    pip install --no-cache-dir $(grep -v cursor-sdk /app/requirements.txt)\\n\\nCOPY . /app\\nRUN chmod +x /app/docker/entrypoint.sh\\nEXPOSE 8000\\nENTRYPOINT [\\\"/app/docker/entrypoint.sh\\\"]\\n\"}, {\"id\": \"ev-docker-compose.yml\", \"kind\": \"config\", \"path\": \"docker-compose.yml\", \"uri\": null, \"locator\": null, \"hash\": \"edddc4ce72d03799c3c5421da69d4c4c8fad2b6b9217b939b102dff95b74bcdb\", \"collected_at\": \"2026-09-17T01:41:50.427822Z\", \"excerpt\": \"services:\\n  postgres:\\n    image: postgres:16-alpine\\n    environment:\\n      POSTGRES_DB: kryptolens\\n      POSTGRES_USER: kryptolens\\n      POSTGRES_PASSWORD=<redacted>\\n    volumes:\\n      - pgdata:/var/lib/postgresql/data\\n    healthcheck:\\n      test: [\\\"CMD-SHELL\\\", \\\"pg_isready -U kryptolens\\\"]\\n      interval: 5s\\n      timeout: 5s\\n      retries: 10\\n\\n  redis:\\n    image: redis:7-alpine\\n\\n  web:\\n    build: .\\n    command: [\\\"web\\\"]\\n    env_file:\\n      - .env\\n    environment:\\n      DATABASE_URL: postgres://kryptolens:kryptolens@postgres:5432/kryptolens\\n      REDIS_URL: redis://redis:6379/0\\n    depends_on:\\n      postgres:\\n        condition: service_healthy\\n      redis:\\n        condition: service_started\\n    expose:\\n      - \\\"8000\\\"\\n\\n  worker:\\n    build: .\\n    command: [\\\"worker\\\"]\\n    env_file:\\n      - .e...\"}, {\"id\": \"ev-PRODUCT.md\", \"kind\": \"docs\", \"path\": \"PRODUCT.md\", \"uri\": null, \"locator\": null, \"hash\": \"669aa3a71fae23b2701c7de6c9cc2e3bcb35bf689cd46347d4a7d1bb360cd06b\", \"collected_at\": \"2026-09-17T01:41:50.430102Z\", \"excerpt\": \"# KryptoLens\\n\\nTell KryptoLens what matters. Give it a job. It keeps watch for you.\\n\\nKryptoLens is a persistent crypto intelligence workspace where users create **Agents** (the UI name for a Lens), talk to them in natural language, give them crypto-market jobs, and leave those jobs running against live market data.\\n\\nAn **Agent** is the only visible teammate. Planning logic stays inside the Lens. The user sees **Agents**. This iteration is not a multi-agent OS and not a specialist graph.\\n\\n## Platform\\n\\nweb\\n\\n## Register\\n\\nproduct\\n\\n## Core loop\\n\\nchat \\u2192 instruction \\u2192 persistent job \\u2192 trigger \\u2192 live CMC \\u2192 verify \\u2192 report.\\n\\nCreate Agent \\u2192 named teammate \\u2192 chat a job \\u2192 confirm a Routine \\u2192 transcript. Unattended Beat writes back into the same conversation. Jobs are LensRuns. Market numbers come fr...\"}, {\"id\": \"ev-git-log\", \"kind\": \"git\", \"path\": \".git\", \"uri\": null, \"locator\": null, \"hash\": null, \"collected_at\": \"2026-09-17T01:41:50.438476Z\", \"excerpt\": \"[{\\\"hash\\\": \\\"da9afbbcd4f83cfcbde4286370cb2f5814dca9a6\\\", \\\"subject\\\": \\\"modified the readme and the config folder\\\", \\\"author\\\": \\\"Richard Frimpong Karikari\\\", \\\"date\\\": \\\"2026-09-13\\\"}, {\\\"hash\\\": \\\"512d617c9d94eac5fb4b74604071929f7e8e28ab\\\", \\\"subject\\\": \\\"first push for kryptolens\\\", \\\"author\\\": \\\"Richard Frimpong Karikari\\\", \\\"date\\\": \\\"2026-09-13\\\"}]\"}], \"git\": {\"head\": \"da9afbbcd4f83cfcbde4286370cb2f5814dca9a6\", \"branch\": \"main\", \"dirty\": true, \"porcelain\": \" M .cursor/skills/frontend-ui-design/SKILL.md\\n M .env.example\\n M DESIGN.md\\n M PLAN.md\\n M PRODUCT.md\\n M README.md\\n M apps/cmc/adapter.py\\n M apps/cmc/normalize.py\\n M apps/lenses/admin.py\\n M apps/lenses/models.py\\n M apps/lenses/services.py\\n M apps/lenses/status.py\\n M apps/lenses/templates_catalog.py\\n M apps/lenses/urls.py\\n M apps/lenses/views.py\\n M apps/monitoring/tasks.py\\n M apps/notifications/telegram.py\\n M apps/notifications/urls.py\\n M apps/notifications/views.py\\n M apps/users/context_processors.py\\n D apps/users/management/commands/ensure_workspace_user.py\\n M apps/users/models.py\\n M apps/users/services.py\\n M apps/users/urls.py\\n M apps/users/views.py\\n M config/settings.py\\n M docker/entrypoint.sh\\n M docs/architecture.md\\n M docs/demo-script.md\\n M docs/demo.md\\n M docs/submission.md\\n M docs/ui-design-skills.md\\n M static/css/app.css\\n M templates/base.html\\n M templates/events/receipt.html\\n D templates/home.html\\n M templates/landing.html\\n D templates/lenses/create.html\\n D templates/lenses/detail.html\\n D templates/lenses/edit.html\\n D templates/lenses/list.html\\n M templates/settings.html\\n D templates/workspace/create.html\\n M templates/workspace/edit.html\\n M templates/workspace/home.html\\n M templates/workspace/lens.html\\n M templates/workspace/partials/event_card.html\\n M templates/workspace/partials/policy.html\\n M templates/workspace/partials/roster.html\\n M templates/workspace/partials/run_status.html\\n M templates/workspace/partials/understanding.html\\n M tests/test_cmc.py\\n M tests/test_views.py\\n?? .brag/\\n?? apps/cmc/strip.py\\n?? apps/intelligence/agent.py\\n?? apps/intelligence/agent_runtime.py\\n?? apps/intelligence/calculations.py\\n?? apps/intelligence/job.py\\n?? apps/intelligence/job_compiler.py\\n?? apps/intelligence/permissions.py\\n?? apps/intelligence/tool_registry.py\\n?? apps/intelligence/tools.py\\n?? apps/intelligence/verification.py\\n?? apps/intelligence/workflow.py\\n?? apps/intelligence/workflow_executor.py\\n?? apps/intelligence/workflow_planner.py\\n?? apps/lenses/agent_service.py\\n?? apps/lenses/conversation.py\\n?? apps/lenses/conversation_service.py\\n?? apps/lenses/live.py\\n?? apps/lenses/migrations/0004_persistent_agent.py\\n?? apps/lenses/migrations/0005_agent_os.py\\n?? apps/lenses/migrations/0006_enable_public_rls.py\\n?? apps/lenses/migrations/0007_agent_workspace.py\\n?? apps/lenses/migrations/0008_routine_run_trace.py\\n?? apps/lenses/routine_service.py\\n?? apps/lenses/run_service.py\\n?? apps/lenses/runtime.py\\n?? apps/notifications/inbound.py\\n?? apps/notifications/telegram_service.py\\n?? apps/users/forms.py\\n?? apps/users/migrations/0002_telegram_notify_results.py\\n?? apps/users/migrations/0003_enable_admin_log_rls.py\\n?? apps/users/migrations/0004_enable_userpreference_rls.py\\n?? apps/users/migrations/0005_active_lens.py\\n?? apps/users/rls.py\\n?? templates/auth/\\n?? templates/registration/\\n?? templates/workspace/create_agent.html\\n?? templates/workspace/job_detail.html\\n?? templates/workspace/jobs.html\\n?? templates/workspace/partials/bot_face.html\\n?? templates/workspace/partials/conversation_item.html\\n?? templates/workspace/partials/job_group.html\\n?? templates/workspace/partials/market_strip.html\\n?? templates/workspace/partials/result_artifact.html\\n?? templates/workspace/partials/routine_plate.html\\n?? templates/workspace/profile.html\\n?? templates/workspace/routine_detail.html\\n?? templates/workspace/routines.html\\n?? tests/test_agent_os.py\\n?? tests/test_agent_workspace.py\\n?? tests/test_beat.py\\n?? tests/test_facades.py\\n?? tests/test_rls.py\\n?? tests/test_status.py\\n?? tests/test_workflow.py\\n\", \"status\": \"## main...origin/main\\n M .cursor/skills/frontend-ui-design/SKILL.md\\n M .env.example\\n M DESIGN.md\\n M PLAN.md\\n M PRODUCT.md\\n M README.md\\n M apps/cmc/adapter.py\\n M apps/cmc/normalize.py\\n M apps/lenses/admin.py\\n M apps/lenses/models.py\\n M apps/lenses/services.py\\n M apps/lenses/status.py\\n M apps/lenses/templates_catalog.py\\n M apps/lenses/urls.py\\n M apps/lenses/views.py\\n M apps/monitoring/tasks.py\\n M apps/notifications/telegram.py\\n M apps/notifications/urls.py\\n M apps/notifications/views.py\\n M apps/users/context_processors.py\\n D apps/users/management/commands/ensure_workspace_user.py\\n M apps/users/models.py\\n M apps/users/services.py\\n M apps/users/urls.py\\n M apps/users/views.py\\n M config/settings.py\\n M docker/entrypoint.sh\\n M docs/architecture.md\\n M docs/demo-script.md\\n M docs/demo.md\\n M docs/submission.md\\n M docs/ui-design-skills.md\\n M static/css/app.css\\n M templates/base.html\\n M templates/events/receipt.html\\n D templates/home.html\\n M templates/landing.html\\n D templates/lenses/create.html\\n D templates/lenses/detail.html\\n D templates/lenses/edit.html\\n D templates/lenses/list.html\\n M templates/settings.html\\n D templates/workspace/create.html\\n M templates/workspace/edit.html\\n M templates/workspace/home.html\\n M templates/workspace/lens.html\\n M templates/workspace/partials/event_card.html\\n M templates/workspace/partials/policy.html\\n M templates/workspace/partials/roster.html\\n M templates/workspace/partials/run_status.html\\n M templates/workspace/partials/understanding.html\\n M tests/test_cmc.py\\n M tests/test_views.py\\n?? .brag/\\n?? apps/cmc/strip.py\\n?? apps/intelligence/agent.py\\n?? apps/intelligence/agent_runtime.py\\n?? apps/intelligence/calculations.py\\n?? apps/intelligence/job.py\\n?? apps/intelligence/job_compiler.py\\n?? apps/intelligence/permissions.py\\n?? apps/intelligence/tool_registry.py\\n?? apps/intelligence/tools.py\\n?? apps/intelligence/verification.py\\n?? apps/intelligence/workflow.py\\n?? apps/intelligence/workflow_executor.py\\n?? apps/intelligence/workflow_planner.py\\n?? apps/lenses/agent_service.py\\n?? apps/lenses/conversation.py\\n?? apps/lenses/conversation_service.py\\n?? apps/lenses/live.py\\n?? apps/lenses/migrations/0004_persistent_agent.py\\n?? apps/lenses/migrations/0005_agent_os.py\\n?? apps/lenses/migrations/0006_enable_public_rls.py\\n?? apps/lenses/migrations/0007_agent_workspace.py\\n?? apps/lenses/migrations/0008_routine_run_trace.py\\n?? apps/lenses/routine_service.py\\n?? apps/lenses/run_service.py\\n?? apps/lenses/runtime.py\\n?? apps/notifications/inbound.py\\n?? apps/notifications/telegram_service.py\\n?? apps/users/forms.py\\n?? apps/users/migrations/0002_telegram_notify_results.py\\n?? apps/users/migrations/0003_enable_admin_log_rls.py\\n?? apps/users/migrations/0004_enable_userpreference_rls.py\\n?? apps/users/migrations/0005_active_lens.py\\n?? apps/users/rls.py\\n?? templates/auth/\\n?? templates/registration/\\n?? templates/workspace/create_agent.html\\n?? templates/workspace/job_detail.html\\n?? templates/workspace/jobs.html\\n?? templates/workspace/partials/bot_face.html\\n?? templates/workspace/partials/conversation_item.html\\n?? templates/workspace/partials/job_group.html\\n?? templates/workspace/partials/market_strip.html\\n?? templates/workspace/partials/result_artifact.html\\n?? templates/workspace/partials/routine_plate.html\\n?? templates/workspace/profile.html\\n?? templates/workspace/routine_detail.html\\n?? templates/workspace/routines.html\\n?? tests/test_agent_os.py\\n?? tests/test_agent_workspace.py\\n?? tests/test_beat.py\\n?? tests/test_facades.py\\n?? tests/test_rls.py\\n?? tests/test_status.py\\n?? tests/test_workflow.py\\n\", \"commits\": [{\"hash\": \"da9afbbcd4f83cfcbde4286370cb2f5814dca9a6\", \"subject\": \"modified the readme and the config folder\", \"author\": \"Richard Frimpong Karikari\", \"date\": \"2026-09-13\"}, {\"hash\": \"512d617c9d94eac5fb4b74604071929f7e8e28ab\", \"subject\": \"first push for kryptolens\", \"author\": \"Richard Frimpong Karikari\", \"date\": \"2026-09-13\"}]}, \"tests\": []}"
+    }
+  ],
+  "schema": {
+    "$defs": {
+      "ApiEndpoint": {
+        "properties": {
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Method"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "claim": {
+            "$ref": "#/$defs/Claim"
+          }
+        },
+        "required": [
+          "path",
+          "claim"
+        ],
+        "title": "ApiEndpoint",
+        "type": "object"
+      },
+      "Claim": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/$defs/ClaimStatus",
+            "default": "unverified"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Confidence"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/$defs/EvidenceRef"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "conflicts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Conflicts",
+            "type": "array"
+          },
+          "demote": {
+            "default": false,
+            "title": "Demote",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "Claim",
+        "type": "object"
+      },
+      "ClaimStatus": {
+        "enum": [
+          "verified",
+          "inferred",
+          "unverified"
+        ],
+        "title": "ClaimStatus",
+        "type": "string"
+      },
+      "EvidenceKind": {
+        "enum": [
+          "source_code",
+          "config",
+          "test",
+          "git",
+          "runtime",
+          "browser",
+          "api",
+          "docs",
+          "onchain",
+          "user"
+        ],
+        "title": "EvidenceKind",
+        "type": "string"
+      },
+      "EvidenceRef": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/$defs/EvidenceKind"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Path"
+          },
+          "uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Uri"
+          },
+          "locator": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Locator"
+          },
+          "hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Hash"
+          },
+          "collected_at": {
+            "format": "date-time",
+            "title": "Collected At",
+            "type": "string"
+          },
+          "excerpt": {
+            "default": "",
+            "title": "Excerpt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind"
+        ],
+        "title": "EvidenceRef",
+        "type": "object"
+      },
+      "Feature": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "$ref": "#/$defs/Claim"
+          },
+          "implemented": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Claim"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ],
+        "title": "Feature",
+        "type": "object"
+      },
+      "Integration": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "claim": {
+            "$ref": "#/$defs/Claim"
+          }
+        },
+        "required": [
+          "name",
+          "claim"
+        ],
+        "title": "Integration",
+        "type": "object"
+      },
+      "Journey": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "beats": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Beats",
+            "type": "array"
+          },
+          "claim": {
+            "$ref": "#/$defs/Claim"
+          }
+        },
+        "required": [
+          "name",
+          "claim"
+        ],
+        "title": "Journey",
+        "type": "object"
+      },
+      "Limitation": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "claim": {
+            "$ref": "#/$defs/Claim"
+          }
+        },
+        "required": [
+          "text",
+          "claim"
+        ],
+        "title": "Limitation",
+        "type": "object"
+      },
+      "ProjectIdentity": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Claim"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "one_liner": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Claim"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "description": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Claim"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "title": "ProjectIdentity",
+        "type": "object"
+      },
+      "Screen": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Path"
+          },
+          "claim": {
+            "$ref": "#/$defs/Claim"
+          }
+        },
+        "required": [
+          "name",
+          "claim"
+        ],
+        "title": "Screen",
+        "type": "object"
+      },
+      "VisualIdentity": {
+        "properties": {
+          "background": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Claim"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "accent": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Claim"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "text_color": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Claim"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "display_font": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Claim"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "body_font": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Claim"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "strongest_visual": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Claim"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "title": "VisualIdentity",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "identity": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ProjectIdentity"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "problem": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Claim"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "solution": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Claim"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "users": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Claim"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "features": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/Feature"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Features"
+      },
+      "journeys": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/Journey"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Journeys"
+      },
+      "screens": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/Screen"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Screens"
+      },
+      "architecture": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Claim"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "stack": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/Claim"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Stack"
+      },
+      "dependencies": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/Claim"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Dependencies"
+      },
+      "integrations": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/Integration"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Integrations"
+      },
+      "apis": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/ApiEndpoint"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Apis"
+      },
+      "database": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Claim"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "auth": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Claim"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "deployment": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Claim"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "implemented_functionality": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/Claim"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Implemented Functionality"
+      },
+      "runtime": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Claim"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "demo_opportunities": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/Claim"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Demo Opportunities"
+      },
+      "marketing": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Claim"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "hackathon": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Claim"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "web3": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/Claim"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Web3"
+      },
+      "limitations": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/Limitation"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Limitations"
+      },
+      "unverified_claims": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/Claim"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Unverified Claims"
+      },
+      "visual": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/VisualIdentity"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "notes": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Notes"
+      }
+    },
+    "title": "ProjectBrainUpdate",
+    "type": "object"
+  },
+  "instruction": "Reason only over evidence.json and the messages. Do not inspect parent directories. Do not run shell commands. Return ONLY JSON matching the schema."
+}

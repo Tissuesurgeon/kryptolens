@@ -1,13 +1,14 @@
 {% extends "base.html" %}
 
 {% block title %}Settings · KryptoLens{% endblock %}
+{% block workspace_title %}Settings{% endblock %}
 
 {% block content %}
 <div class="conversation-stream">
   <header class="stream-intro">
     <p class="page-id">settings</p>
     <h1>Telegram</h1>
-    <p class="lede">Connect a chat to receive Event Receipts. A failed send never drops the stored receipt.</p>
+    <p class="lede">Connect a chat to receive routine triggers and job completions. A failed send never drops the stored receipt.</p>
   </header>
 
   <section class="desk form-narrow">
@@ -24,6 +25,10 @@
       <label class="check">
         <input type="checkbox" name="telegram_enabled" {% if preference.telegram_enabled %}checked{% endif %}>
         Deliver receipts to this chat
+      </label>
+      <label class="check">
+        <input type="checkbox" name="telegram_notify_results" {% if preference.telegram_notify_results %}checked{% endif %}>
+        Also send meaningful Results
       </label>
       <div class="actions">
         <button class="btn btn-primary" type="submit" name="action" value="connect">Connect</button>

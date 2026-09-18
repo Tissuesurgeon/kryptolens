@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{% if lens %}{{ lens.name }}{% else %}Jobs{% endif %} · KryptoLens{% endblock %}
+{% block workspace_title %}{% if lens %}{{ lens.name }}{% else %}Jobs{% endif %}{% endblock %}
+
+{% block content %}
+<div class="thread">
+  <div class="thread-scroll">
+    <header class="conversation-head">
+      <div>
+        {% if lens %}
+          <p class="page-id"><a href="{% url 'agent_chat' lens.id %}">← {{ lens.name }}</a></p>
+        {% else %}
+          <p class="page-id">Jobs</p>
+        {% endif %}
+        <h1>Runs</h1>
+        <p class="lede">One row per execution. Open a job to inspect CMC calls.</p>
+      </div>
+    </header>
+    <div class="job-blotter">
+      {% include "workspace/partials/job_group.html" with heading="Running" group=running %}
+      {% include "workspace/partials/job_group.html" with heading="Completed" group=completed %}
+      {% include "workspace/partials/job_group.html" with heading="Failed" group=failed %}
+    </div>
+    {% if not runs %}
+      <p class="lede">No jobs yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

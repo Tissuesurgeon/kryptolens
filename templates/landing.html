@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}KryptoLens — See what matters in crypto.{% endblock %}
+{% block title %}KryptoLens — Tell KryptoLens what matters.{% endblock %}
 
 {% block landing %}
 <div class="landing-shell landing">
@@ -10,55 +10,92 @@
       <img src="{% static 'img/mark.svg' %}" alt="">
       <span>KryptoLens</span>
     </a>
-    <a class="btn btn-ghost" href="{% url 'enter_demo' %}">Enter Demo</a>
+    <nav class="landing-nav">
+      <a href="#how-it-works">How it works</a>
+      <a href="{% url 'login' %}">Log In</a>
+      <a class="btn btn-primary" href="{% url 'signup' %}">Get Started</a>
+    </nav>
   </header>
 
-  <div class="landing-stage">
-    <div class="landing-claim">
-      <h1>See what matters in crypto.</h1>
-      <p class="lede">
-        Tell KryptoLens what matters. It compiles an Intelligence Policy, watches CoinMarketCap
-        every 15 minutes, and writes a receipt when the policy fires.
-      </p>
+  <section class="landing-hero">
+    <div class="landing-mast">
+      <h1>Tell KryptoLens<br>what matters.</h1>
+      <p class="landing-sub">Give it a job. It keeps watch for you.</p>
+      <p class="lede">You write the job once. The Lens checks live CoinMarketCap every 15 minutes and leaves the result on the desk — whether you stayed or not.</p>
     </div>
-    <form method="post" class="landing-composer" action="{% url 'landing' %}">
-      {% csrf_token %}
-      <label for="landing-intent">Ask KryptoLens…</label>
-      <textarea id="landing-intent" name="intent" required placeholder="Watch the top 100 altcoins for unusual price and volume activity.">{{ preview.intent }}</textarea>
-      <div class="actions landing-actions">
-        <button class="btn" type="submit">Preview compile</button>
-        <a class="btn btn-primary" href="{% url 'enter_demo' %}">Enter Demo</a>
-      </div>
-      <p class="quiet">Same compiler as the workspace. Nothing is saved until you enter.</p>
-    </form>
-    <aside class="landing-spec" aria-label="How the system runs">
-      {% if preview %}
-        <h2>{{ preview.name }}</h2>
-        <div class="ask-split ask-split-tight">
+
+    <div class="landing-stage">
+      <div class="landing-window">
+        <div class="landing-window-head">
+          {% include "workspace/partials/bot_face.html" with face_id=1 kind="ok" %}
           <div>
-            <h3>You asked</h3>
-            <ul class="plain-list">
-              {% for item in preview.you_asked %}<li>{{ item }}</li>{% endfor %}
-            </ul>
-          </div>
-          <div>
-            <h3>KryptoLens assumed</h3>
-            <ul class="plain-list">
-              {% for item in preview.assumptions %}<li>{{ item }}</li>{% endfor %}
-            </ul>
+            <p class="landing-window-name">Ask KryptoLens</p>
+            <p class="landing-window-presence" id="landing-example-title">The same split you will see after you write a job.</p>
           </div>
         </div>
-      {% else %}
-        <dl>
-          <div><dt>Cadence</dt><dd>Every 15 minutes. Not a live tape.</dd></div>
-          <div><dt>Source</dt><dd>CoinMarketCap listings, quotes, Fear &amp; Greed.</dd></div>
-          <div><dt>Scoring</dt><dd>Deterministic. The model does not rank events.</dd></div>
-          <div><dt>Agents</dt><dd>Intent compiler. Explanation brief.</dd></div>
-        </dl>
-      {% endif %}
-    </aside>
-  </div>
 
-  <footer class="landing-foot">Policy in. Observation out. No invented ticks.</footer>
+        <div class="landing-preview" aria-labelledby="landing-example-title">
+          <article class="landing-turn">
+            <h2>You asked</h2>
+            <p class="landing-asked">When BTC drops by 2%, check the top 100 coins and rank their declines.</p>
+          </article>
+          <article class="landing-turn">
+            <h2>KryptoLens assumed</h2>
+            <p class="landing-asked">BTC 24h change ≤ −2%, then rank live listings by decline.</p>
+          </article>
+        </div>
+
+        <form method="post" class="landing-composer" action="{% url 'landing' %}">
+          {% csrf_token %}
+          <p class="starter-label visually-hidden" id="landing-ask">Ask KryptoLens</p>
+          <label class="visually-hidden" for="landing-intent">What job should KryptoLens handle for you?</label>
+          <div class="composer-shell">
+            <textarea id="landing-intent" name="intent" required rows="3" placeholder="Ask KryptoLens…"></textarea>
+            <button class="btn btn-primary" type="submit">Get Started</button>
+          </div>
+          <p class="quiet">Creates a real account, then a real Lens. Nothing runs before you sign up.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-spec" id="how-it-works">
+    <h2>How it works</h2>
+    <dl class="spec-grid landing-loop">
+      <div>
+        <dt>Write the job</dt>
+        <dd>English is enough. No charts to set up.</dd>
+      </div>
+      <div>
+        <dt>See the assumption</dt>
+        <dd><strong>You asked</strong> and <strong>KryptoLens assumed</strong> stay written down.</dd>
+      </div>
+      <div>
+        <dt>Activate once</dt>
+        <dd>The Lens keeps the job without another prompt.</dd>
+      </div>
+      <div>
+        <dt>It reads the market</dt>
+        <dd>Live CoinMarketCap only, every 15 minutes.</dd>
+      </div>
+      <div>
+        <dt>You come back to a result</dt>
+        <dd>Evidence first. A quiet market still counts.</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="landing-close">
+    <p class="landing-close-line">Give it a job. It keeps watch for you.</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="{% url 'signup' %}">Get Started</a>
+      <a class="btn btn-ghost" href="{% url 'login' %}">Log In</a>
+    </div>
+  </section>
+
+  <footer class="landing-foot">
+    <p>Create a persistent crypto intelligence Lens powered by live CMC data.</p>
+    <p>Not a dashboard. Not a chat. Not a trading bot. No invented ticks. No demo account.</p>
+  </footer>
 </div>
 {% endblock %}

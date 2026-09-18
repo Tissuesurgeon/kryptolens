@@ -1,0 +1,23 @@
+{% load humanize %}
+{% if strip.ok %}
+  <div class="market-strip" aria-label="Live CoinMarketCap">
+    {% for asset in strip.assets %}
+      <div class="market-chip">
+        <span class="market-symbol">{{ asset.symbol }}</span>
+        <span class="market-price">{{ asset.price }}</span>
+        <span class="market-change {% if asset.change.kind == 'up' %}is-up{% elif asset.change.kind == 'down' %}is-down{% endif %}">{{ asset.change.text }}</span>
+      </div>
+    {% endfor %}
+    {% if strip.total %}
+      <div class="market-chip">
+        <span class="market-symbol">{{ strip.total.label }}</span>
+        <span class="market-price">{{ strip.total.price }}</span>
+      </div>
+    {% endif %}
+    <p class="market-meta">Live • CMC{% if strip.fetched_at %} · {{ strip.fetched_at|timesince }} ago{% endif %}</p>
+  </div>
+{% else %}
+  <div class="market-strip market-strip-error">
+    <p class="quiet">Live • CMC unavailable{% if strip.error %} · {{ strip.error }}{% endif %}</p>
+  </div>
+{% endif %}

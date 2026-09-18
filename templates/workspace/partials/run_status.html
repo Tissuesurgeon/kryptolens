@@ -9,35 +9,7 @@
   {% endif %}
 >
   {% if run.stage != "complete" and run.stage != "error" %}
-    <header class="plate-head">
-      <h2>{{ run.stage|cut:"_"|title }}</h2>
-      <span class="badge badge-active">run {{ run.id }}</span>
-    </header>
-    <p class="quiet">Stage is written to the database around the real operation. This view only reflects that row.</p>
-    <ol class="stage-track">
-      <li {% if run.stage == "queued" %}aria-current="step"{% endif %}>queued</li>
-      <li {% if run.stage == "loading_policy" %}aria-current="step"{% endif %}>loading policy</li>
-      <li {% if run.stage == "fetching_cmc" %}aria-current="step"{% endif %}>fetching CMC</li>
-      <li {% if run.stage == "evaluating" %}aria-current="step"{% endif %}>evaluating</li>
-      <li {% if run.stage == "scoring" %}aria-current="step"{% endif %}>scoring</li>
-    </ol>
-  {% elif run.stage == "error" %}
-    <header class="plate-head">
-      <h2>Scan failed</h2>
-      <span class="badge badge-high">error</span>
-    </header>
-    <p>{{ run.error|default:"The run stopped before completion." }}</p>
-  {% else %}
-    <header class="plate-head">
-      <h2>
-        {{ run.summary_json.assets_checked|default:run.assets_checked }} assets
-        · {{ run.summary_json.events|default:run.events_promoted }} events
-        · {{ run.near_matches_json|length }} near matches
-      </h2>
-      <span class="badge badge-active">complete</span>
-    </header>
-    <p class="quiet">Zero events is a successful scan. Quiet markets stay quiet.</p>
-    {% include "workspace/partials/near_matches.html" %}
+    <p class="visually-hidden">{{ run.stage }}</p>
   {% endif %}
 </div>
 {% endif %}

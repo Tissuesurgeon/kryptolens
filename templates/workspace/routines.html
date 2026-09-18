@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Routines · {{ lens.name }}{% endblock %}
+{% block workspace_title %}{{ lens.name }}{% endblock %}
+
+{% block content %}
+<div class="thread">
+  <div class="thread-scroll">
+    <header class="conversation-head">
+      <div>
+        <p class="page-id"><a href="{% url 'agent_chat' lens.id %}">← {{ lens.name }}</a></p>
+        <h1>{{ lens.name }}</h1>
+      </div>
+    </header>
+    <div class="job-blotter">
+    {% for item in routines %}
+      <a class="job-line" href="{% url 'agent_routine_detail' lens.id item.id %}">
+        <strong>{{ item.name|default:lens.name }}</strong>
+        <span>{{ item.kind }}{% if item.paused %} · paused{% endif %}</span>
+      </a>
+    {% empty %}
+      <p class="lede">No routines yet. Message this agent a job that should keep watch.</p>
+    {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ detail_routine.name|default:lens.name }} · Routine{% endblock %}
+{% block workspace_title %}{{ lens.name }}{% endblock %}
+
+{% block content %}
+<div class="thread">
+  <div class="thread-scroll">
+    <header class="conversation-head">
+      <div>
+        <p class="page-id"><a href="{% url 'agent_chat' lens.id %}">← {{ lens.name }}</a></p>
+        <h1>{{ detail_routine.name|default:lens.name }}</h1>
+        <p class="lede">{{ lens.purpose }}</p>
+      </div>
+      <span class="badge {% if not detail_routine.paused %}badge-active{% endif %}">{% if detail_routine.paused %}Paused{% else %}Active{% endif %}</span>
+    </header>
+
+    <section class="card">
+      <p class="starter-label">Trigger</p>
+      <h2>{{ live.when }}</h2>
+      {% if live.asset %}
+        <p>{{ live.asset }} {{ live.operator }} {{ live.threshold }}%</p>
+      {% endif %}
+      {% if live.error %}
+        <p class="quiet">{{ live.error }}</p>
+      {% elif live.price != None %}
+        <p>Current {{ live.asset }} ${{ live.price }} · {{ live.change }}%</p>
+        {% if live.distance != None %}
+          <p class="quiet">Distance to trigger {{ live.distance }} percentage points</p>
+        {% endif %}
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <p class="starter-label">Workflow</p>
+      <ol class="plain-list">
+        {% for step in live.steps %}<li>{{ step }}</li>{% empty %}
+          <li>{{ live.do }}</li>
+        {% endfor %}
+      </ol>
+    </section>
+
+    <section class="card">
+      <p class="starter-label">Recent runs</p>
+      <ul class="plain-list">
+        {% for item in routine_runs %}
+          <li>
+            <a href="{% url 'job_detail' item.id %}">{{ item.started_at|date:"M j · H:i" }} · {{ item.status }} · {{ item.trigger }}</a>
+          </li>
+        {% empty %}
+          <li>No runs yet.</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <div class="actions">
+      <form method="post" action="{% url 'agent_routine_run' lens.id detail_routine.id %}">
+        {% csrf_token %}
+        <button class="btn btn-primary" type="submit">Run now</button>
+      </form>
+      <form method="post" action="{% url 'agent_routine_pause' lens.id detail_routine.id %}">
+        {% csrf_token %}
+        <button class="btn btn-ghost" type="submit">{% if detail_routine.paused %}Resume{% else %}Pause{% endif %}</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

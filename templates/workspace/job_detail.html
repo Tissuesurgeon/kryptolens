@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Job {{ run.id }} · {{ run.lens.name }}{% endblock %}
+{% block workspace_title %}{{ run.lens.name }}{% endblock %}
+
+{% block content %}
+<div class="thread">
+  <div class="thread-scroll">
+    <header class="conversation-head">
+      <div>
+        <p class="page-id"><a href="{% url 'agent_chat' run.lens.id %}">← {{ run.lens.name }}</a></p>
+        <h1>{{ run.lens.name }}</h1>
+        <p class="lede">{{ run.status }} · {{ run.started_at|date:"H:i" }}</p>
+      </div>
+    </header>
+
+    <section class="card">
+      <p class="starter-label">Execution</p>
+      <ol class="stage-track">
+        {% for step in trace.stages %}
+          <li {% if step.current %}aria-current="step"{% endif %}>{{ step.id }}</li>
+        {% empty %}
+          <li {% if run.stage == "queued" %}aria-current="step"{% endif %}>queued</li>
+        {% endfor %}
+      </ol>
+      <p class="quiet">Stage {{ run.stage }}{% if run.error %} · {{ run.error }}{% endif %}</p>
+    </section>
+
+    {% if result %}
+      {% include "workspace/partials/result_artifact.html" %}
+    {% endif %}
+
+    <section class="card">
+      <p class="starter-label">CMC API</p>
+      {% for call in cmc_calls %}
+        <details class="cmc-call">
+          <summary>
+            <span class="mono">{{ call.endpoint }}</span>
+            · {{ call.status_code }}
+            · {{ call.elapsed_ms }}ms
+          </summary>
+          <p class="quiet">Redacted params</p>
+          <pre class="policy-json">{{ call.params_redacted }}</pre>
+          <p class="quiet">Response excerpt</p>
+          <pre class="policy-json">{{ call.response_excerpt }}</pre>
+        </details>
+      {% empty %}
+        <p class="quiet">No CMC calls recorded for this run.</p>
+      {% endfor %}
+    </section>
+  </div>
+</div>
+{% endblock %}

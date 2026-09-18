@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Create Agent · KryptoLens{% endblock %}
+{% block workspace_title %}Create Agent{% endblock %}
+
+{% block content %}
+<div class="thread">
+  <form method="post" class="form-narrow create-agent">
+    {% csrf_token %}
+    <h1>Create your agent</h1>
+    <p class="lede">Give it a name and a job. You can message it after this.</p>
+    <p>
+      <label for="agent-name">Name</label>
+      <input id="agent-name" type="text" name="name" required value="{{ name }}" placeholder="Name" autocomplete="off">
+    </p>
+    <p>
+      <label for="agent-purpose">What is its job?</label>
+      <textarea id="agent-purpose" name="purpose" rows="4" placeholder="Standing job (optional)">{{ purpose }}</textarea>
+    </p>
+    <div class="actions">
+      <a class="btn btn-ghost" href="{% url 'agent_home' %}">Cancel</a>
+      <button class="btn btn-primary" type="submit">Create Agent</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

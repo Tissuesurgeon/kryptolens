@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Get Started · KryptoLens{% endblock %}
+
+{% block landing %}
+<div class="auth-shell">
+  <a class="brand" href="{% url 'landing' %}">
+    <img src="{% static 'img/mark.svg' %}" alt="">
+    <span>KryptoLens</span>
+  </a>
+  <h1>Create your account</h1>
+  <p class="lede">Give an agent a job. It keeps watch against live CoinMarketCap data.</p>
+  <form method="post" class="auth-form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <ul class="form-errors">{{ form.non_field_errors }}</ul>
+    {% endif %}
+    <label for="id_email">Email</label>
+    {{ form.email }}
+    {{ form.email.errors }}
+    <label for="id_password">Password</label>
+    {{ form.password }}
+    {{ form.password.errors }}
+    <label for="id_password_confirm">Confirm password</label>
+    {{ form.password_confirm }}
+    {{ form.password_confirm.errors }}
+    <button class="btn btn-primary" type="submit">Get Started</button>
+  </form>
+  <p class="quiet">Already have an account? <a href="{% url 'login' %}">Log In</a></p>
+</div>
+{% endblock %}

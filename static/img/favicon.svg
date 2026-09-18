@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="KryptoLens">
+  <rect width="32" height="32" rx="8" fill="#2c3028"/>
+  <g fill="none" stroke="#8fa56c" stroke-linecap="round">
+    <circle cx="16" cy="16" r="7.15" stroke-width="1.85"/>
+    <circle cx="16" cy="16" r="4.15" stroke-width="1.55"/>
+    <path d="M16 5.6v2.55M16 23.85v2.55M5.6 16h2.55M23.85 16h2.55" stroke-width="1.85"/>
+  </g>
+  <circle cx="16" cy="16" r="1.85" fill="#8fa56c"/>
+</svg>

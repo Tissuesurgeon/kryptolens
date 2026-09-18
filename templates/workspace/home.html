@@ -1,50 +1,76 @@
 {% extends "base.html" %}
+{% load humanize %}
 
-{% block title %}Workspace · KryptoLens{% endblock %}
+{% block title %}Your crypto agents · KryptoLens{% endblock %}
+{% block workspace_title %}Your crypto agents{% endblock %}
 
 {% block content %}
-<div class="conversation-stream">
-  <header class="stream-intro">
-    <h1>Ask KryptoLens what to watch</h1>
-    <p class="lede">
-      Compile an Intelligence Policy from language. Activate it, then Run now against live CoinMarketCap.
-      Quiet scans are valid — the agent will not invent a move.
-    </p>
-  </header>
-
-  <section class="desk">
-    <div class="desk-body">
-      {% if events %}
-        <div class="event-feed" aria-label="Recent receipts">
-          {% for event in events %}
-            {% include "workspace/partials/event_card.html" %}
-          {% endfor %}
+<div class="thread agent-home{% if first_run %} first-run{% endif %}">
+  {% if first_run %}
+  <div class="first-run-stage">
+    <h1>Your crypto teammates</h1>
+    <p class="lede">Create a named teammate — not a disposable chat. Then message the job.</p>
+    <button class="btn btn-primary" type="button" id="open-create-agent">Create Agent</button>
+  </div>
+  {% else %}
+  <div class="thread-scroll">
+    <header class="conversation-head">
+      <div>
+        <h1>Your agents</h1>
+        <p class="lede">Who they are, what they watch, and whether they are working.</p>
+      </div>
+      <button class="btn btn-primary" type="button" id="open-create-agent">Create Agent</button>
+    </header>
+    <div class="agent-list">
+      {% for item in lenses %}
+        <div class="agent-row-wrap">
+          <a class="agent-row" href="{% url 'agent_chat' item.id %}">
+            {% include "workspace/partials/bot_face.html" with face_id=item.id kind=item.agent_state.kind %}
+            <span class="agent-row-body">
+              <strong>{{ item.name }}</strong>
+              <p>{{ item.purpose|default:"Give this agent a job." }}</p>
+              <p class="agent-row-meta">
+                {{ item.agent_state.label }}
+                · {{ item.active_routine_count|default:item.routine_count|default:0 }} routines
+                · {{ item.job_count|default:0 }} jobs
+                {% if item.last_at %} · {{ item.last_at|naturaltime }}{% endif %}
+              </p>
+            </span>
+          </a>
+          {% include "workspace/partials/delete_agent.html" with agent=item form_class="agent-row-delete" labeled=True %}
         </div>
-      {% elif lenses %}
-        <div class="empty-state">
-          <h2>Lenses are compiled</h2>
-          <p class="empty">Open one from the roster, activate it, and run against live listings.</p>
-        </div>
-      {% else %}
-        <div class="empty-state">
-          <h2>No lens on this workspace</h2>
-          <p class="empty">Describe the condition below. You asked / KryptoLens assumed appears after compile.</p>
-        </div>
-      {% endif %}
-
-      {% if templates %}
-        <div class="starter">
-          <p class="starter-label">Start from a condition</p>
-          <div class="chips">
-            {% for item in templates %}
-              <a class="chip" href="{% url 'lens_create' %}?template={{ item.slug }}">{{ item.name }}</a>
-            {% endfor %}
-          </div>
-        </div>
-      {% endif %}
+      {% endfor %}
     </div>
-    {% url 'home' as composer_action %}
-    {% include "workspace/partials/composer.html" with composer_placeholder="Ask KryptoLens…" composer_submit="Compile" %}
-  </section>
+  </div>
+  {% endif %}
 </div>
+<dialog class="create-modal" id="create-agent-modal">
+  <form method="post" action="{% url 'agent_create' %}" class="form-narrow create-agent">
+    {% csrf_token %}
+    <h1>Create your agent</h1>
+    <p class="lede">Give it a name and a job. You can message it after this.</p>
+    <p>
+      <label for="agent-name">Name</label>
+      <input id="agent-name" type="text" name="name" required placeholder="Name" autocomplete="off">
+    </p>
+    <p>
+      <label for="agent-purpose">What is its job?</label>
+      <textarea id="agent-purpose" name="purpose" rows="4" placeholder="Standing job (optional)"></textarea>
+    </p>
+    <div class="actions">
+      <button class="btn btn-ghost" type="button" id="close-create-agent">Cancel</button>
+      <button class="btn btn-primary" type="submit">Create Agent</button>
+    </div>
+  </form>
+</dialog>
+<script>
+  (function () {
+    var modal = document.getElementById("create-agent-modal");
+    var openBtn = document.getElementById("open-create-agent");
+    var closeBtn = document.getElementById("close-create-agent");
+    if (!modal || !openBtn) return;
+    openBtn.addEventListener("click", function () { modal.showModal(); });
+    if (closeBtn) closeBtn.addEventListener("click", function () { modal.close(); });
+  })();
+</script>
 {% endblock %}

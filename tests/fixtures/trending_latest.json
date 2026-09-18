@@ -1,0 +1,12 @@
+{
+  "status": {"error_code": 0, "credit_count": 1},
+  "data": [
+    {
+      "id": 5426,
+      "name": "Solana",
+      "symbol": "SOL",
+      "cmc_rank": 5,
+      "quote": {"USD": {"price": 180.12, "percent_change_24h": 12.4, "volume_24h": 6200000000, "volume_change_24h": 210.5}}
+    }
+  ]
+}

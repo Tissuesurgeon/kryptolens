@@ -8,4 +8,4 @@
 - Limitations: `docs/limitations.md`
 - Demo walkthrough: `docs/demo-script.md`
 
-Walkthrough: Enter Demo → compile a lens → You asked / KryptoLens assumed → Activate → async Run now → Event Receipt → View API evidence dialog → optional Telegram. No pre-seeded lenses or mock market data.
+Walkthrough: Get Started → sign up → Create Agent → chat a job → You asked → confirm Routine → Check now → Result artifact / Job execution trace / Event Receipt → View API evidence → optional Telegram. No pre-seeded agents or mock market data. Monitoring every 15 minutes.

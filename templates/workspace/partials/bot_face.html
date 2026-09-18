@@ -1,0 +1,5 @@
+<span
+  class="bot-face status-{{ kind|default:'paused' }}{% if kind == 'checking' or kind == 'waiting' %} is-working{% endif %}"
+  data-face="{{ face_id }}"
+  aria-hidden="true"
+></span>

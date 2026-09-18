@@ -1,0 +1,22 @@
+{
+  "1_what_is_the_app": "Tell KryptoLens what matters. Give it a job. It keeps watch for you.",
+  "2_funniest_or_most_impressive_claim": "Positioned as a persistent crypto intelligence teammate, not a chatbot, dashboard, demo, or trading bot. Voice: Tell \u2192 Define \u2192 Watch \u2192 Act \u2192 Return. Quiet markets are a valid result.",
+  "3_visual_hook": "",
+  "4_ui_to_show": "Agent / lens workspace",
+  "5_shortest_satisfying_video": "18-22 seconds",
+  "6_tone": {
+    "preset": "default",
+    "direction": "Positioned as a persistent crypto intelligence teammate, not a chatbot, dashboard, demo, or trading bot. Voice: Tell \u2192 Define \u2192 Watch \u2192 Act \u2192 Return. Quiet markets are a valid result."
+  },
+  "7_audio_feel": "Warm bed; SFX matched to UI motion unless disabled",
+  "8_share_caption": "Tell KryptoLens what matters. Give it a job. It keeps watch for you.",
+  "9_user_flow": "Authenticate \u2192 POST intent or pick a template \u2192 AgentService.create_from_intent \u2192 Redirect to lens detail",
+  "visual": {
+    "background": "",
+    "accent": "",
+    "text": "",
+    "display_font": "",
+    "body_font": ""
+  },
+  "name": "KryptoLens"
+}

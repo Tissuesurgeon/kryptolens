@@ -63,11 +63,58 @@ def notify_event(event: Event) -> Notification | None:
     return record
 
 
+def notify_artifact(artifact) -> None:
+    if not artifact or artifact.kind not in {"execution_receipt", "report"}:
+        return
+    preference = UserPreference.objects.filter(user=artifact.lens.user).first()
+    if not preference or not preference.telegram_enabled or not preference.telegram_chat_id:
+        return
+    payload = artifact.payload_json or {}
+    if artifact.kind == "execution_receipt":
+        text = (
+            f"KryptoLens · {artifact.lens.name}\n"
+            f"{payload.get('job') or artifact.title}\n"
+            f"{payload.get('what_triggered_it') or ''}\n"
+            f"Verification: {payload.get('verification') or '—'}\n"
+            f"{payload.get('result') or ''}"
+        )
+        if artifact.lens_run_id:
+            text += f"\nView Full Report: {settings.PUBLIC_BASE_URL}/jobs/{artifact.lens_run_id}"
+    else:
+        text = f"KryptoLens · {artifact.lens.name}\n{artifact.title or 'Report'}"
+    try:
+        send_message(preference.telegram_chat_id, text.strip())
+    except TelegramError as exc:
+        logger.warning("telegram_artifact_failed artifact=%s error=%s", artifact.id, exc)
+
+
+def notify_result(result) -> None:
+    preference = UserPreference.objects.filter(user=result.lens.user).first()
+    if not preference or not preference.telegram_enabled or not preference.telegram_chat_id:
+        return
+    if not getattr(preference, "telegram_notify_results", True):
+        return
+    if result.kind in {"no_result", "error"}:
+        return
+    try:
+        text = f"KryptoLens · {result.lens.name}\n{result.title or result.kind}"
+        if result.lens_run_id:
+            text += f"\nView Full Report: {settings.PUBLIC_BASE_URL}/jobs/{result.lens_run_id}"
+        send_message(preference.telegram_chat_id, text)
+    except TelegramError as exc:
+        logger.warning("telegram_result_failed result=%s error=%s", result.id, exc)
+
+
 def format_event_message(event: Event) -> str:
     reasons = ", ".join(event.score_reasons_json or [])
+    if event.lens_run_id:
+        report = f"{settings.PUBLIC_BASE_URL}/jobs/{event.lens_run_id}"
+    else:
+        report = f"{settings.PUBLIC_BASE_URL}/events/{event.id}"
     return (
         f"KryptoLens · {event.lens.name}\n"
         f"{event.symbol} scored {event.score} ({event.severity})\n"
         f"{event.explanation or reasons}\n"
-        f"Generated under Lens v{event.lens_version.version}"
+        f"Generated under Lens v{event.lens_version.version}\n"
+        f"View Full Report: {report}"
     )

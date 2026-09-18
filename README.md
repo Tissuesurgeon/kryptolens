@@ -1,10 +1,10 @@
 # KryptoLens
 
-See what matters in crypto.
+Tell KryptoLens what matters. Give it a job. It keeps watch for you.
 
-KryptoLens is an intent-driven crypto intelligence system. You name a market condition in language. It compiles that into a versioned **Intelligence Policy**, fetches the minimum live [CoinMarketCap](https://coinmarketcap.com/api/) data required, evaluates every asset deterministically, and — when something qualifies — writes an Event Receipt you can inspect or send to Telegram.
+KryptoLens is a persistent crypto intelligence workspace where users create **Agents** (the UI name for a Lens), talk to them in natural language, give them crypto-market jobs, and leave those jobs running against live market data. A **Routine** starts work without another prompt. Celery Beat runs unattended through **AgentRuntime** → LensRuntime → CMC. The conversation is a structured work log: Plan → Evidence → Verification → Result.
 
-It is not a chatbot, not a market dashboard, and not a trading bot. Cadence is **15 minutes**. Quiet markets are a valid result: zero events is a successful scan.
+It is not a chatbot, not a market dashboard, not a demo, and not a trading bot. Cadence is **15 minutes**. Quiet markets are a valid result.
 
 Built for the [Build with CMC](https://coinmarketcap.com/api/resources/api-hackathon/) hackathon · **AI Agents and Automation** · `#BuildwithCMC`
 
@@ -12,53 +12,59 @@ Built for the [Build with CMC](https://coinmarketcap.com/api/resources/api-hacka
 
 ```
 Human intent
-  → Intent Agent (NL → IntelligencePolicy)
-  → Query plan (minimum CMC endpoints)
-  → CMC adapter (live listings / quotes / Fear & Greed / optional global metrics)
-  → Normalized observations
-  → Policy engine + scoring
-  → Event (if the policy fires)
-  → Explanation Agent (facts → brief)
-  → Event Receipt (web + optional Telegram)
+  → ConversationAgent (needs_input | ClarifiedTask)
+  → Chief Agent (capabilities + tools; never CMC)
+  → AgentRuntime → LensRuntime
+  → CryptoToolRegistry → CMC adapter
+  → Observation rows → deterministic capabilities
+  → Evidence → Verification → Response LLM
+  → Conversation (You asked / I'll do / compact Evidence / Verification)
 ```
 
-Only two agents exist. Query planning, CMC, detection, scoring, and Telegram are ordinary software.
+Chief Agent does not call CMC. Capabilities declare tools; `dispatch_cmc` executes. On-chain, DEX, derivatives, and RWA are registry stubs with honest 403. News uses CoinMarketCap Content Latest plus quotes.
 
-| Piece | Role |
-| --- | --- |
-| Intent Agent | Compiles language into `IntelligencePolicy` JSON and an asked-vs-assumed report |
-| Explanation Agent | Writes a short brief from already-scored facts |
-| Query planner | Chooses listings vs quotes, Fear & Greed, and global metrics only when the policy needs them |
-| CMC adapter | Auth, 60s cache, `CmcCallLog`. Raw JSON never enters the engine |
-| Policy engine | Deterministic `evaluate_policy` |
-| Scoring | Extracted service (`apps/intelligence/scoring.py`). The LLM does not rank events |
-| `MonitoringService.run_lens` | One path for Celery Beat and **Run now** |
+| Piece | Status | Role |
+| --- | --- | --- |
+| ConversationAgent | Implemented | ASK vs WORK, questions only when material |
+| ClarifiedTask | Implemented | Ready job the Chief can plan from |
+| Chief Agent | Implemented | Plans capabilities and tools. Does not call CMC |
+| Hidden capabilities | Implemented | Market, Anomaly, Reaction, Historical, Discovery, Regime |
+| Evidence / Verification | Implemented | Compact claims and checkmarks in the thread |
+| Approvals | Foundation only | READ/ANALYZE not required; EXECUTE denied |
+| Onchain / DEX / Derivatives / RWA | Boundary | Honest refusal, not on Startup |
+| News | Implemented, CMC Content Latest | Headlines related to live quotes |
+| Wallet / Execution | Future | Not available yet |
+| CMC adapter | Implemented | Auth, 60s cache, `CmcCallLog`. Raw JSON never enters the engine |
+| `AgentRuntime` / `LensRuntime` | Implemented | Chat, Check now, and Beat share one path |
 
-**You asked / KryptoLens assumed** is interpretation of the compile, never a market prediction. `confidence` on the compile report is how sure the compiler is that it understood the request.
+**You asked / KryptoLens assumed** is the LLM's interpretation of the message, never a market prediction. `confidence` is how sure that understanding is. The Chief Agent plans from it and does not call CMC.
 
 Policy JSON field names are frozen: `metrics`, `asset_conditions`, `market_context`. UI copy may say “Signals.” Storage must not.
 
 ## Product path
 
-1. Landing composer (optional) — same compiler as the app. Preview is session-only. **No anonymous database rows.**
-2. **Enter Demo** (`GET /enter-demo`; `/start` is an alias) — logs in the single operator account (`APP_EMAIL` / `APP_PASSWORD`). Nothing is seeded.
-3. If a landing intent was previewed, a Lens is created after auth. Otherwise compile from **Ask KryptoLens…**.
-4. Review asked vs assumed and the policy card. **Activate**.
-5. **Run now** creates a `LensRun` (`stage=queued`), queues the same Celery `run_lens` task, and returns `run_id` immediately. HTMX polls `LensRun.stage` until `complete` or `error`.
-6. Open an Event Receipt. **View API evidence** is a dialog: endpoint, redacted params, fields used, sanitized excerpt.
-7. Settings: Connect / test / disconnect Telegram. A failed send never drops the stored receipt.
+1. Landing composer stashes the instruction. **No Agent and no CMC job before authentication.**
+2. **Get Started** (`/signup`) or **Log In** (`/login`). Password reset is Django's built-in flow.
+3. After auth, a pending landing instruction creates **your** Agent. Otherwise **Create Agent** on Agent Home, then message the job.
+4. Chat a job. The LLM understands it (**You asked** / **KryptoLens assumed** / I'll do), Chief Agent plans, and work starts in the thread. A Routine is standing watch — not a setup form.
+5. Close the laptop. Beat ticks every 15 minutes, calls the same Celery `run_lens` task as **Check now** (`AgentRuntime` → `LensRuntime` → live CMC), and writes the result into the conversation. No extra LLM. No invented ticks.
+6. **Check now** creates a `LensRun` (`stage=queued`) and returns `run_id` immediately. HTMX polls `LensRun.stage` until `complete` or `error`. CMC activity cards in the transcript show real endpoints, status, and elapsed_ms.
+7. Conversation artifacts appear in order: Plan → Evidence → Verification → Result → Execution receipt. True Events still open a Receipt. Jobs open an execution trace at `/jobs/<id>`.
+8. Settings: Connect / test / disconnect Telegram. Telegram inbound uses the same conversation as the web. A failed send never drops the stored receipt.
 
-Natural-language edit previews a policy diff, then **Apply** writes a new `LensVersion`. Old events stay on the version that produced them.
+A later message that changes a standing job writes a new `LensVersion` and keeps watching. Old runs stay on the version that produced them.
 
-Workspace status is derived from real runs: Watching / Checking / Scan complete / Degraded / Paused.
+Workspace status is derived from real runs: Idle · Watching · Working · Investigating · Verifying · Waiting for approval · Needs attention · Completed · Paused · Error.
 
 ## Workspace
 
-Persistent-agent layout, not a chat transcript.
+Agent Home and one transcript — not a dashboard.
 
-- Left: **Your Lenses**, New Lens, Settings
-- Main: structured plates — asked/assumed, policy, live scan, scan summary, near matches, event rows, receipt
-- Bottom: **Ask KryptoLens…** (create on home, revise on a lens)
+- Left: **Agents** — name, status, job preview. Hover shows the current action. Create Agent only.
+- Home: Who → What → State → Activity cards. Live CMC strip (BTC / ETH / SOL / TOTAL).
+- Selected Agent: slim Bot head (name + presence), transcript, composer. Pause / check now / activate are messages.
+- Transcript: You asked / KryptoLens assumed / I'll do, watching status, CMC activity cards, Plan → Evidence → Verification → Result
+- Bottom: **Ask {name}…**. First-run is Create Agent, not a compile-chosen "New Lens".
 
 Near-match objects have a frozen shape (`symbol`, `name`, `actuals`, `conditions[].passed`). Templates only render those fields.
 
@@ -72,10 +78,11 @@ cp .env.example .env
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
+python manage.py reset_agents  # wipe agents/jobs/runs; keep user accounts
 python manage.py runserver
 ```
 
-Open [http://127.0.0.1:8000](http://127.0.0.1:8000) → **Enter Demo** → compile a lens → **Activate** → **Run now**.
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) → **Get Started** → create an account → give a Lens a job → **Activate** → **Check now**.
 
 Without `CMC_API_KEY`, Run now persists `stage=error`. The product will not invent market data.
 
@@ -111,8 +118,8 @@ Copy `.env.example` to `.env`. Never commit secrets.
 | `CURSOR_API_KEY` | Composer 2.5 for intent and explanation. Optional. |
 | `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL` | Alternate OpenAI-compatible provider. Optional. |
 | `TELEGRAM_BOT_TOKEN` | Optional Event → Telegram delivery. |
-| `APP_EMAIL` / `APP_PASSWORD` | Single operator account. Defaults are in `.env.example`. |
-| `DATABASE_URL` | Postgres URL. Empty = local SQLite. Pytest always uses SQLite. |
+| `EMAIL_BACKEND` | Password-reset delivery. Defaults to console. |
+| `DATABASE_URL` | Postgres URL. Empty = local SQLite. Pytest always uses SQLite. On Supabase, migrate enables RLS on public Django tables so PostgREST cannot read them. |
 | `REDIS_URL` | Celery broker. Required for queued Run now and Beat. |
 | `EVENT_COOLDOWN_MINUTES` | Dedup window for event fingerprints. Default `60`. |
 | `SCORE_HIGH_MIN` / `SCORE_MEDIUM_MIN` | Scoring bands. Defaults `4` / `2`. |
@@ -131,6 +138,7 @@ Auth header: `X-CMC_PRO_API_KEY`. The key is never logged, never stored on event
 | `GET /v3/cryptocurrency/quotes/latest` | Universe is named symbols (e.g. BTC) |
 | `GET /v3/fear-and-greed/latest` | Policy includes Fear & Greed as **market context** |
 | `GET /v1/global-metrics/quotes/latest` | Only when policy context needs global market fields |
+| `GET /v1/content/latest` | News questions: CMC News/Headlines, then live quotes for tagged assets |
 
 Listings and quotes are cached in-process for about 60 seconds. Events store normalized observations plus a foreign key to the call log — not a full CMC dump.
 
@@ -171,7 +179,7 @@ Full list: [docs/limitations.md](docs/limitations.md).
 | [docs/architecture.md](docs/architecture.md) | Locked chain, run stages, deployment |
 | [docs/agent-design.md](docs/agent-design.md) | Two agents; asked vs assumed |
 | [docs/policy-schema.md](docs/policy-schema.md) | Frozen policy JSON and near-match shape |
-| [docs/demo.md](docs/demo.md) | Enter Demo walkthrough |
+| [docs/demo.md](docs/demo.md) | Fresh-account walkthrough |
 | [docs/cmc-integration.md](docs/cmc-integration.md) | Named endpoints, observation model, evidence |
 | [docs/demo-script.md](docs/demo-script.md) | Judge walkthrough |
 | [docs/limitations.md](docs/limitations.md) | Honest constraints |

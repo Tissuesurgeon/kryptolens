@@ -1,0 +1,111 @@
+<section class="artifact artifact-result">
+  <header class="plate-head">
+    <h2>{{ result.title|default:result.kind }}</h2>
+    <span class="badge">{{ result.kind }}</span>
+  </header>
+  {% if result.kind == "no_result" %}
+    <p>{{ result.payload_json.message|default:"Nothing met the conditions." }}</p>
+    {% if result.payload_json.assets %}
+      <p class="quiet">{{ result.payload_json.assets }} assets evaluated. I'm still watching.</p>
+    {% endif %}
+  {% elif result.kind == "error" %}
+    <p>I couldn't complete this run because CoinMarketCap data was unavailable.</p>
+    <p class="quiet">{{ result.payload_json.message }}</p>
+  {% elif result.kind == "event" %}
+    <p>
+      {% if result.payload_json.count == 1 %}
+        1 significant event.
+      {% else %}
+        {{ result.payload_json.count|default:0 }} significant events.
+      {% endif %}
+    </p>
+  {% elif result.kind == "news_brief" %}
+    <p>{{ result.payload_json.analysis }}</p>
+    <ul class="plain-list">
+      {% for item in result.payload_json.items %}
+        <li>
+          {% if item.source_url %}
+            <a href="{{ item.source_url }}" rel="noreferrer">{{ item.title }}</a>
+          {% else %}
+            {{ item.title }}
+          {% endif %}
+          {% if item.source_name %}
+            <span class="quiet">{{ item.source_name }}</span>
+          {% endif %}
+          {% for quote in item.quotes %}
+            <span class="mono {% if quote.price_change_24h < 0 %}is-down{% elif quote.price_change_24h > 0 %}is-up{% endif %}">
+              {{ quote.symbol }}
+              {% if quote.price_change_24h != None %}{{ quote.price_change_24h|floatformat:2 }}%{% endif %}
+            </span>
+          {% endfor %}
+        </li>
+      {% endfor %}
+    </ul>
+    {% if result.payload_json.rows %}
+      <table class="result-table">
+        <thead><tr><th>Asset</th><th>Price</th><th>24h Change</th></tr></thead>
+        <tbody>
+          {% for row in result.payload_json.rows %}
+            <tr>
+              <td>{{ row.symbol }} <span class="quiet">{{ row.name }}</span></td>
+              <td class="mono">{% if row.price != None %}${{ row.price|floatformat:2 }}{% else %}—{% endif %}</td>
+              <td class="mono {% if row.price_change_24h < 0 %}is-down{% elif row.price_change_24h > 0 %}is-up{% endif %}">
+                {% if row.price_change_24h != None %}{{ row.price_change_24h|floatformat:2 }}%{% else %}—{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  {% elif result.kind == "comparison" %}
+    <table class="result-table">
+      <thead><tr><th>Asset</th><th>Price</th><th>24h Change</th></tr></thead>
+      <tbody>
+        {% for row in result.payload_json.rows %}
+          <tr>
+            <td>{{ row.symbol }} <span class="quiet">{{ row.name }}</span></td>
+            <td class="mono">{% if row.price != None %}${{ row.price|floatformat:2 }}{% else %}—{% endif %}</td>
+            <td class="mono {% if row.price_change_24h < 0 %}is-down{% elif row.price_change_24h > 0 %}is-up{% endif %}">
+              {% if row.price_change_24h != None %}{{ row.price_change_24h|floatformat:2 }}%{% else %}—{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% elif result.kind == "market_summary" %}
+    <p>{{ result.payload_json.assets }} assets analyzed.</p>
+    {% if result.payload_json.mean_price_change_24h != None %}
+      <p>Mean 24h change: <span class="mono">{{ result.payload_json.mean_price_change_24h }}%</span></p>
+    {% endif %}
+  {% else %}
+    {% if result.payload_json.trigger %}
+      <p>
+        {{ result.payload_json.trigger.asset|default:"BTC" }}
+        {% if result.payload_json.trigger.actual != None %}
+          {{ result.payload_json.trigger.actual }}%
+        {% endif %}
+      </p>
+    {% endif %}
+    <table class="result-table">
+      <thead><tr><th>Rank</th><th>Asset</th><th>24h Change</th></tr></thead>
+      <tbody>
+        {% for row in result.payload_json.rows %}
+          <tr>
+            <td class="mono">{{ row.rank }}</td>
+            <td>{{ row.symbol }} <span class="quiet">{{ row.name }}</span></td>
+            <td class="mono {% if row.price_change_24h < 0 %}is-down{% elif row.price_change_24h > 0 %}is-up{% endif %}">
+              {% if row.price_change_24h != None %}{{ row.price_change_24h|floatformat:2 }}%{% else %}—{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="quiet">
+      {% if result.payload_json.assets %}
+        {{ result.payload_json.assets }} assets analyzed
+      {% elif result.payload_json.rows %}
+        {{ result.payload_json.rows|length }} assets analyzed
+      {% endif %}
+    </p>
+  {% endif %}
+</section>

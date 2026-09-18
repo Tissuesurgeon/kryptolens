@@ -1,25 +1,68 @@
-{% load static %}
-<aside class="roster" aria-label="Your Lenses">
-  <a class="brand roster-brand" href="{% url 'home' %}">
+{% load static humanize %}
+<aside class="roster" aria-label="Agents">
+  <a class="brand roster-brand" href="{% url 'agent_home' %}">
     <img src="{% static 'img/mark.svg' %}" alt="">
     <span>KryptoLens</span>
   </a>
   <div class="roster-head">
-    <p class="roster-kicker">Your Lenses</p>
-    <a class="roster-new" href="{% url 'lens_create' %}">New Lens</a>
+    <p class="roster-kicker">Agents</p>
+    <a class="roster-new" href="{% url 'agent_create' %}">+ Create Agent</a>
   </div>
+  {% if workspace_lenses %}
+  <label class="visually-hidden" for="roster-search">Search agents</label>
+  <input
+    id="roster-search"
+    class="roster-search"
+    type="search"
+    placeholder="Search agents"
+    autocomplete="off"
+  >
+  {% endif %}
   <nav class="roster-list">
     {% for item in workspace_lenses %}
-      <a
-        class="roster-item {% if lens and item.id == lens.id %}is-current{% endif %}"
-        href="{% url 'lens_detail' item.id %}"
-      >
-        <strong>{{ item.name }}</strong>
-        <span class="roster-item-meta">{{ item.status }}{% if item.last_assets_checked %} · {{ item.last_assets_checked }} assets{% endif %}</span>
-      </a>
+      <div class="roster-item-wrap" data-search="{{ item.name }} {{ item.purpose|default:item.natural_language_request }}">
+        <a
+          class="roster-item {% if lens and item.id == lens.id %}is-current{% endif %}"
+          href="{% url 'agent_chat' item.id %}"
+          title="{{ item.agent_state.action|default:item.agent_state.label }}"
+        >
+          {% include "workspace/partials/bot_face.html" with face_id=item.id kind=item.agent_state.kind %}
+          <span class="roster-item-body">
+            <span class="roster-item-top">
+              <strong>{{ item.name }}</strong>
+              <span class="roster-item-time">{% if item.last_at %}{{ item.last_at|naturaltime }}{% endif %}</span>
+            </span>
+            <span class="roster-item-preview">{{ item.purpose|default:item.agent_state.label }}{% if item.last_preview %} · {{ item.last_preview }}{% endif %}</span>
+            {% if item.agent_state.action %}
+            <span class="roster-item-action">{{ item.agent_state.action }}</span>
+            {% endif %}
+          </span>
+        </a>
+        {% include "workspace/partials/delete_agent.html" with agent=item form_class="roster-delete" %}
+      </div>
     {% empty %}
-      <p class="roster-empty">No lenses yet.</p>
+      <p class="roster-empty">No agents yet</p>
     {% endfor %}
   </nav>
-  <a class="roster-settings" href="{% url 'settings' %}">Settings</a>
+  <div class="roster-foot">
+    <span class="roster-user">{{ request.user.email }}</span>
+    <a class="roster-settings" href="{% url 'settings' %}">Settings</a>
+    <form method="post" action="{% url 'sign_out' %}">
+      {% csrf_token %}
+      <button class="btn btn-ghost roster-logout" type="submit">Log Out</button>
+    </form>
+  </div>
 </aside>
+<script>
+  (function () {
+    var input = document.getElementById("roster-search");
+    if (!input) return;
+    input.addEventListener("input", function () {
+      var query = (input.value || "").toLowerCase();
+      document.querySelectorAll(".roster-item-wrap").forEach(function (row) {
+        var hay = (row.getAttribute("data-search") || "").toLowerCase();
+        row.hidden = Boolean(query) && hay.indexOf(query) === -1;
+      });
+    });
+  })();
+</script>

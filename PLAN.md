@@ -1,57 +1,58 @@
 # KryptoLens build plan
 
-Approved architecture for the Build with CMC hackathon (AI Agents and Automation, 9–30 Sep 2026).
+Authenticated persistent-agent workspace. There is no demo product.
 
 ## What it is
 
-KryptoLens compiles human information intent into a continuously executable Intelligence Policy. Externally: an intent-driven crypto intelligence system, not a chatbot or dashboard. It monitors on your behalf every 15 minutes.
+KryptoLens is a persistent crypto intelligence workspace where users create Lenses, talk to them in natural language, give them crypto-market jobs, and leave those jobs running against live market data. There is no demo product. Current capability is live CoinMarketCap market intelligence only.
+
+A Lens is the teammate. Chief Agent plans. Workflow executes.
 
 ## Hierarchy
 
 ```
-Human intent → Intent compilation → Intelligence Policy → QueryPlan
-→ CMC Adapter → Observation Model → Detection → Scoring → Explanation
-→ Event Receipt → Web + Telegram
+User instruction → ConversationAgent → ClarifiedTask → ChiefAgent → Job + AgentPlan
+  → PlanValidator → Workflow
+    → AgentRuntime → AgentTask → LensRuntime
+      → Crypto Tool Layer → CMC
+      → Observation rows → capabilities → Evidence → Verification → Result
+      → Response LLM → Conversation
 ```
 
-Policy is the core domain object. A Lens is the user-facing configuration. Only two agents exist: Intent Agent and Explanation Agent.
+Events are only one kind of Result. Policy remains the deterministic evaluator for trigger-only Lenses via `MonitoringService.run_lens`.
+
+Smallest valid execution model: do not force every request into an alert. Compare-now is a task. Watch jobs get a Routine.
 
 ## Stack
 
-Django + templates + HTMX + CSS variables. Persistent-agent workspace (roster + conversation artifacts). Composer (or heuristic fallback) for intent and explanation only. Deterministic scoring. One `MonitoringService` shared by Celery Beat and async Run now.
+Django session auth. Templates + HTMX. Celery Beat every 15 minutes. Composer (or heuristic) for intent and explanation only. LLM outputs are schema-validated config. No `eval`, no arbitrary HTTP.
 
-## Spec-close status
+## Auth
 
-### Done
+- `/signup` `/login` `/logout` `/password-reset/`
+- Landing composer stashes `pending_intent` and redirects to signup
+- No Enter Demo, no operator account, no `/enter-demo`
+- Object access scoped to `request.user`
 
-- Baseline recorded: 26 tests green before edits
-- M0 spike left in place (`spikes/m0_chain.py`, `Dockerfile.m0`). Docker re-run skipped: no `CMC_API_KEY` / `CURSOR_API_KEY` in the environment. Heuristic compiler remains the honest fallback.
-- `LensRun` artifacts: `stage`, `summary_json`, `near_matches_json` (frozen near-match shape)
-- Scoring extracted to `apps/intelligence/scoring.py`; `evaluate_policy` calls it
-- Demo flags `is_demo_scenario` / `is_example` removed; cleanup-delete in `ensure_workspace_user` removed
-- Compile report: `you_asked`, `assumptions`, `clarification`, `confidence` (interpretation only)
-- Optional `get_global_metrics()` only when policy context needs global market fields
-- Persistent workspace shell + conversation artifacts
-- Landing composer uses the same compiler; persist only after **Enter Demo**
-- Async Run now: create run (`queued`), queue Celery `run_lens`, return `run_id`; HTMX polls stage
-- Five-block receipt + CMC evidence `<dialog>`
-- NL edit → policy diff artifact → new `LensVersion`
+## Agent OS layer
+
+- Relational `Job` is the live assignment. `job_definition_json` on `LensVersion` stays as the versioned snapshot.
+- `AgentPlan` is LLM-facing intent. `Workflow` is the closed execution graph.
+- Loop: PLAN → ACT → OBSERVE → VERIFY → REPAIR? → COMPLETE
+- Artifact kinds: plan, result, evidence_pack, report, verification, execution_receipt
+- Approvals: READ/ANALYZE `not_required`. EXECUTE/PREPARE denied.
+
+## Preserved engine
+
+- `MonitoringService.run_lens` for legacy empty-workflow Lenses
+- Policy JSON field names `metrics` / `asset_conditions` / `market_context`
+- CMC adapter, scoring, Event receipts, LensVersion pinning
 - Telegram connect / test / disconnect
-- Docs: architecture, agent-design, policy-schema, demo; CMC notes refreshed
 
-### Issues
+## Tests
 
-- Live M0 Docker hop was not re-verified in this environment (keys absent)
-
-### Documented deviations
-
-- The repo was already a working modular monolith. Spec-close extended services; it did not scaffold from zero.
-- Policy JSON field names remain `metrics` / `asset_conditions` / `market_context`.
-- `run_lens` was extended (stages, summary, near matches, optional existing run), not rewritten.
-- Landing **Enter Demo** is operator-account login only. No seeded events.
+Baseline before Agent OS: 52. Agent OS adds isolation, plan validation, loop, evidence, golden BTC receipt, and approval tests.
 
 ## Definition of done
 
-Enter Demo → compile intent → Policy v1 → Activate → async Run now → live listings + Fear & Greed → scored Event → Receipt + API evidence dialog → optional Telegram.
-
-No mock market data on the demo path. Secrets never committed. `#BuildwithCMC`.
+Fresh account → give a job → Chief plan → Activate → Watching → Check now → live CMC → Evidence → Verification → Result → execution receipt. No special demo path. Docs distinguish implemented from architectural boundary.

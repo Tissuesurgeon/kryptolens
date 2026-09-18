@@ -4,7 +4,6 @@ ROLE="${1:-web}"
 
 python manage.py wait_for_db
 python manage.py migrate --noinput
-python manage.py ensure_workspace_user
 python manage.py collectstatic --noinput
 
 if [ "$ROLE" = "web" ]; then

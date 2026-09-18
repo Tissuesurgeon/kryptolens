@@ -2,10 +2,12 @@
   <div class="event-row-id">
     <strong>{{ event.symbol }}</strong>
     {% if event.name %}<span class="quiet">{{ event.name }}</span>{% endif %}
+    <span class="event-lead">I found something worth your attention.</span>
   </div>
   <p class="event-row-copy">{{ event.explanation|truncatechars:140 }}</p>
   <div class="event-row-meta">
-    <span class="badge badge-{{ event.severity }}">{{ event.severity }} {{ event.score }}</span>
+    <span class="badge badge-{{ event.severity }}">{{ event.severity|upper }} {{ event.score }}</span>
     <span class="quiet">{{ event.lens.name }} · v{{ event.lens_version.version }}</span>
+    <span class="event-link">View intelligence</span>
   </div>
 </a>

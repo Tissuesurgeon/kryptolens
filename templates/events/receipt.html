@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}{{ event.symbol }} receipt · KryptoLens{% endblock %}
+{% block workspace_title %}{{ event.symbol }}{% endblock %}
 
 {% block content %}
 <div class="conversation-stream">
@@ -17,12 +18,12 @@
 
   <article class="receipt">
     <section class="receipt-block">
-      <h2>01 · What happened</h2>
+      <h2>What happened</h2>
       <p>{{ event.explanation }}</p>
     </section>
 
     <section class="receipt-block">
-      <h2>02 · Why it scored</h2>
+      <h2>Why it matters</h2>
       <ul>
         {% for reason in event.score_reasons_json %}
           <li>{{ reason }}</li>
@@ -33,13 +34,13 @@
     </section>
 
     <section class="receipt-block">
-      <h2>03 · Why this version</h2>
+      <h2>Why you saw this</h2>
       <p>Produced by Lens version {{ event.lens_version.version }}. Later revisions do not rewrite this receipt.</p>
       <p class="quiet">{{ event.lens_version.source_intent }}</p>
     </section>
 
     <section class="receipt-block">
-      <h2>04 · Data used</h2>
+      <h2>What data we used</h2>
       <ul>
         <li>CoinMarketCap — price {{ observation.price|default:"—" }}, 24h {{ observation.price_change_24h|default:"—" }}%, volume {{ observation.volume_24h|default:"—" }}, volume change {{ observation.volume_change_24h|default:"—" }}%, market cap {{ observation.market_cap|default:"—" }}, rank {{ observation.market_cap_rank|default:"—" }}</li>
         {% if market_context.fear_greed_value %}
@@ -53,7 +54,7 @@
     </section>
 
     <section class="receipt-block">
-      <h2>05 · Action taken</h2>
+      <h2>What KryptoLens did</h2>
       <ul>
         <li>Stored against Lens v{{ event.lens_version.version }}</li>
         <li>{% if event.notified_at %}Telegram sent {{ event.notified_at }}{% else %}Telegram not sent{% endif %}</li>

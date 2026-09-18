@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>KryptoLens</title>
+<style>
+  html,body { margin:0; background:#0b1020; color:#f4f1ea; font-family:Inter,system-ui,sans-serif; overflow:hidden; }
+  .stage { width:1920px; height:1080px; position:relative; }
+  section {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    justify-content:center; align-items:center; text-align:center; padding:80px;
+    opacity:0; animation-fill-mode:forwards; animation-timing-function:ease;
+  }
+  h1 { font-size:92px; letter-spacing:-0.04em; margin:0 0 24px; }
+  p, li { font-size:36px; line-height:1.35; max-width:1400px; }
+  ul { list-style:none; padding:0; }
+  li { margin:12px 0; color:#c7d2fe; }
+  .kicker { letter-spacing:0.18em; text-transform:uppercase; font-size:22px; color:#818cf8; margin-bottom:20px; }
+  .s1 { animation:fade 3s 0s; }
+  .s2 { animation:fade 5s 3s; }
+  .s3 { animation:fade 6s 8s; }
+  .s4 { animation:fade 4s 14s; }
+  .s5 { animation:fade 3s 18s; }
+  @keyframes fade {
+    0% { opacity:0; transform:translateY(16px); }
+    12% { opacity:1; transform:none; }
+    82% { opacity:1; }
+    100% { opacity:0; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage" data-composition-id="brag" data-width="1920" data-height="1080" data-duration="21">
+    <section class="s1" data-start="0" data-duration="3"><div class="kicker">Launch</div><h1>KryptoLens</h1></section>
+    <section class="s2" data-start="3" data-duration="5"><p>Tell KryptoLens what matters. Give it a job. It keeps watch for you.</p></section>
+    <section class="s3" data-start="8" data-duration="6"><div class="kicker">What it does</div><ul><li>Persistent Lens / Agent</li><li>Natural-language job compile and conversation</li><li>Chief Agent planning</li></ul></section>
+    <section class="s4" data-start="14" data-duration="4"><div class="kicker">The flow</div><p>Authenticate → POST intent or pick a template → AgentService.create_from_intent → Redirect to lens detail</p></section>
+    <section class="s5" data-start="18" data-duration="3"><h1>KryptoLens</h1><p>Tell KryptoLens what matters. Give it a job. It keeps watch for you.</p></section>
+  </div>
+</body>
+</html>

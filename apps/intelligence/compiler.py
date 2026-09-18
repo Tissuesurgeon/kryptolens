@@ -33,10 +33,55 @@ Rules:
 - Fear & Greed is market context, never an asset condition.
 - rank_improved is derived, not a CMC field.
 - Do not invent metrics outside the schema.
-- Prefer listings top 100 for "biggest", "top", "altcoins".
+- If the user names a listing size (top 20, top 50, top 100), set universe.limit to that number. Never rewrite an explicit size to 100.
+- Prefer listings top 100 only when the user says "biggest", "top", or "altcoins" without a number.
 - For a single named coin use universe.type=symbols.
+- If the user asks how a coin is doing now or today, do not invent a percent threshold or a watch condition. That is a live snapshot, not a standing trigger.
 - If the user is making an existing policy stricter, raise numeric thresholds.
 """
+
+
+WATCH_MARKERS = (
+    "when ",
+    "whenever",
+    "every time",
+    "alert me",
+    "notify me",
+    "watch until",
+    "every morning",
+)
+STATUS_ASKS = (
+    "how is",
+    "how's",
+    "how are",
+    "doing on the market",
+    "doing today",
+    "doing right now",
+    "what's the price",
+    "what is the price",
+    "price of",
+    "how much is",
+)
+
+
+def is_now_status(text: str) -> bool:
+    """True for a live snapshot question, not a standing watch."""
+    lowered = text.lower()
+    if any(marker in lowered for marker in WATCH_MARKERS):
+        return False
+    if any(ask in lowered for ask in STATUS_ASKS):
+        return True
+    named = bool(re.search(r"\b(btc|bitcoin|eth|ethereum|sol|solana)\b", lowered))
+    snapshot = any(token in lowered for token in (" today", " right now", " currently"))
+    return named and snapshot
+
+
+def extract_listing_limit(text: str, default: int = 100) -> int:
+    """Honor an explicit 'top N'. Last match wins on edits like 'instead of top 100, use top 20'."""
+    matches = re.findall(r"\btop\s+(\d+)\b", text, flags=re.I)
+    if not matches:
+        return default
+    return max(1, min(int(matches[-1]), 500))
 
 
 def compile_intent(
@@ -126,7 +171,8 @@ class HeuristicCompiler:
 
         symbols = _extract_symbols(text)
         numbers = [float(item) for item in re.findall(r"(\d+(?:\.\d+)?)\s*%", text)]
-        price_value = numbers[0] if numbers else 5.0
+        snapshot = is_now_status(text)
+        price_value = numbers[0] if numbers else (None if snapshot else 5.0)
         volume_value = numbers[1] if len(numbers) > 1 else 80.0
 
         wants_rank = any(word in lowered for word in ("rank", "momentum", "unusual", "altcoin"))
@@ -144,21 +190,22 @@ class HeuristicCompiler:
             name = f"{(symbols[0] if symbols else 'BTC')} Volatility"
             assumptions = [f"Interpreted named asset as {', '.join(universe['symbols'])}."]
         else:
+            limit = extract_listing_limit(text)
             universe = {
                 "type": "listings",
-                "limit": 100,
+                "limit": limit,
                 "exclude_stablecoins": True,
                 "symbols": [],
             }
-            name = "Top-100 Momentum"
+            name = f"Top-{limit} Momentum"
             assumptions = ['"Biggest" / top interpreted as highest market-cap assets.', "Stablecoins excluded."]
 
         observed = ["price_change_24h"]
         derived = []
         context = []
-        conditions = [
-            {"metric": "price_change_24h", "operator": ">", "value": price_value},
-        ]
+        conditions = []
+        if price_value is not None:
+            conditions.append({"metric": "price_change_24h", "operator": ">", "value": price_value})
         if wants_volume:
             observed.append("volume_change_24h")
             conditions.append({"metric": "volume_change_24h", "operator": ">", "value": volume_value})
@@ -172,12 +219,14 @@ class HeuristicCompiler:
             market_context.append({"metric": "fear_greed", "operator": ">=", "value": 70})
             assumptions.append("Fear & Greed is market context, not an asset attribute.")
 
+        if snapshot:
+            name = f"{(symbols[0] if symbols else 'BTC')} now"
         if "btc" in lowered and "volatil" in lowered:
             name = "BTC Volatility Watcher"
         if "volume" in lowered and "price" not in lowered and not wants_rank:
             name = "Unusual Volume"
 
-        interesting = " + ".join(
+        interesting = "Live snapshot" if snapshot else " + ".join(
             part
             for part, flag in (
                 ("Strong price movement", True),

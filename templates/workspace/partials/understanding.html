@@ -1,23 +1,26 @@
-<section class="ask-split" aria-label="Intent understanding">
-  <div>
-    <h2>You asked</h2>
-    <ul class="plain-list">
-      {% for item in compile_report.you_asked %}
-        <li>{{ item }}</li>
-      {% empty %}
-        <li>{{ lens.natural_language_request }}</li>
-      {% endfor %}
-    </ul>
-  </div>
-  <div>
-    <h2>KryptoLens assumed</h2>
-    <ul class="plain-list">
-      {% for item in compile_report.assumptions %}
-        <li>{{ item }}</li>
-      {% empty %}
-        <li>No extra assumptions recorded.</li>
-      {% endfor %}
-    </ul>
+<section class="understand-block" aria-label="I understand">
+  <h2>I understand</h2>
+  <div class="ask-split">
+    <div>
+      <h3>You asked</h3>
+      <ul class="plain-list">
+        {% for item in compile_report.you_asked %}
+          <li>{{ item }}</li>
+        {% empty %}
+          <li>{{ lens.natural_language_request }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div>
+      <h3>KryptoLens assumed</h3>
+      <ul class="plain-list">
+        {% for item in compile_report.assumptions %}
+          <li>{{ item }}</li>
+        {% empty %}
+          <li>No extra assumptions recorded.</li>
+        {% endfor %}
+      </ul>
+    </div>
   </div>
   {% if compile_report.clarification %}
     <p class="quiet ask-note">Needs clarification: {{ compile_report.clarification }}</p>

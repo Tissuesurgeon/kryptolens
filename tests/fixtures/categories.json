@@ -1,0 +1,6 @@
+{
+  "status": {"error_code": 0, "credit_count": 1},
+  "data": [
+    {"id": "layer-1", "name": "Layer 1", "market_cap": 800000000000, "volume": 20000000000}
+  ]
+}

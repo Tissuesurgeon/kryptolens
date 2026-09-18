@@ -58,13 +58,13 @@ WCAG 2.2 AA: normal text **4.5:1**, large text **3:1**, UI component boundaries 
 
 | Surface | Hierarchy (squint test) | Grouping |
 |---|---|---|
-| Landing | Headline → composer field → Enter Demo. Spec is tertiary. | Composer is one common region. Spec is proximity-only (no card). |
-| Workspace home | Ask heading → blotter → composer. Chips are secondary. | Desk + composer share one surface. No floating bar in the void. |
-| Lens | Name + Activate/Run → You asked / assumed → policy → scan. | Labels hug values. Sections separated by space, not nested plates. |
+| Landing | Headline → product window → Get Started. Spec is tertiary. | Composer and the asked/assumed split share one window. Spec is proximity-only (no card). |
+| Workspace home | 0 agents: Create Agent. 1+ agents: single-column rows. | Named teammates. Job is a message on the Agent. Live CMC strip. |
+| Lens | Named teammate → You asked / assumed → Routine. Composer docked. | Named rows + unboxed work. Labels hug values. |
 | Settings | Telegram heading → fields → Connect. | Label above field. Related actions in one row. |
 | Receipt | Symbol → five numbered blocks. | Blocks share one region; headings hug copy. |
 
-Keep moss tokens, Source Sans 3, Literata on the landing headline only, Source Code Pro for ids/JSON. No neon, chat bubbles, chart walls, side-stripe accents, gradient text, or “demo” chrome.
+Keep moss tokens, Source Sans 3, Literata on the landing headline, Source Code Pro for ids/JSON/CMC. No neon, chat bubbles, identical SaaS card grids, chart walls, side-stripe accents, gradient text, or “demo” chrome.
 
 ## Sources
 

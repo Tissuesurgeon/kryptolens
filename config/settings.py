@@ -138,7 +138,12 @@ if database_url.startswith("postgres") and not _running_tests():
 else:
     DATABASES = _sqlite_default()
 
-AUTH_PASSWORD_VALIDATORS = []
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
@@ -147,6 +152,8 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+_css_path = BASE_DIR / "static" / "css" / "app.css"
+STATIC_VERSION = str(int(_css_path.stat().st_mtime)) if _css_path.exists() else "1"
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -157,9 +164,11 @@ STORAGES = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-LOGIN_URL = "/"
+LOGIN_URL = "/login"
 LOGIN_REDIRECT_URL = "/home"
 LOGOUT_REDIRECT_URL = "/"
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "KryptoLens <noreply@kryptolens.app>")
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 CELERY_BROKER_URL = REDIS_URL
@@ -176,9 +185,9 @@ CMC_API_KEY = os.getenv("CMC_API_KEY", "")
 CURSOR_API_KEY = os.getenv("CURSOR_API_KEY", "")
 LLM_MODEL = os.getenv("LLM_MODEL", "composer-2.5")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 EVENT_COOLDOWN_MINUTES = int(os.getenv("EVENT_COOLDOWN_MINUTES", "60"))
-APP_EMAIL = os.getenv("APP_EMAIL") or os.getenv("DEMO_EMAIL", "operator@kryptolens.app")
-APP_PASSWORD = os.getenv("APP_PASSWORD") or os.getenv("DEMO_PASSWORD", "kryptolens-operator")
 MONITOR_INTERVAL_MINUTES = 15
 SCORE_HIGH_MIN = int(os.getenv("SCORE_HIGH_MIN", "4"))
 SCORE_MEDIUM_MIN = int(os.getenv("SCORE_MEDIUM_MIN", "2"))

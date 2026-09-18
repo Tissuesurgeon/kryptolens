@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>KryptoLens</title>
+<style>
+  html,body { margin:0; background:#0b1020; color:#f4f1ea; font-family:Inter,system-ui,sans-serif; overflow:hidden; }
+  .stage { width:1920px; height:1080px; position:relative; }
+  section {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    justify-content:center; align-items:center; text-align:center; padding:80px;
+    opacity:0; animation-fill-mode:forwards; animation-timing-function:ease;
+  }
+  h1 { font-size:72px; letter-spacing:-0.04em; margin:0 0 24px; }
+  p { font-size:32px; line-height:1.35; max-width:1400px; }
+  .kicker { letter-spacing:0.18em; text-transform:uppercase; font-size:22px; color:#818cf8; margin-bottom:20px; }
+  .s1 { animation: fade 8s 0s; }
+  .s2 { animation: fade 8s 8s; }
+  .s3 { animation: fade 10s 16s; }
+  .s4 { animation: fade 10s 26s; }
+  .s5 { animation: fade 10s 36s; }
+  .s6 { animation: fade 10s 46s; }
+  .s7 { animation: fade 10s 56s; }
+  .s8 { animation: fade 10s 66s; }
+  .s9 { animation: fade 10s 76s; }
+  .s10 { animation: fade 10s 86s; }
+  .s11 { animation: fade 10s 96s; }
+  .s12 { animation: fade 10s 106s; }
+  .s13 { animation: fade 10s 116s; }
+  .s14 { animation: fade 10s 126s; }
+  .s15 { animation: fade 10s 136s; }
+  .s16 { animation: fade 8s 146s; }
+  @keyframes fade {
+    0% { opacity:0; transform:translateY(16px); }
+    8% { opacity:1; transform:none; }
+    88% { opacity:1; }
+    100% { opacity:0; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage" data-composition-id="brag" data-width="1920" data-height="1080" data-duration="150" data-no-timeline>
+    <section class="clip s1" id="scene-1" data-start="0" data-duration="8"><div class="kicker">Hook</div><h1>KryptoLens</h1><p>Positioned as a persistent crypto intelligence teammate, not a chatbot, dashboard, demo, or trading bot. Voice: Tell → Define → Watch → Act → Return. Quiet markets are a valid result.</p></section>
+    <section class="clip s2" id="scene-2" data-start="8" data-duration="8"><div class="kicker">The product</div><h1>The product</h1><p>Tell KryptoLens what matters. Give it a job. It keeps watch for you.</p></section>
+    <section class="clip s3" id="scene-3" data-start="16" data-duration="10"><div class="kicker">The problem</div><h1>The problem</h1><p>Someone who can name a crypto-market job in language wants a teammate that stays on it, not a dashboard they have to configure.</p></section>
+    <section class="clip s4" id="scene-4" data-start="26" data-duration="10"><div class="kicker">The approach</div><h1>The approach</h1><p>A Lens is a persistent crypto agent with a compiled job, workflow, routines, tool permissions, conversation, and results; AgentRuntime plans then LensRuntime/workflow hits live CMC and writes verified results back.</p></section>
+    <section class="clip s5" id="scene-5" data-start="36" data-duration="10"><div class="kicker">Persistent Lens / Agent</div><h1>Persistent Lens / Agent</h1><p>A Lens is a user-owned persistent crypto agent with name, purpose, natural-language request, status (draft/active/paused), versions, routines, conversation, and results.</p></section>
+    <section class="clip s6" id="scene-6" data-start="46" data-duration="10"><div class="kicker">Natural-language job compile and conversation</div><h1>Natural-language job compile and conversation</h1><p>Authenticated users describe a job; ConversationService handles intent/actions on the lens detail page, including run, preview, and draft diffs.</p></section>
+    <section class="clip s7" id="scene-7" data-start="56" data-duration="10"><div class="kicker">Chief Agent planning</div><h1>Chief Agent planning</h1><p>Chief Agent emits a schema-validated AgentPlan (monitor/investigate/research) with allowed steps and tools; plans do not call CMC.</p></section>
+    <section class="clip s8" id="scene-8" data-start="66" data-duration="10"><div class="kicker">Closed CMC workflow execution</div><h1>Closed CMC workflow execution</h1><p>WorkflowDefinition allows a fixed step set (universe/listings, quotes, global metrics, fear &amp; greed, calculate, sort, filter, aggregate, present) and optional asset_condition triggers.</p></section>
+    <section class="clip s9" id="scene-9" data-start="76" data-duration="10"><div class="kicker">AgentRuntime loop with verification</div><h1>AgentRuntime loop with verification</h1><p>AgentRuntime wraps LensRuntime in PLAN → ACT → OBSERVE → VERIFY → REPAIR? → COMPLETE, sharing Check now and scheduled paths.</p></section>
+    <section class="clip s10" id="scene-10" data-start="86" data-duration="10"><div class="kicker">Unattended Beat / routines</div><h1>Unattended Beat / routines</h1><p>Celery task run_active_lenses enqueues due routines via RoutineService; run_lens executes the same AgentRuntime path as manual checks.</p></section>
+    <section class="clip s11" id="scene-11" data-start="96" data-duration="10"><div class="kicker">The flow</div><h1>The flow</h1><p>Authenticate → POST intent or pick a template → AgentService.create_from_intent → Redirect to lens detail</p></section>
+    <section class="clip s12" id="scene-12" data-start="106" data-duration="10"><div class="kicker">The workspace</div><h1>The workspace</h1><p>Agent / lens workspace, Run status partial, Landing, Signup</p></section>
+    <section class="clip s13" id="scene-13" data-start="116" data-duration="10"><div class="kicker">How it runs</div><h1>How it runs</h1><p>Django monolith: users, lenses, intelligence, monitoring, events, notifications, cmc. Human intent → Chief Agent AgentPlan → validated Workflow → AgentRuntime wrapping LensRuntime → CMCAdapter. Celery worker/beat share run_lens. WhiteNoise + Django templates.</p></section>
+    <section class="clip s14" id="scene-14" data-start="126" data-duration="10"><div class="kicker">A real journey</div><h1>A real journey</h1><p>Logged-in users create a Lens from natural-language intent or a catalog template and land on the agent workspace.</p></section>
+    <section class="clip s15" id="scene-15" data-start="136" data-duration="10"><div class="kicker">Honest limits</div><h1>Honest limits</h1><p>News and on-chain tools are refused; no fake specialist agents.</p></section>
+    <section class="clip s16" id="scene-16" data-start="146" data-duration="8"><div class="kicker">Outro</div><h1>KryptoLens</h1><p>KryptoLens</p></section>
+
+  </div>
+</body>
+</html>

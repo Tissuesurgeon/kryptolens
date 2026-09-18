@@ -25,6 +25,14 @@ def test_top100_momentum_heuristic():
     assert any(item.metric == "fear_greed" for item in policy.market_context)
 
 
+def test_heuristic_honors_top_20():
+    policy = HeuristicCompiler().compile(
+        "Watch the top 20 altcoins for unusual momentum."
+    )
+    assert policy.universe.limit == 20
+    assert policy.name == "Top-20 Momentum"
+
+
 def test_stricter_edit():
     original = HeuristicCompiler().compile("Watch BTC for a 5% move")
     updated = HeuristicCompiler().compile(
@@ -53,3 +61,24 @@ def test_heuristic_provider_returns_json():
     provider = HeuristicProvider()
     raw = provider.generate("User intent:\nAlert me when ETH rises more than 8%.")
     assert '"ETH"' in raw or '"price_change_24h"' in raw
+
+
+def test_bitcoin_today_is_a_snapshot_not_a_5_percent_watch():
+    from apps.intelligence.compiler import is_now_status
+    from apps.intelligence.job_compiler import compile_job_report
+
+    text = "how is bitcoin doing on the market today"
+    assert is_now_status(text)
+    policy = HeuristicCompiler().compile(text)
+    assert policy.universe.symbols == ["BTC"]
+    assert policy.asset_conditions == []
+    report = compile_job_report(text, provider=HeuristicProvider())
+    job = report["job"]
+    workflow = report["workflow"]
+    assert job.execution_model == "task"
+    assert job.is_persistent() is False
+    assert job.you_asked == [text]
+    assert workflow.trigger is None
+    assert [step.type for step in workflow.steps] == ["get_quotes", "present"]
+    assert workflow.steps[0].symbols == ["BTC"]
+    assert "5.0" not in (job.trigger_summary or "")
