@@ -13,7 +13,10 @@
         {% empty %}
           <div class="empty-lens">
             {% include "workspace/partials/bot_face.html" with face_id=lens.id kind=lens_state.kind %}
-            <h2>{{ lens.name }}</h2>
+            <div>
+              <h2>{{ lens.name }}</h2>
+              <p class="lede">Tell this Lens what you want.</p>
+            </div>
           </div>
         {% endfor %}
 

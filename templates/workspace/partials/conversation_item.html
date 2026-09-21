@@ -60,7 +60,7 @@
   {% include "workspace/partials/bot_face.html" with face_id=lens.id kind=lens_state.kind %}
   <div class="turn-body">
     <p class="turn-name">{{ lens.name }}</p>
-    <p>{{ item.payload_json.text|default:"I'll keep watch." }}</p>
+    <p>{{ item.payload_json.text|default:"Routine activated." }}</p>
     <p><strong>WHEN</strong> {{ item.payload_json.when|default:"when the condition occurs" }}</p>
     <p><strong>DO</strong></p>
     <ol class="plain-list">

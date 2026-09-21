@@ -75,7 +75,7 @@ def watching_payload(job, workflow, routine) -> dict:
         "data": "CoinMarketCap only",
         "failure": "Report failure if current CoinMarketCap data is unavailable.",
         "watching": True,
-        "text": "I'll keep watch.",
+        "text": "Routine activated.",
     }
 
 

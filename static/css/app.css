@@ -634,6 +634,9 @@ button.agent-remove.is-labeled {
 }
 .bot-head-presence {
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   font-size: var(--text-sm);
   color: var(--muted);
 }
@@ -741,7 +744,7 @@ button.agent-remove.is-labeled {
   font-weight: 650;
   letter-spacing: -0.02em;
 }
-.first-run-stage .lede { margin: 0; max-width: 36ch; color: var(--ink); }
+.first-run-stage .lede { margin: 0; max-width: 36ch; }
 .first-run-stage > p { margin: 0; max-width: 36ch; }
 .first-run-form { display: grid; gap: var(--space-4); justify-items: start; }
 .first-run-form textarea { min-height: 96px; }
@@ -765,12 +768,14 @@ button.agent-remove.is-labeled {
 }
 .empty-lens {
   width: min(36rem, 100%);
-  margin: auto 0;
+  margin: 0;
   display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
   gap: var(--space-3);
-  justify-items: start;
+  align-items: start;
 }
-.empty-lens h2 { margin: 0; }
+.empty-lens h2,
+.empty-lens .lede { margin: 0; }
 .transcript {
   display: grid;
   gap: var(--space-6);
@@ -792,7 +797,7 @@ button.agent-remove.is-labeled {
 }
 .turn-body { min-width: 0; display: grid; gap: var(--space-1); }
 .turn-body h2 { margin: 0; }
-.turn p { margin: 0; }
+.turn p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .turn-name {
   margin: 0 0 var(--space-1);
   font-size: var(--text-sm);
@@ -1464,11 +1469,25 @@ button.agent-remove.is-labeled {
     height: auto;
     border-bottom: 1px solid var(--line);
   }
-  .roster-list { max-height: 10rem; }
+  .roster-list {
+    display: flex;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: var(--space-2);
+  }
+  .roster-item { flex: 0 0 14rem; }
+  .roster-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
   .conversation { min-height: 70vh; }
   .thread { min-height: 70vh; }
   .conversation-head { display: grid; }
   .conversation-stream, .thread-scroll { padding: var(--space-6) var(--space-4); }
+  .composer-dock { padding: var(--space-3) var(--space-4) var(--space-4); }
   .event-row-meta { justify-items: start; text-align: left; }
 }
 
@@ -1491,7 +1510,7 @@ button.agent-remove.is-labeled {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.artifact { margin: 0 0 var(--space-6); }
+.artifact { margin: 0 0 var(--space-6); max-width: 100%; overflow-x: auto; }
 .artifact-user p { max-width: 62ch; }
 .result-table {
   width: 100%;

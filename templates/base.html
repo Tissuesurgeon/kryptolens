@@ -29,7 +29,10 @@
           <div>
             <p class="bot-head-name">{% block workspace_title %}Ask KryptoLens{% endblock %}</p>
             {% if lens %}
-            <p class="bot-head-presence" title="{{ lens_state.action|default:'' }}">{{ lens_state.label|default:"Idle" }}</p>
+            <p class="bot-head-presence" title="{{ lens_state.action|default:'' }}">
+              <span class="status-dot status-{{ lens_state.kind|default:'idle' }}" aria-hidden="true"></span>
+              <span>{{ lens_state.label|default:"Idle" }}</span>
+            </p>
             {% endif %}
           </div>
         </div>

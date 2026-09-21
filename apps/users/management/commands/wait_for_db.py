@@ -9,7 +9,7 @@ class Command(BaseCommand):
     help = "Wait until the database accepts connections."
 
     def handle(self, *args, **options):
-        for _ in range(30):
+        for _ in range(60):
             try:
                 connection.ensure_connection()
                 self.stdout.write("Database ready.")

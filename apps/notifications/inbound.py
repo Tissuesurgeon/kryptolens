@@ -56,7 +56,7 @@ def _dispatch(user, preference, text: str, base: str) -> list[str]:
         lens_id = lowered.split(":", 1)[1]
         lens = Lens.objects.filter(pk=lens_id, user=user).first()
         if not lens:
-            return ["I couldn't find that agent."]
+            return ["I couldn't find that Lens."]
         AgentService.select(user, lens)
         return [f"Talking to {lens.name}. Send a job in language."]
     lens = preference.active_lens if preference.active_lens_id else None
@@ -68,7 +68,7 @@ def _dispatch(user, preference, text: str, base: str) -> list[str]:
             AgentService.select(user, lens)
     if lowered == "/routines":
         if not lens:
-            return ["Create an agent first with /create Name"]
+            return ["Create a Lens first with /create Name"]
         routines = RoutineService.list_for_lens(lens)
         if not routines:
             return [f"{lens.name} has no routines yet."]
@@ -79,7 +79,7 @@ def _dispatch(user, preference, text: str, base: str) -> list[str]:
         return ["\n".join(lines)]
     if lowered == "/jobs":
         if not lens:
-            return ["Create an agent first with /create Name"]
+            return ["Create a Lens first with /create Name"]
         runs = RunService.list_for_lens(lens, limit=8)
         if not runs:
             return [f"{lens.name} has no jobs yet."]
@@ -89,21 +89,21 @@ def _dispatch(user, preference, text: str, base: str) -> list[str]:
         return ["\n".join(lines)]
     if lowered == "/status":
         if not lens:
-            return ["Create an agent first with /create Name"]
+            return ["Create a Lens first with /create Name"]
         state = lens_state(lens)
         return [f"{lens.name} is {state['label']}. {state['action']}"]
     if lowered in {"/delete", "delete agent"}:
         if not lens:
-            return ["Pick an agent first."]
+            return ["Pick a Lens first."]
         name = AgentService.delete(lens)
         return [f"Deleted {name}."]
     if lowered in {"create routine", "/confirm"}:
         if not lens:
-            return ["Pick an agent first."]
+            return ["Pick a Lens first."]
         result = ConversationService.handle(lens, "", action="create_routine", source="telegram")
         return [result.flash or "Routine created."]
     if not lens:
-        return ["Create an agent first: /create Market Scout"]
+        return ["Create a Lens first: /create Market Scout"]
     result = ConversationService.handle(lens, text, source="telegram")
     return [_result_copy(lens, result, base)]
 
@@ -112,9 +112,9 @@ def _start_copy(user, base: str) -> str:
     lenses = AgentService.list_for_user(user)
     lines = ["KryptoLens. Message a job in language."]
     if not lenses:
-        lines.append("No agents yet. Send /create Market Scout")
+        lines.append("No Lenses yet. Send /create Market Scout")
         return "\n".join(lines)
-    lines.append("Agents:")
+    lines.append("Your Lenses:")
     for item in lenses:
         lines.append(f"• {item.name} — {item.agent_state.get('label')}")
     lines.append(f"Open the desk: {base}/agents")

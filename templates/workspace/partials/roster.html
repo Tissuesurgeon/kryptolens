@@ -30,12 +30,9 @@
           <span class="roster-item-body">
             <span class="roster-item-top">
               <strong>{{ item.name }}</strong>
-              <span class="roster-item-time">{% if item.last_at %}{{ item.last_at|naturaltime }}{% endif %}</span>
+              <span class="roster-item-state">{{ item.agent_state.label }}</span>
             </span>
-            <span class="roster-item-preview">{{ item.purpose|default:item.agent_state.label }}{% if item.last_preview %} · {{ item.last_preview }}{% endif %}</span>
-            {% if item.agent_state.action %}
-            <span class="roster-item-action">{{ item.agent_state.action }}</span>
-            {% endif %}
+            <span class="roster-item-preview">{% if item.last_preview %}{{ item.last_preview }}{% elif item.last_at %}{{ item.last_at|naturaltime }}{% else %}{{ item.agent_state.action }}{% endif %}</span>
           </span>
         </a>
         {% include "workspace/partials/delete_agent.html" with agent=item form_class="roster-delete" %}

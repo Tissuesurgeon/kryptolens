@@ -55,7 +55,7 @@ def lens_create(request):
     if request.method == "POST":
         text = (request.POST.get("intent") or "").strip()
         if not text:
-            messages.error(request, "Describe the job you want this agent to handle.")
+            messages.error(request, "Describe the job you want this Lens to handle.")
             return redirect("lens_create")
         lens, version, policy = AgentService.create_from_intent(request.user, text)
         messages.success(request, f"Created {policy.name} as Lens v{version.version}.")
@@ -212,7 +212,7 @@ def agent_profile(request, lens_id: int):
             (request.POST.get("name") or "").strip(),
             (request.POST.get("purpose") or "").strip(),
         )
-        messages.success(request, "Agent updated.")
+        messages.success(request, "Lens updated.")
         return redirect("agent_profile", lens_id=lens.id)
     context = ConversationService.context(lens, request)
     context.update(

@@ -12,5 +12,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt || \
 
 COPY . /app
 RUN chmod +x /app/docker/entrypoint.sh
+ENV PORT=8000
 EXPOSE 8000
 ENTRYPOINT ["/app/docker/entrypoint.sh"]
+CMD ["web"]

@@ -4,9 +4,9 @@
     <span class="badge">{{ result.kind }}</span>
   </header>
   {% if result.kind == "no_result" %}
-    <p>{{ result.payload_json.message|default:"Nothing met the conditions." }}</p>
+    <p>{{ result.payload_json.message|default:"No matching result was found based on the available CoinMarketCap data." }}</p>
     {% if result.payload_json.assets %}
-      <p class="quiet">{{ result.payload_json.assets }} assets evaluated. I'm still watching.</p>
+      <p class="quiet">{{ result.payload_json.assets }} assets evaluated.</p>
     {% endif %}
   {% elif result.kind == "error" %}
     <p>I couldn't complete this run because CoinMarketCap data was unavailable.</p>
@@ -80,7 +80,7 @@
   {% else %}
     {% if result.payload_json.trigger %}
       <p>
-        {{ result.payload_json.trigger.asset|default:"BTC" }}
+        {{ result.payload_json.trigger.asset|default:"Trigger" }}
         {% if result.payload_json.trigger.actual != None %}
           {{ result.payload_json.trigger.actual }}%
         {% endif %}

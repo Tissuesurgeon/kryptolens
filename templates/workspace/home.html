@@ -28,13 +28,8 @@
             {% include "workspace/partials/bot_face.html" with face_id=item.id kind=item.agent_state.kind %}
             <span class="agent-row-body">
               <strong>{{ item.name }}</strong>
-              <p>{{ item.purpose|default:item.agent_state.label }}</p>
-              <p class="agent-row-meta">
-                {{ item.agent_state.label }}
-                · {{ item.active_routine_count|default:item.routine_count|default:0 }} routines
-                · {{ item.job_count|default:0 }} jobs
-                {% if item.last_at %} · {{ item.last_at|naturaltime }}{% endif %}
-              </p>
+              <p>{{ item.agent_state.label }}{% if item.last_preview %} · {{ item.last_preview }}{% endif %}</p>
+              <p class="agent-row-meta">{% if item.last_at %}{{ item.last_at|naturaltime }}{% endif %}</p>
             </span>
           </a>
           {% include "workspace/partials/delete_agent.html" with agent=item form_class="agent-row-delete" labeled=True %}

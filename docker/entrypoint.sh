@@ -7,7 +7,8 @@ python manage.py migrate --noinput
 python manage.py collectstatic --noinput
 
 if [ "$ROLE" = "web" ]; then
-  exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2
+  PORT="${PORT:-8000}"
+  exec gunicorn config.wsgi:application --bind "0.0.0.0:${PORT}" --workers 2 --timeout 120
 fi
 if [ "$ROLE" = "worker" ]; then
   exec celery -A config worker -l info

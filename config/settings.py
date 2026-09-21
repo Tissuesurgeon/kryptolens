@@ -12,16 +12,38 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-kryptolens-secret")
-DEBUG = os.getenv("DEBUG", "1") == "1"
-ALLOWED_HOSTS = [item.strip() for item in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if item.strip()]
-CSRF_TRUSTED_ORIGINS = [
-    item.strip()
-    for item in os.getenv(
-        "CSRF_TRUSTED_ORIGINS",
-        "http://localhost:8000,http://127.0.0.1:8000,http://localhost:8080,http://127.0.0.1:8080",
-    ).split(",")
-    if item.strip()
-]
+_ON_RAILWAY = bool(os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_PUBLIC_DOMAIN"))
+DEBUG = os.getenv("DEBUG", "0" if _ON_RAILWAY else "1") == "1"
+
+
+def _csv_env(name: str, default: str) -> list[str]:
+    return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
+
+
+ALLOWED_HOSTS = _csv_env("ALLOWED_HOSTS", "localhost,127.0.0.1")
+CSRF_TRUSTED_ORIGINS = _csv_env(
+    "CSRF_TRUSTED_ORIGINS",
+    "http://localhost:8000,http://127.0.0.1:8000,http://localhost:8080,http://127.0.0.1:8080",
+)
+for _host in (
+    os.getenv("RAILWAY_PUBLIC_DOMAIN", "").strip(),
+    os.getenv("RAILWAY_PRIVATE_DOMAIN", "").strip(),
+):
+    if _host and _host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_host)
+    if _host:
+        _origin = f"https://{_host}"
+        if _origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(_origin)
+if _ON_RAILWAY:
+    for _suffix in (".railway.app", ".up.railway.app", ".railway.internal"):
+        if _suffix not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(_suffix)
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    USE_X_FORWARDED_HOST = True
+    if os.getenv("PUBLIC_BASE_URL", "").startswith("https://"):
+        CSRF_TRUSTED_ORIGINS.append(os.getenv("PUBLIC_BASE_URL", "").rstrip("/"))
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(CSRF_TRUSTED_ORIGINS))
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -73,11 +95,13 @@ TEMPLATES = [
 
 def _sqlite_default():
     return {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
+
+
+def _database_url() -> str:
+    return os.getenv("DATABASE_URL", "").strip().strip("'\"")
 
 
 def _supabase_ipv4_url(database_url: str) -> str:
@@ -123,7 +147,27 @@ def _postgres_from_url(database_url: str):
     }
     if sslmode:
         config["OPTIONS"] = {"sslmode": sslmode}
-    return {"default": config}
+    return config
+
+
+def _sqlite_from_url(database_url: str) -> dict:
+    parsed = urlparse.urlparse(database_url)
+    name = parsed.path.lstrip("/") or str(BASE_DIR / "db.sqlite3")
+    if parsed.netloc in {"", "relative"} and parsed.path:
+        name = parsed.path
+    return {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": name,
+    }
+
+
+def _engine_from_url(database_url: str) -> dict:
+    scheme = urlparse.urlparse(database_url).scheme.lower()
+    if scheme in {"postgres", "postgresql", "pgsql"}:
+        return _postgres_from_url(database_url)
+    if scheme.startswith("sqlite"):
+        return _sqlite_from_url(database_url)
+    raise ValueError(f"Unsupported DATABASE_URL scheme: {scheme or 'missing'}")
 
 
 def _running_tests() -> bool:
@@ -132,11 +176,18 @@ def _running_tests() -> bool:
     return len(sys.argv) > 1 and sys.argv[1] == "test"
 
 
-database_url = os.getenv("DATABASE_URL", "").strip()
-if database_url.startswith("postgres") and not _running_tests():
-    DATABASES = _postgres_from_url(database_url)
-else:
-    DATABASES = _sqlite_default()
+def _default_database() -> dict:
+    if _running_tests():
+        return _sqlite_default()
+    url = _database_url()
+    if url:
+        return _engine_from_url(url)
+    if _ON_RAILWAY:
+        raise ValueError("DATABASE_URL is required and is used as Django's default database.")
+    return _sqlite_default()
+
+
+DATABASES = {"default": _default_database()}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
