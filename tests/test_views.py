@@ -27,13 +27,12 @@ def test_landing_has_real_auth_ctas():
     client = Client()
     landing = client.get("/")
     assert landing.status_code == 200
-    assert b"Create your Lens" in landing.content
+    assert b"Create a Lens" in landing.content
     assert b"Log In" in landing.content
-    assert b"See how it works" in landing.content
-    assert b"Enter Demo" not in landing.content
     assert b"How it works" in landing.content
+    assert b"Enter Demo" not in landing.content
     assert b"CoinMarketCap" in landing.content
-    assert b"Check now" in landing.content
+    assert b"How KryptoLens works" in landing.content
     assert b"img/favicon.svg" in landing.content
     assert b"img/apple-touch-icon.png" in landing.content
     assert b"See what matters in crypto." in landing.content

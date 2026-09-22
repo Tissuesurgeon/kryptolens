@@ -1224,6 +1224,7 @@ button.agent-remove.is-labeled {
   letter-spacing: -0.02em;
   color: var(--ink);
 }
+.landing-mast p { max-width: 36rem; }
 .landing-lead {
   margin: 0;
   max-width: 36rem;
@@ -1665,6 +1666,12 @@ html.landing-motion .landing-spec.is-in .landing-trail > li:nth-child(3) { anima
 html.landing-motion .landing-spec.is-in .landing-trail > li:nth-child(4) { animation-delay: 0.24s; }
 html.landing-motion .landing-spec.is-in .landing-trail > li:nth-child(5) { animation-delay: 0.32s; }
 html.landing-motion .landing-spec.is-in .landing-trail > li:nth-child(6) { animation-delay: 0.4s; }
+html.landing-motion .landing-spec.is-in .landing-trail > li:nth-child(7) { animation-delay: 0.48s; }
+html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(4) { animation-delay: 0.24s; }
+html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(5) { animation-delay: 0.32s; }
+html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(6) { animation-delay: 0.4s; }
+html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(7) { animation-delay: 0.48s; }
+html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(8) { animation-delay: 0.56s; }
 
 /* Legacy surfaces still referenced by unused templates */
 .shell { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }

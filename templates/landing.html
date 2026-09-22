@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}KryptoLens — Your crypto intelligence, always on.{% endblock %}
+{% block title %}KryptoLens — Your persistent crypto intelligence workspace{% endblock %}
 
 {% block landing %}
 <script>
@@ -18,23 +18,18 @@
     <nav class="landing-nav" aria-label="Landing">
       <a href="#how-it-works">How it works</a>
       <a href="{% url 'login' %}">Log In</a>
-      <a class="btn btn-primary" href="{% url 'signup' %}">Create your Lens</a>
+      <a class="btn btn-primary" href="{% url 'signup' %}">Create a Lens</a>
     </nav>
   </header>
 
   <section class="landing-hero">
     <div class="landing-mast">
-      <h1>Your crypto intelligence, always on.</h1>
-      <p class="landing-lead">Create a Lens. Tell it what matters to you. KryptoLens watches, investigates, and explains what happens across the crypto market.</p>
-      <ul class="landing-lines">
-        <li>No dashboards to configure.</li>
-        <li>No complicated filters.</li>
-        <li>No specialist agents to manage.</li>
-      </ul>
-      <p class="lede">Just tell your Lens what you want to know.</p>
+      <h1>Your persistent crypto intelligence workspace</h1>
+      <p class="landing-lead">Ask questions. Investigate markets. Monitor what matters. Get answers grounded in live CoinMarketCap data.</p>
+      <p>KryptoLens is an AI-powered crypto intelligence workspace that lets you create persistent Lenses for the things you want to understand, investigate, or monitor in the cryptocurrency market.</p>
+      <p class="lede">Create a Lens. Tell it what matters. Let it investigate.</p>
       <div class="actions">
-        <a class="btn btn-primary" href="{% url 'signup' %}">Create your Lens</a>
-        <a class="btn btn-ghost" href="#how-it-works">See how it works</a>
+        <a class="btn btn-primary" href="{% url 'signup' %}">Create a Lens</a>
       </div>
     </div>
 
@@ -43,26 +38,26 @@
         <div class="landing-window-head">
           {% include "workspace/partials/bot_face.html" with face_id=1 kind="ok" %}
           <div>
-            <p class="landing-window-name">Crypto Scout</p>
+            <p class="landing-window-name">Market Watch</p>
             <p class="landing-window-presence">Your Lens</p>
           </div>
         </div>
         <div class="landing-preview">
           <article class="landing-turn">
-            <h2>You say</h2>
-            <p class="landing-asked">Watch BTC for unusual activity.</p>
+            <h2>You</h2>
+            <p class="landing-asked">I want to know which top 100 coins react the most when BTC drops sharply.</p>
           </article>
           <article class="landing-turn">
-            <h2>KryptoLens asks</h2>
-            <p class="landing-asked">What should count as unusual activity — a large price move, unusual volume, or both?</p>
+            <h2>KryptoLens</h2>
+            <p class="landing-asked">What should count as a sharp BTC drop — 2%, 5%, or another threshold?</p>
           </article>
         </div>
         <form method="post" class="landing-composer" action="{% url 'landing' %}">
           {% csrf_token %}
-          <label for="landing-intent">Just tell your Lens what you want to know.</label>
+          <label for="landing-intent">Tell KryptoLens what you want.</label>
           <div class="composer-shell">
-            <textarea id="landing-intent" name="intent" required rows="3" placeholder="Watch BTC for unusual activity."></textarea>
-            <button class="btn btn-primary" type="submit">Create your Lens</button>
+            <textarea id="landing-intent" name="intent" required rows="3" placeholder="Watch BTC and tell me when it drops more than 2%."></textarea>
+            <button class="btn btn-primary" type="submit">Create a Lens</button>
           </div>
           <p class="quiet">Your words wait here until you have an account.</p>
         </form>
@@ -70,316 +65,413 @@
     </div>
   </section>
 
-  <section class="landing-spec" id="ask">
-    <h2>Stop watching the market. Start asking it questions.</h2>
-    <p class="lede">Crypto moves too quickly to constantly scan prices, rankings, volume, and market activity yourself.</p>
-    <p>KryptoLens gives you a persistent intelligence workspace where you can describe what you care about in plain language.</p>
-    <p>Your Lens can clarify what you mean, investigate the market using live CoinMarketCap data, verify what it finds, and bring the result back into the same conversation.</p>
+  <section class="landing-spec" id="what">
+    <h2>What is KryptoLens?</h2>
+    <p>Crypto markets produce an enormous amount of information every second. Prices change. Volumes move. Market rankings shift. Assets behave differently across market conditions. Large market movements can trigger reactions across hundreds of other assets.</p>
+    <p>The problem is not simply finding data. The problem is knowing:</p>
+    <ul class="landing-lines">
+      <li>What should I look at?</li>
+      <li>Which assets matter?</li>
+      <li>What changed?</li>
+      <li>How significant was the change?</li>
+      <li>What happened around the event?</li>
+      <li>Which historical patterns are relevant?</li>
+      <li>Which assets behaved differently from the rest of the market?</li>
+      <li>What should I continue monitoring?</li>
+    </ul>
+    <p>KryptoLens is designed to help answer those questions. Rather than giving you another dashboard filled with information, KryptoLens gives you a workspace where you can describe the intelligence you want.</p>
+    <blockquote class="landing-quote"><p>Watch BTC and tell me when it drops more than 2%.</p></blockquote>
+    <blockquote class="landing-quote"><p>When BTC drops by 2%, check the top 100 cryptocurrencies and show me which ones fall the most.</p></blockquote>
+    <blockquote class="landing-quote"><p>Find unusual volume activity across the market.</p></blockquote>
+    <blockquote class="landing-quote"><p>Compare the current market environment with previous periods where BTC experienced a similar move.</p></blockquote>
+    <p>KryptoLens turns these requests into structured analytical workflows. Instead of searching through dashboards, charts, news feeds, and market tables yourself, tell KryptoLens what you want to know in natural language.</p>
+    <p>KryptoLens understands your request, asks for clarification when necessary, determines what analysis is required, retrieves relevant market data from CoinMarketCap, performs the analysis, verifies the results, and explains its findings. Because a Lens persists, your work does not disappear when the conversation ends.</p>
   </section>
 
   <section class="landing-spec" id="how-it-works">
-    <h2>How it works</h2>
+    <h2>How KryptoLens works</h2>
     <dl class="landing-steps">
       <div>
         <dt>Create a Lens</dt>
         <dd>
-          <p>Give your intelligence teammate a name.</p>
+          <p>A Lens is a persistent intelligence workspace. Give it a name such as:</p>
           <ul class="landing-names">
-            <li>Crypto Scout</li>
             <li>Market Watch</li>
-            <li>BTC Radar</li>
+            <li>BTC Reaction</li>
+            <li>Altcoin Monitor</li>
+            <li>Market Research</li>
           </ul>
-          <p>That's it. You don't need to configure strategies or choose an analyst.</p>
+          <p>You don't need to configure a complicated agent or choose a specialist. Just create the Lens.</p>
         </dd>
       </div>
       <div>
-        <dt>Tell it what you want</dt>
+        <dt>Tell KryptoLens what you want</dt>
         <dd>
-          <p>Talk naturally.</p>
-          <blockquote class="landing-quote"><p>Watch BTC for unusual activity.</p></blockquote>
-          <p>If your request isn't specific enough, KryptoLens asks what you mean.</p>
-          <blockquote class="landing-quote"><p>What should count as unusual activity — a large price move, unusual volume, or both?</p></blockquote>
-          <p>You clarify. KryptoLens takes it from there.</p>
+          <p>Describe your request naturally. You don't need to know which API endpoint to use or which analytical method is required.</p>
+          <blockquote class="landing-quote"><p>I want to know which top 100 coins react the most when BTC drops sharply.</p></blockquote>
+          <p>KryptoLens interprets the request and determines what information is missing.</p>
         </dd>
       </div>
       <div>
-        <dt>KryptoLens investigates</dt>
+        <dt>KryptoLens asks questions when necessary</dt>
         <dd>
-          <p>Behind the conversation, a Chief Agent determines what kind of analysis is needed. It can combine capabilities for:</p>
+          <p>Good analysis depends on a clear definition of the task. If your request is ambiguous, KryptoLens does not simply guess.</p>
+          <blockquote class="landing-quote"><p>What should count as a sharp BTC drop — 2%, 5%, or another threshold?</p></blockquote>
+          <blockquote class="landing-quote"><p>Should the analysis consider the top 50, top 100, or the entire market?</p></blockquote>
+          <p>You answer the question, and the Lens continues from there. Clarification becomes part of the analysis rather than a separate configuration screen.</p>
+        </dd>
+      </div>
+      <div>
+        <dt>KryptoLens builds the investigation</dt>
+        <dd>
+          <p>Once the request is clear, KryptoLens determines what capabilities are required. You do not need to choose an analyst. The system can dynamically use capabilities such as:</p>
           <dl class="landing-work">
             <div>
               <dt>Market analysis</dt>
-              <dd>Understand what's happening across the market.</dd>
+              <dd>Understand current market conditions, rankings, prices, market capitalization, volume, and other market metrics.</dd>
             </div>
             <div>
-              <dt>Anomaly detection</dt>
-              <dd>Find unusual price or volume behavior.</dd>
+              <dt>Anomaly analysis</dt>
+              <dd>Identify unusual movements, abnormal activity, significant changes, or assets behaving differently from their surrounding market.</dd>
             </div>
             <div>
               <dt>Reaction analysis</dt>
-              <dd>See how other assets respond to a market move.</dd>
+              <dd>Study how one asset or market event relates to the behavior of other assets. When BTC falls 2%, which of the top 100 coins fall the most?</dd>
             </div>
             <div>
               <dt>Historical analysis</dt>
-              <dd>Compare what's happening now with previous market conditions.</dd>
+              <dd>Compare current market conditions with historical market data and previous market behavior.</dd>
             </div>
             <div>
               <dt>Discovery</dt>
-              <dd>Find trending, moving, newly listed, or otherwise relevant assets.</dd>
+              <dd>Find assets, categories, market segments, or opportunities that match a particular analytical request.</dd>
             </div>
             <div>
               <dt>Regime analysis</dt>
-              <dd>Understand broader market conditions.</dd>
+              <dd>Analyze broader market conditions and identify the characteristics of the current market environment.</dd>
             </div>
           </dl>
-          <p>You don't have to choose any of these. KryptoLens chooses the capabilities required for your request.</p>
+          <p>These capabilities work behind the scenes. You interact with KryptoLens, not a collection of separate bots.</p>
+        </dd>
+      </div>
+      <div>
+        <dt>KryptoLens retrieves live market data</dt>
+        <dd>
+          <p>KryptoLens uses CoinMarketCap data as its market-data foundation. Depending on the request, it can work with:</p>
+          <ul class="landing-data">
+            <li>Cryptocurrency listings</li>
+            <li>Current market prices</li>
+            <li>Market capitalization</li>
+            <li>Trading volume</li>
+            <li>Market rankings</li>
+            <li>Historical quotes</li>
+            <li>Categories</li>
+            <li>Global market metrics</li>
+            <li>Market-wide statistics</li>
+            <li>Other supported CoinMarketCap data</li>
+          </ul>
+          <p>The system selects the relevant data based on the task instead of forcing every request through the same workflow.</p>
+        </dd>
+      </div>
+      <div>
+        <dt>The analysis happens deterministically</dt>
+        <dd>
+          <p>AI is useful for understanding what you mean. Market calculations should not depend on an AI model inventing numbers. KryptoLens separates those responsibilities.</p>
+          <p>The intelligence layer can determine what you want, what data is needed, and what analysis should be performed. The analytical runtime handles fetching data, calculating changes, filtering assets, sorting results, comparing observations, aggregating information, and validating results.</p>
+          <blockquote class="landing-quote"><p>List the biggest drops first.</p></blockquote>
+          <p>That request is handled by deterministic ranking logic rather than asking a language model to decide which number is larger.</p>
+        </dd>
+      </div>
+      <div>
+        <dt>Results are verified before they are presented</dt>
+        <dd>
+          <p>An explanation should be grounded in the evidence that produced it. Before a result is presented, the system can verify:</p>
+          <ul class="landing-lines">
+            <li>Whether the required data was available</li>
+            <li>Whether the requested assets were actually analyzed</li>
+            <li>Whether calculations completed successfully</li>
+            <li>Whether ranking and filtering rules were applied</li>
+            <li>Whether the result contains the expected evidence</li>
+            <li>Whether missing data was incorrectly treated as zero</li>
+          </ul>
+          <p>If the available CoinMarketCap data is insufficient, KryptoLens should say so rather than inventing an answer.</p>
+        </dd>
+      </div>
+      <div>
+        <dt>KryptoLens explains the result</dt>
+        <dd>
+          <p>The final response turns the verified analytical result into an understandable explanation. Instead of exposing a collection of API responses, you receive the relevant findings and supporting evidence.</p>
+          <p class="landing-sub">BTC Reaction Analysis</p>
+          <dl class="landing-work landing-work-2">
+            <div>
+              <dt>Trigger</dt>
+              <dd>BTC declined by at least 2%.</dd>
+            </div>
+            <div>
+              <dt>Universe</dt>
+              <dd>Top 100 cryptocurrencies by market ranking.</dd>
+            </div>
+            <div>
+              <dt>Analysis</dt>
+              <dd>Compare the price movement of each asset against the defined BTC event.</dd>
+            </div>
+            <div>
+              <dt>Result</dt>
+              <dd>Assets are ranked according to their observed decline.</dd>
+            </div>
+          </dl>
+          <p>The underlying market observations and data used for the calculation remain inspectable. The goal is not simply to give you an answer. It is to make the reasoning behind the answer understandable.</p>
         </dd>
       </div>
     </dl>
   </section>
 
-  <section class="landing-spec" id="evidence">
-    <h2>From question to evidence</h2>
-    <p class="landing-sub">Every answer has a trail.</p>
-    <p class="lede">KryptoLens doesn't ask an LLM to make up market numbers.</p>
-    <p>The system separates:</p>
+  <section class="landing-spec">
+    <h2>From a question to an investigation</h2>
+    <p>A KryptoLens request can move through several stages.</p>
     <ol class="landing-trail">
       <li>
-        <strong>Understanding</strong>
-        <span>What did you actually ask?</span>
+        <strong>Understand</strong>
+        <span>What is the user actually asking?</span>
       </li>
       <li>
-        <strong>Planning</strong>
-        <span>What analysis is required?</span>
+        <strong>Clarify</strong>
+        <span>Is anything important missing?</span>
       </li>
       <li>
-        <strong>Data</strong>
-        <span>What does CoinMarketCap report?</span>
+        <strong>Plan</strong>
+        <span>Which capabilities and data are required?</span>
       </li>
       <li>
-        <strong>Analysis</strong>
-        <span>What do the numbers show?</span>
+        <strong>Collect</strong>
+        <span>Retrieve the relevant CoinMarketCap data.</span>
       </li>
       <li>
-        <strong>Verification</strong>
-        <span>Does the result satisfy the request?</span>
+        <strong>Analyze</strong>
+        <span>Run deterministic calculations and comparisons.</span>
       </li>
       <li>
-        <strong>Response</strong>
-        <span>What should you know?</span>
+        <strong>Verify</strong>
+        <span>Check the result against the requested task and evidence.</span>
+      </li>
+      <li>
+        <strong>Explain</strong>
+        <span>Present the findings in a clear response.</span>
       </li>
     </ol>
-    <p>This means the language model handles understanding and explanation, while the analytical runtime handles the actual data retrieval, calculations, and verification.</p>
+    <p>This gives KryptoLens a structured path from natural-language intent to evidence-backed intelligence.</p>
   </section>
 
-  <section class="landing-spec" id="example">
-    <h2>Example</h2>
-    <p class="landing-sub">You say:</p>
-    <blockquote class="landing-quote"><p>When BTC drops by 2%, check the top 100 coins and tell me which ones fall the most.</p></blockquote>
-    <p class="landing-sub">KryptoLens understands:</p>
-    <dl class="landing-work landing-work-4">
+  <section class="landing-spec">
+    <h2>Ask once. Keep working.</h2>
+    <p>KryptoLens is not limited to one-time questions. A Lens can become a persistent monitoring workspace.</p>
+    <blockquote class="landing-quote"><p>Watch BTC and alert me whenever it drops more than 2%.</p></blockquote>
+    <p>That request can become a persistent routine. KryptoLens can continue checking the relevant market data and, when the defined condition occurs, run the associated analysis. You can then return to the same Lens and continue the conversation.</p>
+    <blockquote class="landing-quote"><p>Watch BTC for a 2% drop.</p></blockquote>
+    <blockquote class="landing-quote"><p>What should I analyze when the trigger occurs?</p></blockquote>
+    <blockquote class="landing-quote"><p>Check the top 100 coins and rank their declines.</p></blockquote>
+    <blockquote class="landing-quote"><p>The BTC trigger occurred. Here are the top 100 assets ranked by decline.</p></blockquote>
+    <p>The conversation, monitoring task, results, and evidence remain connected to the same Lens.</p>
+  </section>
+
+  <section class="landing-spec">
+    <h2>One Lens. Multiple kinds of work.</h2>
+    <p>A Lens can support different types of intelligence work without requiring you to create a different bot for every task.</p>
+    <dl class="landing-work">
       <div>
-        <dt>Trigger</dt>
-        <dd>BTC falls 2% or more.</dd>
+        <dt>Ask</dt>
+        <dd>Ask a question about the market.</dd>
       </div>
       <div>
-        <dt>Universe</dt>
-        <dd>Top 100 assets.</dd>
+        <dt>Investigate</dt>
+        <dd>Request a deeper analysis of a market event or condition.</dd>
       </div>
       <div>
-        <dt>Analysis</dt>
-        <dd>Calculate their percentage declines.</dd>
+        <dt>Watch</dt>
+        <dd>Define something that should be monitored continuously.</dd>
       </div>
       <div>
-        <dt>Output</dt>
-        <dd>Rank from largest decline to smallest.</dd>
+        <dt>Follow up</dt>
+        <dd>Continue asking questions using the context of the existing investigation.</dd>
+      </div>
+      <div>
+        <dt>Review</dt>
+        <dd>Inspect previous results, evidence, and execution history.</dd>
       </div>
     </dl>
-    <p class="landing-sub">Then it works.</p>
-    <p>KryptoLens monitors the trigger, retrieves live market data, performs the calculations, verifies the ranking, and returns the result in your Lens conversation.</p>
-    <ul class="landing-lines">
-      <li>No spreadsheet.</li>
-      <li>No manual scanning.</li>
-      <li>No custom script.</li>
-    </ul>
+    <p>This turns a Lens into a persistent workspace rather than a disposable chatbot conversation.</p>
+  </section>
+
+  <section class="landing-spec">
+    <h2>Built for real crypto research</h2>
+    <p>KryptoLens is designed for questions that are difficult to answer manually.</p>
+    <dl class="landing-work landing-work-2">
+      <div>
+        <dt>Market relationships</dt>
+        <dd>When BTC moves sharply, which large-cap assets tend to move with it?</dd>
+      </div>
+      <div>
+        <dt>Market-wide reactions</dt>
+        <dd>When ETH drops 3%, analyze how the top 100 assets respond.</dd>
+      </div>
+      <div>
+        <dt>Unusual activity</dt>
+        <dd>Find assets experiencing unusually large movements.</dd>
+      </div>
+      <div>
+        <dt>Historical comparisons</dt>
+        <dd>Compare today's market conditions with similar historical periods.</dd>
+      </div>
+      <div>
+        <dt>Market discovery</dt>
+        <dd>Find assets in the current market that match these conditions.</dd>
+      </div>
+      <div>
+        <dt>Regime analysis</dt>
+        <dd>Describe the current market environment using the available market data.</dd>
+      </div>
+    </dl>
+    <p>You don't need to know which analytical capability is required. Describe the question. KryptoLens determines the investigation.</p>
   </section>
 
   <section class="landing-spec">
     <h2>Your Lens remembers the work</h2>
-    <p class="landing-sub">Intelligence that stays with you.</p>
-    <p class="lede">A Lens isn't a temporary chat.</p>
-    <p>It can maintain:</p>
+    <p>A Lens is designed to maintain continuity. Your workspace can contain:</p>
     <ul class="landing-data">
-      <li>conversations</li>
-      <li>active monitoring jobs</li>
-      <li>routines</li>
-      <li>previous results</li>
-      <li>evidence</li>
-      <li>execution history</li>
+      <li>Conversations</li>
+      <li>Clarifications</li>
+      <li>Investigations</li>
+      <li>Monitoring routines</li>
+      <li>Workflows</li>
+      <li>Results</li>
+      <li>Observations</li>
+      <li>Evidence</li>
+      <li>Verification records</li>
+      <li>Execution history</li>
     </ul>
-    <p>Come back later and continue where you left off.</p>
-    <blockquote class="landing-quote"><p>What have you found?</p></blockquote>
-    <blockquote class="landing-quote"><p>Compare this with the last time.</p></blockquote>
-    <blockquote class="landing-quote"><p>Make the threshold stricter.</p></blockquote>
-    <p>Your Lens already has the context.</p>
+    <p>This allows you to return to previous work instead of starting from zero every time. A Lens can evolve from a simple question into an ongoing research and monitoring workspace.</p>
   </section>
 
   <section class="landing-spec">
-    <h2>One conversation. Different kinds of work.</h2>
+    <h2>Inspect the evidence</h2>
+    <p>KryptoLens is designed to make intelligence inspectable. When a result is important, you should be able to understand:</p>
+    <ul class="landing-data">
+      <li>What was requested?</li>
+      <li>What data was used?</li>
+      <li>What analysis was performed?</li>
+      <li>What result was produced?</li>
+      <li>What evidence supports it?</li>
+      <li>Was the result verified?</li>
+    </ul>
+    <p>The system keeps the analytical process connected to the final response so that the answer does not become a black box.</p>
+  </section>
+
+  <section class="landing-spec">
+    <h2>Powered by CoinMarketCap</h2>
+    <p>KryptoLens uses CoinMarketCap as its market-data layer. This allows the intelligence system to work with real cryptocurrency market information instead of fabricated demo values.</p>
+    <p>Depending on the investigation, KryptoLens can use supported CoinMarketCap endpoints for:</p>
+    <ul class="landing-data">
+      <li>Market listings</li>
+      <li>Latest market data</li>
+      <li>Cryptocurrency quotes</li>
+      <li>Historical market information</li>
+      <li>Categories</li>
+      <li>Global market metrics</li>
+      <li>Market-wide statistics</li>
+    </ul>
+    <p>The CoinMarketCap integration is part of the intelligence workflow, not simply a data display layer. KryptoLens determines what information is needed for your request and uses the appropriate available data.</p>
+  </section>
+
+  <section class="landing-spec">
+    <h2>Why KryptoLens is different</h2>
     <dl class="landing-work landing-work-2">
       <div>
-        <dt>Ask</dt>
-        <dd>
-          <blockquote class="landing-quote"><p>Compare BTC and ETH right now.</p></blockquote>
-          <p>Get an answer and move on.</p>
-        </dd>
+        <dt>Not another crypto dashboard</dt>
+        <dd>Dashboards show you information. KryptoLens lets you ask for intelligence about the information.</dd>
       </div>
       <div>
-        <dt>Watch</dt>
-        <dd>
-          <blockquote class="landing-quote"><p>Tell me whenever BTC drops more than 3%.</p></blockquote>
-          <p>Your Lens keeps watching.</p>
-        </dd>
+        <dt>Not a generic chatbot</dt>
+        <dd>KryptoLens is connected to structured market data, analytical capabilities, workflows, verification, and persistent monitoring. It is designed to investigate rather than simply generate text.</dd>
       </div>
       <div>
-        <dt>Investigate</dt>
-        <dd>
-          <blockquote class="landing-quote"><p>If BTC falls sharply, investigate whether the move affected the broader market.</p></blockquote>
-          <p>KryptoLens can combine multiple analytical capabilities to investigate the event.</p>
-        </dd>
+        <dt>Not a trading bot</dt>
+        <dd>KryptoLens is focused on market intelligence and analysis. It does not need to place trades to be useful. Its purpose is to help you understand what is happening in the market and continuously monitor the conditions that matter to you.</dd>
       </div>
       <div>
-        <dt>Follow up</dt>
-        <dd>
-          <blockquote class="landing-quote"><p>Why did you flag that?</p></blockquote>
-          <blockquote class="landing-quote"><p>Show me the evidence.</p></blockquote>
-          <blockquote class="landing-quote"><p>Check again.</p></blockquote>
-          <p>The conversation remains the workspace.</p>
-        </dd>
+        <dt>Not a collection of chatbots</dt>
+        <dd>You don't have to decide whether your question belongs to a Market Analyst, Reaction Analyst, or Historical Analyst. The system handles capability selection behind the scenes. You interact with one intelligence workspace.</dd>
       </div>
     </dl>
-  </section>
-
-  <section class="landing-spec">
-    <h2>Built on live market data</h2>
-    <p class="landing-sub">Powered by CoinMarketCap.</p>
-    <p>KryptoLens uses live CoinMarketCap data for the market intelligence it provides.</p>
-    <p>Depending on the task, it can work with data such as:</p>
-    <ul class="landing-data">
-      <li>market listings</li>
-      <li>prices</li>
-      <li>market capitalization</li>
-      <li>volume</li>
-      <li>historical quotes</li>
-      <li>OHLCV</li>
-      <li>global market metrics</li>
-      <li>trending assets</li>
-      <li>gainers and losers</li>
-      <li>new listings</li>
-      <li>categories</li>
-      <li>market content</li>
-    </ul>
-    <p>The data is retrieved through controlled tools rather than allowing the language model to invent market information.</p>
   </section>
 
   <section class="landing-spec">
     <h2>Designed for clarity, not noise</h2>
-    <p class="landing-sub">No chart wall. No crypto casino.</p>
-    <p>KryptoLens isn't trying to fill your screen with:</p>
+    <p>Crypto products often compete for attention with:</p>
     <ul class="landing-data">
       <li>endless charts</li>
       <li>flashing numbers</li>
       <li>dozens of indicators</li>
-      <li>unnecessary notifications</li>
-      <li>complicated configuration screens</li>
+      <li>crowded dashboards</li>
+      <li>notification overload</li>
     </ul>
-    <p>Instead, it gives you a focused intelligence workspace.</p>
-    <p class="landing-sub">Ask. Understand. Investigate. Verify.</p>
-    <p>Then get back to what matters.</p>
+    <p class="landing-sub">Start with the question.</p>
+    <p>Then determine what data is needed, what analysis is required, what evidence supports the result, and what should continue to be monitored. The interface is built around the investigation rather than the amount of information displayed.</p>
   </section>
 
   <section class="landing-spec">
-    <h2>Built for persistent intelligence</h2>
-    <p class="landing-sub">Your Lens can keep working after you leave.</p>
-    <p>Set a condition once. Let KryptoLens monitor it. When the condition matters, the result comes back to the same Lens conversation. You remain in control.</p>
-    <dl class="landing-controls">
+    <h2>Your crypto intelligence workspace</h2>
+    <p>KryptoLens brings together:</p>
+    <dl class="landing-work">
       <div>
-        <dt>Activate</dt>
-        <dd>Start a routine.</dd>
+        <dt>Natural-language interaction</dt>
+        <dd>Tell the system what you want without learning a specialized interface.</dd>
       </div>
       <div>
-        <dt>Pause</dt>
-        <dd>Stop monitoring.</dd>
+        <dt>Dynamic analysis</dt>
+        <dd>The system determines which capabilities are required for the task.</dd>
       </div>
       <div>
-        <dt>Check now</dt>
-        <dd>Run the analysis immediately.</dd>
+        <dt>Live market data</dt>
+        <dd>Use real CoinMarketCap data as the foundation for analysis.</dd>
       </div>
       <div>
-        <dt>Resume</dt>
-        <dd>Continue the routine.</dd>
+        <dt>Deterministic calculations</dt>
+        <dd>Ranking, filtering, comparison, and other numerical operations are handled by the analytical runtime.</dd>
+      </div>
+      <div>
+        <dt>Evidence</dt>
+        <dd>Results remain connected to the observations and data behind them.</dd>
+      </div>
+      <div>
+        <dt>Verification</dt>
+        <dd>The system checks that the result satisfies the intended task.</dd>
+      </div>
+      <div>
+        <dt>Persistent monitoring</dt>
+        <dd>Turn a request into an ongoing routine when you want KryptoLens to keep watching.</dd>
+      </div>
+      <div>
+        <dt>Conversation continuity</dt>
+        <dd>Return to the same Lens and continue the work.</dd>
       </div>
     </dl>
-  </section>
-
-  <section class="landing-spec">
-    <h2>Intelligence you can inspect</h2>
-    <p class="landing-sub">Don't just trust the answer. See the evidence.</p>
-    <p>For important results, KryptoLens can expose the underlying evidence and execution details.</p>
-    <ul class="landing-data">
-      <li>What was requested</li>
-      <li>What was analyzed</li>
-      <li>Which data was retrieved</li>
-      <li>What calculations were performed</li>
-      <li>What was verified</li>
-      <li>What result was produced</li>
-    </ul>
-    <p>The goal isn't simply to give you an answer. It's to make the answer understandable.</p>
-  </section>
-
-  <section class="landing-spec">
-    <h2>KryptoLens is not…</h2>
-    <dl class="landing-work landing-work-2">
-      <div>
-        <dt>Not another crypto dashboard.</dt>
-        <dd>You don't need to spend your time watching charts.</dd>
-      </div>
-      <div>
-        <dt>Not a trading bot.</dt>
-        <dd>KryptoLens analyzes and explains market information. It doesn't make trades for you.</dd>
-      </div>
-      <div>
-        <dt>Not a generic chatbot.</dt>
-        <dd>Its job is grounded crypto intelligence using live market data and deterministic analysis.</dd>
-      </div>
-      <div>
-        <dt>Not a collection of bots.</dt>
-        <dd>You create one Lens and tell it what you need. The system determines which analytical capabilities are required behind the scenes.</dd>
-      </div>
-    </dl>
-  </section>
-
-  <section class="landing-spec">
-    <h2>The KryptoLens mindset</h2>
-    <p class="landing-sub">Tell it what matters.</p>
-    <p>You shouldn't have to translate a question into:</p>
-    <blockquote class="landing-quote"><p>API endpoint → filter → threshold → workflow → calculation → notification.</p></blockquote>
-    <p>Just say:</p>
-    <blockquote class="landing-quote"><p>When BTC falls 2%, show me which top-100 assets fall the most.</p></blockquote>
-    <p>KryptoLens turns that intent into a structured investigation.</p>
   </section>
 
   <section class="landing-close">
-    <h2>Give your crypto intelligence a name.</h2>
-    <p>Create a Lens. Tell it what matters. Let it watch the market, investigate what changes, and bring the important results back to you.</p>
+    <h2>Start with a question</h2>
+    <p>You don't need to build a dashboard. You don't need to configure a complicated agent. You don't need to know which API endpoint contains the answer.</p>
+    <p>Create a Lens. Give it a name. Tell it what matters. KryptoLens will help turn your question into an investigation.</p>
+    <p class="landing-close-line">Create a Lens. Tell it what matters.</p>
     <div class="actions">
-      <a class="btn btn-primary" href="{% url 'signup' %}">Create your Lens</a>
+      <a class="btn btn-primary" href="{% url 'signup' %}">Create Your Lens</a>
       <a class="btn btn-ghost" href="{% url 'login' %}">Log In</a>
     </div>
   </section>
 
   <footer class="landing-foot">
     <p class="landing-foot-name">KryptoLens</p>
+    <p>Persistent crypto intelligence for the questions that matter.</p>
+    <p>Powered by CoinMarketCap.</p>
     <p>See what matters in crypto.</p>
   </footer>
 </div>
