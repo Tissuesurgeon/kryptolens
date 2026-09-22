@@ -10,7 +10,8 @@
       <img src="{% static 'img/mark.svg' %}" alt="">
       <span>KryptoLens</span>
     </a>
-    <nav class="landing-nav">
+    <nav class="landing-nav" aria-label="Landing">
+      <a href="#what-it-does">What a Lens does</a>
       <a href="#how-it-works">How it works</a>
       <a href="{% url 'login' %}">Log In</a>
       <a class="btn btn-primary" href="{% url 'signup' %}">Get Started</a>
@@ -19,9 +20,23 @@
 
   <section class="landing-hero">
     <div class="landing-mast">
-      <h1>Tell KryptoLens<br>what matters.</h1>
+      <h1>Tell KryptoLens what matters.</h1>
       <p class="landing-sub">Give it a job. It keeps watch for you.</p>
-      <p class="lede">You write the job once. The Lens checks live CoinMarketCap every 15 minutes and leaves the result on the desk — whether you stayed or not.</p>
+      <p class="lede">A Lens is a persistent crypto watch. Describe the job in plain language, then leave it running against live CoinMarketCap. A Routine checks every 15 minutes and writes the result into the same conversation.</p>
+      <dl class="landing-facts">
+        <div>
+          <dt>Routine</dt>
+          <dd>The next check starts without another prompt. Check now uses that same path.</dd>
+        </div>
+        <div>
+          <dt>Cadence</dt>
+          <dd>Every 15 minutes, including after you close the laptop.</dd>
+        </div>
+        <div>
+          <dt>Work log</dt>
+          <dd>Plan, Evidence, Verification, Result. You asked and KryptoLens assumed are the interpretation, not a forecast.</dd>
+        </div>
+      </dl>
     </div>
 
     <div class="landing-stage">
@@ -30,7 +45,7 @@
           {% include "workspace/partials/bot_face.html" with face_id=1 kind="ok" %}
           <div>
             <p class="landing-window-name">Ask KryptoLens</p>
-            <p class="landing-window-presence" id="landing-example-title">The same split you will see after you write a job.</p>
+            <p class="landing-window-presence" id="landing-example-title">Crypto Scout · Watching</p>
           </div>
         </div>
 
@@ -41,7 +56,7 @@
           </article>
           <article class="landing-turn">
             <h2>KryptoLens assumed</h2>
-            <p class="landing-asked">BTC 24h change ≤ −2%, then rank live listings by decline.</p>
+            <p class="landing-asked">BTC 24h change ≤ −2%, then rank live listings by the largest decline first.</p>
           </article>
         </div>
 
@@ -53,40 +68,60 @@
             <textarea id="landing-intent" name="intent" required rows="3" placeholder="Ask KryptoLens…"></textarea>
             <button class="btn btn-primary" type="submit">Get Started</button>
           </div>
-          <p class="quiet">Creates a real account, then a real Lens. Nothing runs before you sign up.</p>
+          <p class="quiet">Your instruction waits until you sign up. No Lens and no CoinMarketCap job runs before that.</p>
         </form>
       </div>
     </div>
+  </section>
+
+  <section class="landing-spec" id="what-it-does">
+    <h2>What a Lens does</h2>
+    <p class="lede">You create a Lens, tell it the job, and leave. The conversation is the record of that work.</p>
+    <dl class="landing-work">
+      <div>
+        <dt>One check</dt>
+        <dd>Compare BTC and ETH from live quotes. The thread shows what you asked and what KryptoLens assumed before the result.</dd>
+      </div>
+      <div>
+        <dt>A Routine</dt>
+        <dd>When ETH drops by 2%, rank the top 100 declines. Later checks run every 15 minutes without another prompt.</dd>
+      </div>
+      <div>
+        <dt>The same thread</dt>
+        <dd>Pause, resume, and Check now are messages. A new instruction updates the watch. Older results stay with the run that produced them.</dd>
+      </div>
+    </dl>
   </section>
 
   <section class="landing-spec" id="how-it-works">
     <h2>How it works</h2>
     <dl class="spec-grid landing-loop">
       <div>
-        <dt>Write the job</dt>
-        <dd>English is enough. No charts to set up.</dd>
+        <dt>Get Started</dt>
+        <dd>The composer keeps your instruction until you have an account. Nothing runs before that.</dd>
       </div>
       <div>
-        <dt>See the assumption</dt>
-        <dd><strong>You asked</strong> and <strong>KryptoLens assumed</strong> stay written down.</dd>
+        <dt>Name a Lens</dt>
+        <dd>A name is enough. The conversation starts empty. You send the first message.</dd>
       </div>
       <div>
-        <dt>Activate once</dt>
-        <dd>The Lens keeps the job without another prompt.</dd>
+        <dt>Read the interpretation</dt>
+        <dd><strong>You asked</strong> keeps your words. <strong>KryptoLens assumed</strong> shows how the job was understood. That is not a market prediction.</dd>
       </div>
       <div>
-        <dt>It reads the market</dt>
-        <dd>Live CoinMarketCap only, every 15 minutes.</dd>
+        <dt>Watch live CoinMarketCap</dt>
+        <dd>A Routine and Check now share one path. Quotes and listings come from CoinMarketCap. Missing prices stay missing.</dd>
       </div>
       <div>
-        <dt>You come back to a result</dt>
-        <dd>Evidence first. A quiet market still counts.</dd>
+        <dt>Keep the work log</dt>
+        <dd>Plan, Evidence, Verification, and Result land in the same thread. A quiet market is a completed check.</dd>
       </div>
     </dl>
   </section>
 
   <section class="landing-close">
     <p class="landing-close-line">Give it a job. It keeps watch for you.</p>
+    <p class="lede">Sign up. A waiting instruction opens your Lens. Otherwise, name one and send the first message.</p>
     <div class="actions">
       <a class="btn btn-primary" href="{% url 'signup' %}">Get Started</a>
       <a class="btn btn-ghost" href="{% url 'login' %}">Log In</a>
@@ -95,7 +130,7 @@
 
   <footer class="landing-foot">
     <p>Create a persistent crypto intelligence Lens powered by live CMC data.</p>
-    <p>Not a dashboard. Not a chat. Not a trading bot. No invented ticks. No demo account.</p>
+    <p>A check every 15 minutes. A quiet market is a valid result.</p>
   </footer>
 </div>
 {% endblock %}
