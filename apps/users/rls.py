@@ -15,6 +15,7 @@ PUBLIC_TABLES = (
     "lenses_job",
     "lenses_artifact",
     "lenses_agenttask",
+    "lenses_observation",
     "lenses_evidence",
     "lenses_verificationrecord",
     "lenses_approvalrequest",

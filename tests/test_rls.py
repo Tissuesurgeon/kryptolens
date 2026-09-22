@@ -32,6 +32,7 @@ def test_rls_enables_on_postgres():
 
 def test_public_rls_covers_lens_and_remaining_tables():
     assert "lenses_lens" in PUBLIC_TABLES
+    assert "lenses_observation" in PUBLIC_TABLES
     editor = _Editor("postgresql")
     enable_public_rls(editor)
     joined = "\n".join(editor.statements)
