@@ -1217,6 +1217,27 @@ button.agent-remove.is-labeled {
   margin: 0;
   text-wrap: balance;
 }
+.landing h1 em {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--primary);
+}
+.landing-marks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+.landing-marks span + span::before {
+  content: "·";
+  margin: 0 var(--space-3);
+  color: var(--muted);
+}
 .landing-sub {
   margin: 0 0 var(--space-4);
   font-size: var(--text-lg);
@@ -1355,6 +1376,46 @@ button.agent-remove.is-labeled {
 .landing-jobs .job-line span { display: none; }
 .landing-jobs .job-line:hover { background: var(--surface-2); }
 .landing-jobs .job-line:hover strong { color: var(--primary); }
+.landing-jobs .job-line[aria-selected="true"] {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.landing-stage .landing-jobs {
+  position: relative;
+  z-index: 1;
+  margin-bottom: var(--space-3);
+}
+.landing-track {
+  display: grid;
+  gap: var(--space-6);
+}
+.landing-track[hidden] { display: none; }
+.landing-preview .landing-turn {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+.landing-caption {
+  position: relative;
+  z-index: 1;
+  margin: var(--space-4) 0 0;
+  max-width: 58ch;
+  color: var(--muted);
+}
+.landing-meet {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(16rem, 0.92fr);
+  gap: var(--space-8);
+  align-items: start;
+  margin-top: var(--space-6);
+}
+.landing-meet-side {
+  position: sticky;
+  top: 88px;
+  display: grid;
+  gap: var(--space-5);
+}
+.landing-meet .landing-work { margin-top: 0; }
 .landing-jobs .job-line:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
@@ -1480,6 +1541,7 @@ button.agent-remove.is-labeled {
 .landing-steps dd p { margin: 0 0 var(--space-3); max-width: 62ch; }
 .landing-steps .landing-work { margin-top: var(--space-5); }
 .landing-work + p { margin-top: var(--space-5); }
+.landing-sub + .landing-work { margin-top: 0; }
 .landing-work-2 { grid-template-columns: 1fr 1fr; }
 .landing-work-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .landing-trail {
@@ -1542,7 +1604,7 @@ button.agent-remove.is-labeled {
 .landing-spec {
   width: min(72rem, calc(100% - 64px));
   margin: var(--space-16) auto 0;
-  scroll-margin-top: 72px;
+  scroll-margin-top: 96px;
 }
 .landing-spec h2 {
   margin: 0 0 var(--space-4);
@@ -1701,6 +1763,7 @@ html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(8) { anim
 }
 @media (max-width: 700px) {
   .landing-nav a[href="#how-it-works"],
+  .landing-nav a[href="#what"],
   .landing-nav a[href="#what-it-does"] { display: none; }
   .landing-bar { padding: var(--space-3) var(--space-4); gap: var(--space-3); }
 }
@@ -1715,6 +1778,8 @@ html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(8) { anim
   .landing-trail,
   .landing-data,
   .landing-controls { grid-template-columns: 1fr 1fr; }
+  .landing-meet { grid-template-columns: 1fr; }
+  .landing-meet-side { position: static; }
   .landing-loop:not(.landing-steps) { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 860px) {

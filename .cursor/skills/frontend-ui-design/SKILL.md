@@ -24,7 +24,7 @@ Read `docs/ui-design-skills.md` and `DESIGN.md` before changing visuals.
 
 ## Surfaces
 
-- **Landing:** display headline → product window (Ask composer + You asked / assumed) → one primary (Get Started). Spec is an unboxed numbered sequence. Moss field. Sticky bar with filled Get Started.
+- **Landing:** follow `index-landing` for composition (fact line, stance headline, track-switched Lens window, numbered path beside a transcript). Moss field. One filled Create a Lens. Tokens, type, and bans in this skill still apply.
 - **Workspace:** Grok Bot messenger. Sidebar of named Agents with geometric faces. Slim head: name + presence + CMC strip. New Agent opens an empty thread; the user writes first. Transcript of messages and work cards. Composer docked as a rounded field. Pause, check now, and activate are messages.
 - **Receipt / job trace:** one region, persisted stages, headings hug copy.
 
