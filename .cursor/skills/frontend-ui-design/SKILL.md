@@ -19,18 +19,18 @@ Read `docs/ui-design-skills.md` and `DESIGN.md` before changing visuals.
 8. Spacing from `--space-*` only (4 / 8 / 16 / 24 / 32 / 48 / 64).
 9. Text ≥4.5:1, large text ≥3:1, controls/focus ≥3:1. Off-black / off-white, not #000 / #fff.
 10. Focus ring: 2px `var(--primary)`, 2px offset.
-11. Radius: `--radius` (8px) on buttons, inputs, rows, and the Create Agent modal. No pill chips, no 999px tracks, no 16px SaaS card grids.
+11. Radius, color, type, and control chrome come from `harvest-ui`. No pill chips and no 999px tracks.
 12. Keep required copy: Get Started, Log In, Ask KryptoLens, You asked, KryptoLens assumed, Activate, Threshold changes, Telegram, Connect, Disconnect, queued.
 
 ## Surfaces
 
-- **Landing:** follow `index-landing` for composition (fact line, stance headline, track-switched Lens window, numbered path beside a transcript). Moss field. One filled Create a Lens. Tokens, type, and bans in this skill still apply.
+- **Landing:** follow `index-landing` for composition. Color and chrome follow `harvest-ui`. One filled Create a Lens.
 - **Workspace:** Grok Bot messenger. Sidebar of named Agents with geometric faces. Slim head: name + presence + CMC strip. New Agent opens an empty thread; the user writes first. Transcript of messages and work cards. Composer docked as a rounded field. Pause, check now, and activate are messages.
 - **Receipt / job trace:** one region, persisted stages, headings hug copy.
 
 ## Type
 
-Source Sans 3 for UI. Literata only for the landing headline. Source Code Pro for CMC prices, counts, ids, JSON.
+Fredoka for headings and buttons. Nunito for UI text. Source Code Pro for CMC prices, counts, ids, JSON. See `harvest-ui`.
 
 ## Bans
 

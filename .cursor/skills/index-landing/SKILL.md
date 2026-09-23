@@ -10,11 +10,11 @@ description: >-
 
 # INDEX 0 landing composition
 
-Source: [INDEX 0](https://www.index-0.in/). Apply the composition. Keep KryptoLens tokens from `frontend-ui-design` and `DESIGN.md`.
+Source: [INDEX 0](https://www.index-0.in/). Apply the composition. Color, type, and chrome come from `harvest-ui`.
 
 ## Keep
 
-- Moss field, Source Sans 3, Literata only on the landing headline, Source Code Pro for the fact line and step indexes.
+- Sage field, cream panels, Fredoka headings, Nunito body, Source Code Pro for the fact line and step indexes.
 - Spacing from `--space-*`. Radius 8px. Focus ring 2px primary, 2px offset.
 - One filled primary per view: **Create a Lens**. Log In stays quiet.
 - The existing write-up. Restructure it into the scenes below. Do not invent metrics, logos, testimonials, or market numbers.

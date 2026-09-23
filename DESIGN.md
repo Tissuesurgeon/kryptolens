@@ -4,7 +4,7 @@ UI work follows `docs/ui-design-skills.md` (hierarchy, proximity, 8px scale, WCA
 
 ## Scene
 
-Night desk. Landing is a committed moss field whose hero is the product window: Ask composer plus the You asked / assumed split. The workspace is a restrained tool: roster of named teammates and one transcript. Not a neon terminal, not a magazine spread, not a generic SaaS card grid.
+Sage checker field, from the Harvest Call system in `.cursor/skills/harvest-ui/SKILL.md`. Cream paper panels sit on the field. Landing composition stays the product window and one primary action. The workspace is a roster of Lenses and one transcript. Not a neon terminal, not a farm illustration, not a generic SaaS card grid.
 
 ## Strategy
 
@@ -12,24 +12,24 @@ Restrained in the app. Workspace follows **Grok Bot** layout, not grok.com chat:
 
 ## Tokens
 
-Workspace is moss-tinted charcoal. Accent is moss; the surface is not. `body.is-app` only locks the shell (full height, no page scroll).
+The field is sage. Paper is cream. Bark is the outline. `body.is-app` only locks the shell (full height, no page scroll).
 
 | Token | Value | Role |
 |---|---|---|
-| `--bg` | `oklch(0.11 0.008 130)` | Stage |
-| `--bg-raise` | `oklch(0.135 0.010 130)` | Roster |
-| `--surface` | `oklch(0.155 0.008 130)` | Thread |
-| `--surface-2` | `oklch(0.19 0.010 130)` | Elevated / hover |
-| `--line` | `oklch(0.28 0.014 130)` | Hairlines |
-| `--primary` | `oklch(0.68 0.12 130)` | Actions, status, selection accent |
-| `--accent` | `oklch(0.72 0.12 75)` | Waiting / attention |
-| `--radius` | `8px` | Buttons, inputs, rows, modal |
+| `--bg` | `#b9c78a` | Field |
+| `--bg-raise` | `#f3ead8` | Raised paper |
+| `--surface` | `#fbf6ec` | Panels |
+| `--surface-2` | `#f3ead8` | Hover / second paper |
+| `--line` | `#6f5334` | Bark outlines |
+| `--primary` | `#b8552f` | Terracotta actions |
+| `--accent` | `#f2cf7a` | Gold second action and focus |
+| `--radius` | `16px` | Buttons, inputs, rows, modal |
 
-Landing keeps the moss field. Status color is sparse: green = active/success; red = negative market move or error; yellow = waiting.
+Status color stays sparse: green = active/success; red = negative market move or error; gold = waiting.
 
 ## Type
 
-Source Sans 3 for product UI. Literata only on the landing headline. Source Code Pro for the CMC strip, counts, page ids, and API evidence.
+Fredoka for headings and buttons. Nunito for product UI. Source Code Pro for the CMC strip, counts, page ids, and API evidence.
 
 ## Motion
 
