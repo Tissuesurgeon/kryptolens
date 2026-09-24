@@ -9,6 +9,7 @@ import json
 
 from django.conf import settings
 
+from apps.notifications.linking import ensure_link_code
 from apps.users.models import UserPreference
 
 from .telegram import TelegramError, send_message
@@ -51,10 +52,18 @@ def settings_page(request):
             messages.success(request, "Telegram settings saved.")
         return redirect("settings")
     connected = bool(preference.telegram_chat_id and preference.telegram_enabled)
+    link_code = ensure_link_code(preference)
+    username = (settings.TELEGRAM_BOT_USERNAME or "").strip()
+    telegram_url = f"https://t.me/{username}?start={link_code}" if username else ""
     return render(
         request,
         "settings.html",
-        {"preference": preference, "telegram_connected": connected},
+        {
+            "preference": preference,
+            "telegram_connected": connected,
+            "link_code": link_code,
+            "telegram_url": telegram_url,
+        },
     )
 
 

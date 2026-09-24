@@ -23,7 +23,7 @@ Source: [Harvest Call](https://harvest-call.vercel.app/). This skill sets color,
 | Bark | `#6f5334` | 3px outlines, hard shadows, muted labels |
 | Terracotta | `#b8552f` | One primary action, cream label `#fff7ee` |
 | Gold | `#f2cf7a` / ink `#6b4d16` | The second button, when a view has two actions |
-| Cream headline | `#fff7ee` | Display type that sits directly on the field |
+| Field text | `#33291f` ink, `#6e2c16` emphasis | Headlines and body on the sage field. Cream and gold are button fills, not type. |
 
 ## Controls
 

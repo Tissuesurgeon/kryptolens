@@ -67,7 +67,7 @@ def test_first_run_home_is_create_new_agent():
     assert b"named Lens" in home.content
     assert b"No Lenses yet" in home.content
     assert b"+ New Lens" in home.content
-    assert b"Settings" in home.content
+    assert b"Telegram" in home.content
     assert user.email.encode() in home.content
     assert b"What should this Lens handle?" not in home.content
     assert b"Create Lens" not in home.content
@@ -274,6 +274,7 @@ def test_create_lens_understanding():
     settings_page = client.get("/settings")
     assert settings_page.status_code == 200
     assert b"Telegram" in settings_page.content
+    assert b"/link" in settings_page.content
     assert b"Connect" in settings_page.content
     assert b"Disconnect" in settings_page.content
     assert b"Also send meaningful Results" in settings_page.content

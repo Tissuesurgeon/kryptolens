@@ -10,6 +10,7 @@ from apps.lenses.models import Lens
 from apps.lenses.routine_service import RoutineService
 from apps.lenses.run_service import RunService
 from apps.lenses.status import lens_state
+from apps.notifications.linking import claim_link, link_code_from_text
 from apps.notifications.telegram import send_message
 from apps.users.models import UserPreference
 
@@ -28,9 +29,23 @@ def handle_telegram_update(update: dict, *, sender=None, public_base: str = "") 
     chat_id = str(chat.get("id") or "")
     if not chat_id:
         return {"ok": False, "error": "missing chat"}
+    code = link_code_from_text(text)
+    if code:
+        linked = claim_link(code, chat_id)
+        if linked is None:
+            reply = f"That link code was not recognized. Your Telegram chat ID is {chat_id}."
+            _safe_send(sender, chat_id, reply)
+            return {"ok": False, "error": "unknown code", "replies": [reply]}
+        reply = "Telegram connected. Send a job in language, or /help."
+        _safe_send(sender, chat_id, reply)
+        return {"ok": True, "replies": [reply]}
     preference = UserPreference.objects.filter(telegram_chat_id=chat_id, telegram_enabled=True).first()
     if not preference:
-        reply = "Connect this chat in KryptoLens Settings, then send a job here."
+        reply = (
+            f"This chat is not linked yet. Your Telegram chat ID is {chat_id}. "
+            "Open KryptoLens, choose Telegram, and paste that ID. "
+            "Or send /link followed by the code on that page."
+        )
         _safe_send(sender, chat_id, reply)
         return {"ok": False, "error": "unknown chat", "replies": [reply]}
     user = preference.user

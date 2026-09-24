@@ -8,14 +8,25 @@
   <header class="stream-intro">
     <p class="page-id">settings</p>
     <h1>Telegram</h1>
-    <p class="lede">Connect a chat to receive routine triggers and job completions. A failed send never drops the stored receipt.</p>
+    <p class="lede">Connect a chat to receive routine triggers and job completions, and to use KryptoLens from Telegram. A failed send never drops the stored receipt.</p>
   </header>
 
   <section class="desk form-narrow">
     <div class="desk-body">
     <header class="plate-head">
       <h2>{% if telegram_connected %}Connected{% else %}Not connected{% endif %}</h2>
+      {% if telegram_connected %}
+      <p class="quiet">Chat ID {{ preference.telegram_chat_id }}</p>
+      {% endif %}
     </header>
+    <div class="stack">
+      <p>Send this to the bot to link the chat:</p>
+      <p class="mono">/link {{ link_code }}</p>
+      {% if telegram_url %}
+      <p><a class="btn" href="{{ telegram_url }}" target="_blank" rel="noopener">Open Telegram</a></p>
+      {% endif %}
+      <p class="quiet">The bot replies with your chat ID if you would rather paste it below.</p>
+    </div>
     <form method="post" class="stack">
       {% csrf_token %}
       <div>

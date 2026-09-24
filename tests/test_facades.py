@@ -374,6 +374,36 @@ def test_telegram_inbound_writes_the_same_conversation():
 
 
 @pytest.mark.django_db
+def test_telegram_link_code_binds_the_chat():
+    from apps.notifications.linking import ensure_link_code
+    from apps.notifications.telegram_service import TelegramService
+    from apps.users.models import UserPreference
+
+    user = _user()
+    preference, _ = UserPreference.objects.get_or_create(user=user)
+    code = ensure_link_code(preference)
+    sent = []
+    result = TelegramService.handle_update(
+        {"message": {"chat": {"id": 9001}, "text": f"/link {code}"}},
+        sender=lambda chat_id, text: sent.append((chat_id, text)),
+    )
+    preference.refresh_from_db()
+    assert result["ok"] is True
+    assert preference.telegram_chat_id == "9001"
+    assert preference.telegram_enabled is True
+    assert preference.telegram_link_code is None
+    assert any("Telegram connected" in text for _, text in sent)
+
+    unknown = []
+    missed = TelegramService.handle_update(
+        {"message": {"chat": {"id": 55}, "text": "hello"}},
+        sender=lambda chat_id, text: unknown.append(text),
+    )
+    assert missed["ok"] is False
+    assert any("55" in text for text in unknown)
+
+
+@pytest.mark.django_db
 def test_telegram_webhook_rejects_bad_secret(settings):
     settings.TELEGRAM_WEBHOOK_SECRET = "s3cret"
     client = Client()

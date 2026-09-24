@@ -43,7 +43,7 @@
   </nav>
   <div class="roster-foot">
     <span class="roster-user">{{ request.user.email }}</span>
-    <a class="roster-settings" href="{% url 'settings' %}">Settings</a>
+    <a class="roster-settings" href="{% url 'settings' %}">Telegram</a>
     <form method="post" action="{% url 'sign_out' %}">
       {% csrf_token %}
       <button class="btn btn-ghost roster-logout" type="submit">Log Out</button>

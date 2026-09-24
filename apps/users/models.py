@@ -12,6 +12,7 @@ class User(AbstractUser):
 class UserPreference(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="preference")
     telegram_chat_id = models.CharField(max_length=64, blank=True)
+    telegram_link_code = models.CharField(max_length=16, blank=True, unique=True, null=True)
     telegram_enabled = models.BooleanField(default=False)
     telegram_notify_results = models.BooleanField(default=True)
     active_lens = models.ForeignKey(

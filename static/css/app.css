@@ -6,9 +6,10 @@
   --inset: #fff7ee;
   --line: #6f5334;
   --ink: #33291f;
-  --muted: #6f5334;
+  --muted: #5a4636;
   --primary: #b8552f;
   --primary-ink: #fff7ee;
+  --link: #6e2c16;
   --accent: #f2cf7a;
   --gold-ink: #6b4d16;
   --up: #2f6b34;
@@ -76,7 +77,7 @@ body.is-app {
 }
 
 a { color: inherit; text-decoration: none; }
-a:hover { color: var(--primary); }
+a:hover { color: var(--link); }
 button, input, textarea, select { font: inherit; color: inherit; }
 
 .skip {
@@ -179,7 +180,7 @@ h3 { font-size: var(--text-base); font-weight: 600; }
   color: var(--primary-ink);
   min-width: 7rem;
 }
-.btn-primary:hover { color: var(--primary-ink); background: #c4633a; }
+.btn-primary:hover { color: var(--primary-ink); background: #a34b28; }
 .btn-ghost {
   background: transparent;
   min-height: 36px;
@@ -187,7 +188,7 @@ h3 { font-size: var(--text-base); font-weight: 600; }
   border-color: transparent;
   box-shadow: none;
 }
-.btn-ghost:hover { background: transparent; color: var(--primary); }
+.btn-ghost:hover { background: transparent; color: var(--link); }
 
 .stack { display: grid; gap: var(--space-4); }
 .form-narrow { max-width: 32rem; }
@@ -206,7 +207,7 @@ h3 { font-size: var(--text-base); font-weight: 600; }
   background: var(--surface-2);
   color: var(--muted);
 }
-.badge-active { color: var(--primary); background: rgb(184 85 47 / 0.14); }
+.badge-active { color: var(--link); background: rgb(184 85 47 / 0.14); }
 .badge-high { color: var(--high); }
 .badge-medium { color: var(--medium); }
 .badge-low { color: var(--low); }
@@ -221,7 +222,7 @@ textarea, input[type="text"], input[type="email"], input[type="password"], input
   color: var(--ink);
 }
 textarea { min-height: 148px; resize: vertical; }
-textarea::placeholder, input::placeholder { color: var(--muted); opacity: 0.7; }
+textarea::placeholder, input::placeholder { color: var(--muted); opacity: 1; }
 textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .check {
@@ -368,7 +369,7 @@ pre {
 }
 .roster-new {
   font-size: var(--text-sm);
-  color: var(--primary);
+  color: var(--link);
   font-weight: 600;
 }
 input.roster-search[type="search"] {
@@ -536,7 +537,7 @@ input.roster-search[type="search"]:focus {
 .agent-row-wrap .agent-row { padding-top: var(--space-4); padding-bottom: var(--space-4); }
 .agent-list > .agent-row-wrap:first-child .agent-row { padding-top: var(--space-2); }
 .agent-row:hover { color: inherit; }
-.agent-row:hover strong { color: var(--primary); }
+.agent-row:hover strong { color: var(--link); }
 .agent-row .bot-face { margin-top: 2px; }
 .agent-row-body { display: grid; gap: var(--space-1); min-width: 0; }
 .agent-row-body strong {
@@ -917,7 +918,7 @@ button.agent-remove.is-labeled {
   color: var(--muted);
   max-width: 52ch;
 }
-.job-line:hover strong { color: var(--primary); }
+.job-line:hover strong { color: var(--link); }
 .desk-body {
   display: grid;
   gap: var(--space-8);
@@ -997,7 +998,7 @@ button.agent-remove.is-labeled {
   font-size: var(--text-sm);
   color: var(--muted);
 }
-.event-link { color: var(--primary); }
+.event-link { color: var(--link); }
 .scan-list {
   margin: 0;
   padding: 0;
@@ -1043,7 +1044,7 @@ button.agent-remove.is-labeled {
   letter-spacing: 0.02em;
 }
 .stage-track [aria-current="step"] {
-  color: var(--primary);
+  color: var(--link);
   font-weight: 600;
 }
 
@@ -1063,8 +1064,8 @@ button.agent-remove.is-labeled {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.chip-state.is-pass { color: var(--primary); }
-.chip-state.is-miss { color: var(--accent); }
+.chip-state.is-pass { color: var(--link); }
+.chip-state.is-miss { color: var(--down); }
 .near-actuals { margin: var(--space-2) 0 0; }
 
 .event-feed { display: grid; }
@@ -1119,7 +1120,7 @@ button.agent-remove.is-labeled {
   box-shadow: 0 3px 0 var(--line);
 }
 .composer-send svg { display: block; flex: 0 0 16px; }
-.composer-send:hover { color: var(--primary-ink); background: #c4633a; }
+.composer-send:hover { color: var(--primary-ink); background: #a34b28; }
 .composer-send:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .composer-send:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
 .thread .composer-shell {
@@ -1246,11 +1247,11 @@ button.agent-remove.is-labeled {
   margin: 0;
   text-wrap: balance;
 }
-.landing h1 { color: var(--inset); }
+.landing h1 { color: var(--ink); }
 .landing h1 em {
   font-style: normal;
   font-weight: 650;
-  color: var(--accent);
+  color: var(--link);
 }
 .landing-marks {
   display: flex;
@@ -1261,7 +1262,7 @@ button.agent-remove.is-labeled {
   font-size: var(--text-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--primary);
+  color: var(--link);
 }
 .landing-marks span + span::before {
   content: "·";
@@ -1405,10 +1406,10 @@ button.agent-remove.is-labeled {
 }
 .landing-jobs .job-line span { display: none; }
 .landing-jobs .job-line:hover { background: var(--surface-2); }
-.landing-jobs .job-line:hover strong { color: var(--primary); }
+.landing-jobs .job-line:hover strong { color: var(--link); }
 .landing-jobs .job-line[aria-selected="true"] {
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: var(--link);
+  color: var(--link);
 }
 .landing-stage .landing-jobs {
   position: relative;
@@ -1469,7 +1470,7 @@ button.agent-remove.is-labeled {
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--primary);
+  color: var(--link);
 }
 .landing-facts dd {
   margin: 0;
@@ -1556,7 +1557,7 @@ button.agent-remove.is-labeled {
   font-family: var(--mono);
   font-size: var(--text-sm);
   font-weight: 500;
-  color: var(--primary);
+  color: var(--link);
 }
 .landing-steps dt,
 .landing-steps dd { grid-column: 2; margin: 0; }
@@ -1660,7 +1661,7 @@ button.agent-remove.is-labeled {
   font-family: var(--mono);
   font-size: var(--text-sm);
   font-weight: 500;
-  color: var(--primary);
+  color: var(--link);
 }
 .landing-loop dt {
   font-family: var(--font);
