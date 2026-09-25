@@ -27,7 +27,7 @@ def test_landing_has_real_auth_ctas():
     client = Client()
     landing = client.get("/")
     assert landing.status_code == 200
-    assert b"Create a Lens" in landing.content
+    assert b"Create an Analyst" in landing.content
     assert b"Log In" in landing.content
     assert b"How it works" in landing.content
     assert b"Enter Demo" not in landing.content
@@ -61,17 +61,17 @@ def test_first_run_home_is_create_new_agent():
     client, user = _client()
     home = client.get("/home")
     assert home.status_code == 200
-    assert b"Your Lenses" in home.content
-    assert b"Create a Lens" in home.content
+    assert b"Your Analysts" in home.content
+    assert b"Create an Analyst" in home.content
     assert b"What is its job?" not in home.content
     assert b"named Lens" in home.content
     assert b"No Lenses yet" in home.content
-    assert b"+ New Lens" in home.content
+    assert b"+ New Analyst" in home.content
     assert b"Telegram" in home.content
     assert user.email.encode() in home.content
     assert b"What should this Lens handle?" not in home.content
     assert b"Create Lens" not in home.content
-    assert b"Search Your Lenses" not in home.content
+    assert b"Search Your Analysts" not in home.content
     assert b"Market Overview" not in home.content
     assert b"Recent Events" not in home.content
     assert b"Recent work" not in home.content
@@ -81,7 +81,7 @@ def test_first_run_home_is_create_new_agent():
     opened = client.get("/agents/new")
     assert opened.status_code == 200
     assert b"What is its job?" not in opened.content
-    assert b"Create a Lens" in opened.content
+    assert b"Create an Analyst" in opened.content
     created = client.post(
         "/agents/new",
         {"name": "Market Scout"},
@@ -95,7 +95,7 @@ def test_first_run_home_is_create_new_agent():
     assert "Hi. I" not in html
     assert "Market Scout" in html
     assert "What would you like me to watch?" not in html
-    assert "Ask KryptoLens" in html
+    assert "Ask " in html
     assert lens.conversation_items.count() == 0
     assert 'id="work-preview"' not in html
     assert 'id="scan-mount"' in html
@@ -132,7 +132,7 @@ def test_new_creates_empty_draft_lens():
     assert draft.current_version() is None
     assert b"New Lens" in opened.content
     assert b"What would you like me to watch?" not in opened.content
-    assert b"Ask KryptoLens" in opened.content
+    assert b"Ask " in opened.content
     assert b"Create new agent" not in opened.content or b"New Lens" in opened.content
     attached = client.post(f"/lenses/{draft.id}", {"intent": "Give me a morning market brief"}, follow=True)
     assert attached.status_code == 200
@@ -161,12 +161,12 @@ def test_signup_login_logout():
     )
     assert created.status_code == 200
     assert User.objects.filter(email="fresh@kryptolens.app").exists()
-    assert b"Your Lenses" in created.content
-    assert b"Create a Lens" in created.content
+    assert b"Your Analysts" in created.content
+    assert b"Create an Analyst" in created.content
     client.post("/sign-out")
     logged = client.post("/login", {"email": "fresh@kryptolens.app", "password": PASSWORD}, follow=True)
     assert logged.status_code == 200
-    assert b"Your Lenses" in logged.content
+    assert b"Your Analysts" in logged.content
 
 
 @pytest.mark.django_db

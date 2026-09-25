@@ -68,6 +68,7 @@ Rules:
 - "When BTC drops by 2%, check the top 100..." → ready, mode=work, watch_plus_investigate immediately.
 - "When ETH drops by 2%, rank the top 100 declines." → ready, mode=work, trigger asset ETH, not BTC.
 - "When BTC drops by 2%, find me the coins with the highest drop." → ready, mode=work, watch_plus_investigate. Rank declines.
+- "What can you do?" / "help" / "who are you" is not a market task. Do not invent an asset or a BTC quote.
 - News/headlines → ready, mode=ask, news_brief.
 - Every morning summarize → ready, mode=work, scheduled_brief.
 - Never call CMC. Never invent a percent the user did not state.
@@ -98,11 +99,18 @@ def understand(
     current_job: JobDefinition | None = None,
     pending: dict | None = None,
     provider=None,
+    research_context=None,
 ) -> TurnResult:
     text = (text or "").strip()
     provider = provider or get_provider()
     if pending:
         return _merge_answer(text, pending, current_job=current_job, provider=provider, history=history)
+    if research_context is not None:
+        from apps.intelligence.research.context import resolve_follow_up
+
+        followed = resolve_follow_up(text, research_context)
+        if followed is not None:
+            return followed
     if provider_is_llm(provider):
         try:
             return _understand_llm(text, history=history, current_job=current_job, provider=provider)
@@ -316,11 +324,25 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
                 }
             ],
         )
+    mentioned = _extract_symbols(text)
+    if not mentioned:
+        question = "What should I research? Name an asset, a ranking, or a condition to watch."
+        task = ClarifiedTask(
+            status="needs_input",
+            mode="ask",
+            objective=text.strip(),
+            you_asked=[text.strip()] if text.strip() else [],
+            question=question,
+            pending_field="subject",
+            source_text=text,
+            capabilities=["market"],
+        )
+        return TurnResult(status="needs_input", question=question, task=task)
     return _ready(
         text,
         mode="ask",
         task_type="one_shot_research",
-        assets=assets,
+        assets=mentioned,
         action="report",
         capabilities=["market"],
         objective=text.strip() or "Report live CoinMarketCap quotes.",

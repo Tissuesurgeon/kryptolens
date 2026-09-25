@@ -1,25 +1,25 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Your Lenses · KryptoLens{% endblock %}
-{% block workspace_title %}Your Lenses{% endblock %}
+{% block title %}Your Analysts · KryptoLens{% endblock %}
+{% block workspace_title %}Your Analysts{% endblock %}
 
 {% block content %}
 <div class="thread agent-home{% if first_run %} first-run{% endif %}">
   {% if first_run %}
   <div class="first-run-stage">
-    <h1>Your Lenses</h1>
+    <h1>Your Analysts</h1>
     <p class="lede">Create a named Lens — not a disposable chat. Then tell it what you want.</p>
-    <button class="btn btn-primary" type="button" id="open-create-agent">Create a Lens</button>
+    <button class="btn btn-primary" type="button" id="open-create-agent">Create an Analyst</button>
   </div>
   {% else %}
   <div class="thread-scroll">
     <header class="conversation-head">
       <div>
-        <h1>Your Lenses</h1>
+        <h1>Your Analysts</h1>
         <p class="lede">Who they are, what they watch, and whether they are working.</p>
       </div>
-      <button class="btn btn-primary" type="button" id="open-create-agent">Create a Lens</button>
+      <button class="btn btn-primary" type="button" id="open-create-agent">Create an Analyst</button>
     </header>
     <div class="agent-list">
       {% for item in lenses %}
@@ -42,7 +42,7 @@
 <dialog class="create-modal" id="create-agent-modal">
   <form method="post" action="{% url 'agent_create' %}" class="form-narrow create-agent">
     {% csrf_token %}
-    <h1>Create a Lens</h1>
+    <h1>Create an Analyst</h1>
     <p class="lede">Give it a name. You can tell it what to do after this.</p>
     <p>
       <label for="agent-name">Lens name</label>
@@ -50,7 +50,7 @@
     </p>
     <div class="actions">
       <button class="btn btn-ghost" type="button" id="close-create-agent">Cancel</button>
-      <button class="btn btn-primary" type="submit">Create a Lens</button>
+      <button class="btn btn-primary" type="submit">Create an Analyst</button>
     </div>
   </form>
 </dialog>

@@ -46,6 +46,35 @@ DOING_PHRASES = frozenset(
         "what is this agent doing now",
     }
 )
+WATCH_PHRASES = frozenset(
+    {
+        "keep watching",
+        "keep watching this",
+        "keep an eye on this",
+        "keep monitoring this",
+    }
+)
+CAPABILITY_PHRASES = frozenset(
+    {
+        "help",
+        "/help",
+        "what can you do",
+        "what do you do",
+        "what are you",
+        "who are you",
+        "how do you work",
+        "what can this lens do",
+        "what can kryptolens do",
+        "what are you able to do",
+    }
+)
+CAPABILITY_REPLY = (
+    "I investigate the crypto market with live CoinMarketCap data. "
+    "Ask a question, such as how BTC is doing or which of the top 100 coins fell the most. "
+    "Tell me to watch a condition, such as a 2% BTC drop, and I keep checking this analyst. "
+    "If the request is ambiguous, I ask before I analyze. "
+    "The result stays here, with the evidence behind it. I do not place trades."
+)
 
 
 @dataclass
@@ -63,7 +92,7 @@ class ChatResult:
 class ConversationService:
     @staticmethod
     def normalize(text: str) -> str:
-        return " ".join(text.lower().strip().rstrip(".!").split())
+        return " ".join(text.lower().strip().rstrip(".!?").split())
 
     @staticmethod
     def command(text: str, action: str = "") -> str | None:
@@ -84,6 +113,10 @@ class ConversationService:
             return "why"
         if phrase in DOING_PHRASES:
             return "doing"
+        if phrase in CAPABILITY_PHRASES:
+            return "capabilities"
+        if phrase in WATCH_PHRASES:
+            return "watch"
         return None
 
     @staticmethod
@@ -136,6 +169,12 @@ class ConversationService:
             add_item(lens, "user_message", {"text": text})
             add_item(lens, "assistant_message", ConversationService.doing_reply(lens))
             return ChatResult(kind="replied", command="doing")
+        if command == "capabilities":
+            add_item(lens, "user_message", {"text": text})
+            add_item(lens, "assistant_message", {"text": CAPABILITY_REPLY})
+            return ChatResult(kind="replied", command="capabilities")
+        if command == "watch":
+            return ConversationService._keep_watching(lens, text)
         return ConversationService._turn(lens, text, action=action)
 
     @staticmethod
@@ -149,12 +188,17 @@ class ConversationService:
         except Exception:
             current_workflow = None
         current_policy = lens.current_policy()
+        from apps.intelligence.research.context import ResearchContext
+        from apps.intelligence.research.task import ResearchTask
+
         pending = (lens.context_json or {}).get("pending_task")
+        research = ResearchContext.from_json(lens.context_json)
         turn = ConversationAgent.understand(
             text,
             history=ConversationService._history(lens),
             current_job=current_job,
             pending=pending,
+            research_context=research,
         )
         if turn.status == "needs_input" and turn.task:
             add_item(lens, "user_message", {"text": text})
@@ -165,7 +209,8 @@ class ConversationService:
         task = turn.task
         if not task:
             return ChatResult(kind="error", flash="Give this Lens a job.", flash_level="error")
-        plan = ChiefAgent().plan_from_task(task)
+        research_task = ResearchTask.from_clarified(task, session_id=research.ensure_session())
+        research_plan, plan = ChiefAgent().plan(research_task, research)
         report = compile_from_task(
             task,
             capability_plan=plan,
@@ -173,6 +218,10 @@ class ConversationService:
             current_job=current_job,
             current_workflow=current_workflow,
         )
+        report["research_plan"] = research_plan.model_dump(mode="json")
+        research.apply_task(research_task, report["research_plan"])
+        lens.context_json = research.dump_into(lens.context_json)
+        lens.save(update_fields=["context_json", "updated_at"])
         if action == "preview":
             preview = report["policy"]
             diffs = policy_diff(current_policy, preview) if current_policy else []
@@ -206,6 +255,60 @@ class ConversationService:
         else:
             apply_compiled_edit(lens, text, report, record_diff=False, announce_job=False)
         return ConversationService._begin_ask(lens, report)
+
+    @staticmethod
+    def _keep_watching(lens: Lens, text: str) -> ChatResult:
+        from apps.intelligence.research.context import ResearchContext
+        from apps.intelligence.research.task import ResearchTask
+
+        research = ResearchContext.from_json(lens.context_json)
+        add_item(lens, "user_message", {"text": text})
+        if not research.current_task:
+            add_item(
+                lens,
+                "assistant_message",
+                {"text": "Tell me what to research first. Then I can keep watching it."},
+            )
+            return ChatResult(kind="needs_input")
+        task = ResearchTask.model_validate(research.current_task)
+        task.mode = "work"
+        task.status = "ready"
+        if task.task_type == "one_shot_research":
+            task.task_type = "watch_plus_investigate" if task.trigger_conditions else "persistent_monitor"
+        if "anomaly" not in task.capabilities and "reaction" not in task.capabilities:
+            task.capabilities = list(dict.fromkeys(list(task.capabilities) + ["anomaly", "market"]))
+        clarified = task.to_clarified()
+        version = lens.current_version()
+        current_job = version.as_job() if version else None
+        try:
+            current_workflow = version.as_workflow() if version else None
+        except Exception:
+            current_workflow = None
+        research_plan, plan = ChiefAgent().plan(task, research)
+        report = compile_from_task(
+            clarified,
+            capability_plan=plan,
+            current_policy=lens.current_policy(),
+            current_job=current_job,
+            current_workflow=current_workflow,
+        )
+        report["research_plan"] = research_plan.model_dump(mode="json")
+        research.apply_task(task, report["research_plan"])
+        lens.context_json = research.dump_into(lens.context_json)
+        lens.save(update_fields=["context_json", "updated_at"])
+        add_item(
+            lens,
+            "assistant_message",
+            {"text": "I'll keep watching this and report later findings in this conversation."},
+        )
+        intent = task.objective or task.source_text or text
+        if not version:
+            attach_compiled_job(lens, intent, report, persist_routine=True)
+        else:
+            apply_compiled_edit(lens, intent, report, record_diff=False, announce_job=False)
+            start_watching(lens)
+        RoutineService.confirm(lens, intent)
+        return ConversationService._begin_work(lens, persistent=True)
 
     @staticmethod
     def _begin_ask(lens: Lens, report: dict) -> ChatResult:
@@ -417,6 +520,8 @@ class ConversationService:
             "work_track": work_track(latest_run),
             "work_open": False,
             "working_cards": RunService.working_cards(latest_run) if latest_run else [],
-            "composer_placeholder": "Ask KryptoLens…",
+            "composer_placeholder": f"Ask {lens.name}…",
+            "research_plan": ((lens.context_json or {}).get("research") or {}).get("research_plan") or {},
+            "recent_findings": ((lens.context_json or {}).get("research") or {}).get("recent_findings") or [],
             "agent_nav": "chat",
         }

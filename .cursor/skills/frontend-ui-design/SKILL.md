@@ -20,11 +20,11 @@ Read `docs/ui-design-skills.md` and `DESIGN.md` before changing visuals.
 9. Text ≥4.5:1, large text ≥3:1, controls/focus ≥3:1. Off-black / off-white, not #000 / #fff.
 10. Focus ring: 2px `var(--primary)`, 2px offset.
 11. Radius, color, type, and control chrome come from `harvest-ui`. No pill chips and no 999px tracks.
-12. Keep required copy: Get Started, Log In, Ask KryptoLens, You asked, KryptoLens assumed, Activate, Threshold changes, Telegram, Connect, Disconnect, queued.
+12. Keep required copy: Log In, Create an Analyst, Your Analysts, What would you like to research?, Telegram, Connect, Disconnect, queued.
 
 ## Surfaces
 
-- **Landing:** follow `index-landing` for composition. Color and chrome follow `harvest-ui`. One filled Create a Lens.
+- **Landing:** follow `index-landing` for composition. Color and chrome follow `harvest-ui`. One filled Create an Analyst. The composer still posts `intent` and does not create an analyst before signup.
 - **Workspace:** Grok Bot messenger. Sidebar of named Agents with geometric faces. Slim head: name + presence + CMC strip. New Agent opens an empty thread; the user writes first. Transcript of messages and work cards. Composer docked as a rounded field. Pause, check now, and activate are messages.
 - **Receipt / job trace:** one region, persisted stages, headings hug copy.
 

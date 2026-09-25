@@ -42,9 +42,9 @@
   </div>
   <form class="composer-dock" method="post">
     {% csrf_token %}
-    <label class="visually-hidden" for="composer-intent">Ask KryptoLens</label>
+    <label class="visually-hidden" for="composer-intent">Ask your analyst</label>
     <div class="composer-shell">
-      <textarea id="composer-intent" name="intent" required rows="2" placeholder="Ask KryptoLens to revise this lens…">{{ draft }}</textarea>
+      <textarea id="composer-intent" name="intent" required rows="2" placeholder="Ask your analyst to revise this lens…">{{ draft }}</textarea>
       <div class="composer-actions">
         <button class="btn" name="action" value="preview" type="submit">Preview diff</button>
         {% if preview %}

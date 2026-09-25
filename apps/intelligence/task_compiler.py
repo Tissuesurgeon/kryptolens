@@ -29,7 +29,7 @@ def compile_from_task(
     current_workflow: WorkflowDefinition | None = None,
     provider=None,
 ) -> dict:
-    text = task.source_text or task.objective or ""
+    text = _text_from_task(task)
     workflow = None
     if capability_plan is not None and getattr(capability_plan, "workflow", None) is not None:
         planned = capability_plan.workflow
@@ -79,6 +79,19 @@ def compile_from_task(
         policy = _policy_from_task(task, text)
         job, workflow, policy = _status_now(text or task.objective, policy)
 
+    listings = (task.scope.universe or "").startswith("top") or task.task_type in {
+        "watch_plus_investigate",
+        "scheduled_brief",
+    }
+    if task.scope.assets and not listings and task.action not in {"rank_gains", "rank_declines"}:
+        policy = policy.model_copy(
+            update={
+                "universe": policy.universe.model_copy(
+                    update={"type": "symbols", "symbols": list(task.scope.assets)}
+                )
+            }
+        )
+
     if capability_plan is not None and getattr(capability_plan, "workflow", None) is not None:
         planned = capability_plan.workflow
         if planned.steps or planned.trigger:
@@ -120,6 +133,16 @@ def compile_from_task(
     report["tool_permissions"] = dict(DEFAULT_TOOL_PERMISSIONS)
     _ = current_job, current_workflow, provider
     return report
+
+
+def _text_from_task(task: ClarifiedTask) -> str:
+    """Use the understood task. A follow-up sentence must not replace its assets."""
+    assets = [str(asset) for asset in task.scope.assets if asset]
+    source = task.source_text or ""
+    if assets and not any(asset.lower() in source.lower() for asset in assets):
+        named = ", ".join(assets)
+        return f"{task.objective or source} ({named})".strip()
+    return source or task.objective or ""
 
 
 def compile_task_or_text(

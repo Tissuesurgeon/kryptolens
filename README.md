@@ -1,42 +1,36 @@
 # KryptoLens
 
-Tell KryptoLens what matters. Give it a job. It keeps watch for you.
+Ask an analyst. It researches live CoinMarketCap data and answers in the same conversation.
 
-KryptoLens is a persistent crypto intelligence workspace where users create a **Lens**, tell it what they want in natural language, and leave those jobs running against live market data. A **Routine** starts work without another prompt. Celery Beat runs unattended through **AgentRuntime** → LensRuntime → CMC. The conversation is a structured work log: Plan → Evidence → Verification → Result.
+KryptoLens is a conversational crypto analyst. You create an **Analyst** (stored as a Lens), ask a question, and it investigates with live market data. A normal question stays a research task. **Keep watching this** turns that task into one Routine. Celery Beat runs unattended through **AgentRuntime** → LensRuntime → CMC. The conversation shows the question, the research steps, the finding, the evidence, and the verification.
 
-It is not a chatbot, not a market dashboard, not a demo, and not a trading bot. Cadence is **15 minutes**. Quiet markets are a valid result.
+It is not a chatbot, not a market dashboard, not a demo, and not a trading bot. Cadence is **15 minutes**. Quiet markets are a valid result. Missing data is not treated as zero.
 
 Built for the [Build with CMC](https://coinmarketcap.com/api/resources/api-hackathon/) hackathon · **AI Agents and Automation** · `#BuildwithCMC`
 
 ## How it works
 
 ```
-User
-  → Lens conversation
-  → Understanding Agent (LLM JSON)
-  → ClarifiedTask
-  → Chief Agent → CapabilityPlan
-  → Capabilities + registered CMC tools
-  → Workflow
-  → Deterministic analysis
-  → Verification
-  → Response Agent
-  → Same Lens thread
+User message
+  → Understanding (LLM JSON → ResearchTask)
+  → ResearchContext
+  → ResearchPlanner → ResearchPlan + CapabilityPlan
+  → Existing runtime and registered CMC tools
+  → Finding, evidence, verification
+  → Grounded reply in the same conversation
 ```
 
-Chief Agent does not call CMC. Capabilities declare tools; `dispatch_cmc` executes. On-chain, DEX, derivatives, and RWA are registry stubs with honest 403. News uses CoinMarketCap Content Latest plus quotes.
+The planner does not call CMC. Capabilities declare tools; `dispatch_cmc` executes. Python calculates returns, ranks, filters, and comparisons.
 
 | Piece | Status | Role |
 | --- | --- | --- |
-| Understanding Agent | Implemented | LLM-first ClarifiedTask; heuristics are fallback only |
-| ClarifiedTask | Implemented | What the user asked; source of truth for compile |
-| Chief Agent / CapabilityPlan | Implemented | Selects one or more capabilities and validated tools. Does not call CMC |
+| Understanding | Implemented | LLM-first ResearchTask; heuristics only when the provider or JSON fails |
+| ResearchTask / ResearchContext | Implemented | The request and the session, stored on the existing Lens JSON |
+| ResearchPlanner / CapabilityPlan | Implemented | Names capabilities and validated tools. Does not call CMC |
 | Internal capabilities | Implemented | Market, Anomaly, Reaction, Historical, Discovery, Regime — not user-managed bots |
 | Evidence / Verification | Implemented | Compact claims and checkmarks in the thread |
 | Approvals | Foundation only | READ/ANALYZE not required; EXECUTE denied |
-| Onchain / DEX / Derivatives / RWA | Boundary | Honest refusal, not on Startup |
-| News | Implemented, CMC Content Latest | Headlines related to live quotes |
-| Wallet / Execution | Future | Not available yet |
+| Wallet / Execution | Not in this product | The analyst does not place trades |
 | CMC adapter | Implemented | Auth, 60s cache, `CmcCallLog`. Raw JSON never enters the engine |
 | `AgentRuntime` / `LensRuntime` | Implemented | Chat, Check now, and Beat share one path |
 
@@ -48,8 +42,8 @@ Policy JSON field names are frozen: `metrics`, `asset_conditions`, `market_conte
 
 1. Landing composer stashes the instruction. **No Agent and no CMC job before authentication.**
 2. **Get Started** (`/signup`) or **Log In** (`/login`). Password reset is Django's built-in flow.
-3. After auth, a pending landing instruction creates **your** Lens. Otherwise **Create a Lens** (name only) on Your Lenses, then send the first message.
-4. Chat a job. The LLM understands it (**You asked** / **KryptoLens assumed** / I'll do), Chief Agent plans, and work starts in the thread. A Routine is standing watch — not a setup form.
+3. After auth, a pending landing instruction creates **your** analyst. Otherwise **Create an Analyst** (name only) on Your Analysts, then send the first message.
+4. Ask a question. Understanding produces a research task, the planner selects capabilities, and the reply stays in the thread. **Keep watching this** creates one Routine from that task.
 5. Close the laptop. Beat ticks every 15 minutes, calls the same Celery `run_lens` task as **Check now** (`AgentRuntime` → `LensRuntime` → live CMC), and writes the result into the conversation. No extra LLM. No invented ticks.
 6. **Check now** creates a `LensRun` (`stage=queued`) and returns `run_id` immediately. HTMX polls `LensRun.stage` until `complete` or `error`. CMC activity cards in the transcript show real endpoints, status, and elapsed_ms.
 7. Conversation artifacts appear in order: Plan → Evidence → Verification → Result → Execution receipt. True Events still open a Receipt. Jobs open an execution trace at `/jobs/<id>`.
@@ -63,11 +57,11 @@ Workspace status is derived from real runs: Idle · Watching · Working · Inves
 
 Agent Home and one transcript — not a dashboard.
 
-- Left: **Your Lenses** — name, status, recent activity. **+ New Lens**.
+- Left: **Your Analysts** — name, status, recent activity. **+ New Analyst**.
 - Home: Who → State → Activity. Live CMC strip (BTC / ETH / SOL / TOTAL).
 - Selected Lens: name + presence (Watching / Working / Idle), transcript, composer. Pause / resume / check now are messages.
 - Transcript: work log — messages, clarification, compact work preview, Plan → Evidence → Verification → Result
-- Bottom: **Ask KryptoLens…**. A new Lens opens an empty conversation. The user sends the first message.
+- Bottom: **Ask {name}…**. A new analyst opens an empty conversation. The first screen asks what you would like to research.
 
 Near-match objects have a frozen shape (`symbol`, `name`, `actuals`, `conditions[].passed`). Templates only render those fields.
 
@@ -141,7 +135,7 @@ Auth header: `X-CMC_PRO_API_KEY`. The key is never logged, never stored on event
 | `GET /v3/cryptocurrency/quotes/latest` | Universe is named symbols (e.g. BTC) |
 | `GET /v3/fear-and-greed/latest` | Policy includes Fear & Greed as **market context** |
 | `GET /v1/global-metrics/quotes/latest` | Only when policy context needs global market fields |
-| `GET /v1/content/latest` | News questions: CMC News/Headlines, then live quotes for tagged assets |
+| `GET /v1/content/latest` | Registered CMC endpoint. The analyst does not present a news product. |
 
 Listings and quotes are cached in-process for about 60 seconds. Events store normalized observations plus a foreign key to the call log — not a full CMC dump.
 

@@ -63,6 +63,10 @@ def compose_reply(
     return _heuristic_reply(fallback, claims, limitations, historical, verification)
 
 
+def _verification_blocks(verification: dict | None) -> bool:
+    return (verification or {}).get("status") in {"unsupported", "inconclusive", "needs_more_evidence"}
+
+
 def _heuristic_reply(
     fallback: str,
     claims: list[str],
@@ -76,9 +80,9 @@ def _heuristic_reply(
             bits.append(claim)
     status = (verification or {}).get("status")
     if status in {"inconclusive", "needs_more_evidence"}:
-        bits.append("Verification is inconclusive on this run.")
-    elif status == "unsupported":
-        bits.append("I could not support this result from the CoinMarketCap evidence.")
+        return "I do not have enough CoinMarketCap evidence to answer that. Verification is inconclusive."
+    if status == "unsupported":
+        return "I could not support this from the CoinMarketCap evidence, so I will not treat it as a finding."
     if historical and not any("comparable observations" in item.lower() for item in bits):
         bits.append("These are comparable observations, not a prediction.")
     for note in limitations[:1]:

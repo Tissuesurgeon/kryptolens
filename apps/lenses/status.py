@@ -123,6 +123,8 @@ def _running_state(run: LensRun | None) -> dict:
     stage = run.stage if run else ""
     if stage == "investigating":
         return _state("Investigating", "checking", "investigating")
+    if stage in {"evaluating", "analyzing"}:
+        return _state("Analyzing", "checking", "analyzing")
     if stage == "verifying":
         return _state("Verifying", "checking", "verifying")
     return _state("Working", "checking", STAGE_ACTIONS.get(stage, "working"))

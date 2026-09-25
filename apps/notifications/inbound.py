@@ -83,7 +83,7 @@ def _dispatch(user, preference, text: str, base: str) -> list[str]:
             AgentService.select(user, lens)
     if lowered == "/routines":
         if not lens:
-            return ["Create a Lens first with /create Name"]
+            return ["Create an Analyst first with /create Name"]
         routines = RoutineService.list_for_lens(lens)
         if not routines:
             return [f"{lens.name} has no routines yet."]
@@ -94,7 +94,7 @@ def _dispatch(user, preference, text: str, base: str) -> list[str]:
         return ["\n".join(lines)]
     if lowered == "/jobs":
         if not lens:
-            return ["Create a Lens first with /create Name"]
+            return ["Create an Analyst first with /create Name"]
         runs = RunService.list_for_lens(lens, limit=8)
         if not runs:
             return [f"{lens.name} has no jobs yet."]
@@ -104,7 +104,7 @@ def _dispatch(user, preference, text: str, base: str) -> list[str]:
         return ["\n".join(lines)]
     if lowered == "/status":
         if not lens:
-            return ["Create a Lens first with /create Name"]
+            return ["Create an Analyst first with /create Name"]
         state = lens_state(lens)
         return [f"{lens.name} is {state['label']}. {state['action']}"]
     if lowered in {"/delete", "delete agent"}:
@@ -118,7 +118,7 @@ def _dispatch(user, preference, text: str, base: str) -> list[str]:
         result = ConversationService.handle(lens, "", action="create_routine", source="telegram")
         return [result.flash or "Routine created."]
     if not lens:
-        return ["Create a Lens first: /create Market Scout"]
+        return ["Create an Analyst first: /create Market Scout"]
     result = ConversationService.handle(lens, text, source="telegram")
     return [_result_copy(lens, result, base)]
 
@@ -129,7 +129,7 @@ def _start_copy(user, base: str) -> str:
     if not lenses:
         lines.append("No Lenses yet. Send /create Market Scout")
         return "\n".join(lines)
-    lines.append("Your Lenses:")
+    lines.append("Your Analysts:")
     for item in lenses:
         lines.append(f"• {item.name} — {item.agent_state.get('label')}")
     lines.append(f"Open the desk: {base}/agents")

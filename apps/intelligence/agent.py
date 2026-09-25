@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from apps.intelligence.job import JobDefinition
 from apps.intelligence.job_compiler import compile_job_report
+from apps.intelligence.research.planner import ResearchPlanner
 from apps.intelligence.permissions import require_sensitivity
 from apps.intelligence.tool_registry import tool_in_registry
 from apps.intelligence.tools import DEFAULT_TOOL_PERMISSIONS, tool_allowed
@@ -303,8 +304,8 @@ def _apply_capability_steps(plan: AgentPlan) -> None:
             plan.tools.append(tool)
 
 
-class ChiefAgent:
-    """Plans from an understood job. Does not interpret language and does not call CMC."""
+class ChiefAgent(ResearchPlanner):
+    """Plans from an understood research task. Does not interpret language and does not call CMC."""
 
     def plan_from_text(
         self,
@@ -344,64 +345,14 @@ class ChiefAgent:
         return plan
 
     def plan_from_task(self, task, report: dict | None = None):
-        from apps.intelligence.capabilities import required_tools
-        from apps.intelligence.capability_plan import (
-            CapabilityPlan,
-            tools_from_workflow,
-            verification_for_workflow,
-        )
-        from apps.intelligence.job_compiler import workflow_from_task
-
-        capabilities = list(task.capabilities or _default_capabilities_for_task(task))
-        workflow = workflow_from_task(task)
-        if report and report.get("workflow") and (report["workflow"].steps or report["workflow"].trigger):
-            if not workflow.steps and not workflow.trigger:
-                workflow = report["workflow"]
-        tools = _unique(required_tools(task, capabilities) + tools_from_workflow(workflow))
-        reason = _reason_for_task(task, capabilities)
-        verification = verification_for_workflow(workflow, task)
-        plan = CapabilityPlan(
-            capabilities=capabilities,
-            tools=tools,
-            workflow=workflow,
-            reason=reason,
-            verification_requirements=verification,
-            persistent=task.mode == "work",
-        )
+        research_plan, plan = self.plan(task, report=report)
         if report is not None:
-            agent_plan = plan.to_agent_plan(task, task.objective or (report.get("job").purpose if report.get("job") else ""))
+            report["research_plan"] = research_plan.model_dump(mode="json")
+            agent_plan = plan.to_agent_plan(
+                task, task.objective or (report.get("job").purpose if report.get("job") else "")
+            )
             if report.get("tool_permissions"):
                 validate_agent_plan(agent_plan, report.get("tool_permissions"))
             if report.get("workflow"):
                 plan_to_workflow(agent_plan, report["workflow"])
         return plan
-
-
-def _default_capabilities_for_task(task) -> list[str]:
-    names: list[str] = []
-    if task.task_type == "watch_plus_investigate" or task.action == "investigate_market_reaction":
-        names.extend(["market", "reaction"])
-    elif task.task_type == "persistent_monitor":
-        names.extend(["anomaly", "market"])
-    elif task.task_type == "scheduled_brief":
-        names.extend(["market", "regime"])
-    else:
-        names.append("market")
-    if task.scope.window or "historical" in (task.capabilities or []):
-        if "historical" not in names:
-            names.append("historical")
-    if "discovery" in (task.capabilities or []) and "discovery" not in names:
-        names.append("discovery")
-    return _unique(names)
-
-
-def _reason_for_task(task, capabilities: list[str]) -> str:
-    joined = ", ".join(capabilities) or "market"
-    if task.trigger_asset() and "reaction" in capabilities:
-        return (
-            f"The request requires detecting a {task.trigger_asset()} trigger "
-            f"and comparing reactions across the selected universe ({joined})."
-        )
-    if task.scope.window:
-        return f"The request compares live quotes with previous observations ({joined})."
-    return f"The request is served by {joined}."

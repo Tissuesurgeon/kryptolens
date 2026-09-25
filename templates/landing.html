@@ -19,20 +19,20 @@
       <a href="#what">What it is</a>
       <a href="#how-it-works">How it works</a>
       <a href="{% url 'login' %}">Log In</a>
-      <a class="btn btn-primary" href="{% url 'signup' %}">Create a Lens</a>
+      <a class="btn btn-primary" href="{% url 'signup' %}">Create an Analyst</a>
     </nav>
   </header>
 
   <section class="landing-hero">
     <div class="landing-mast">
-      <p class="landing-marks"><span>Persistent</span><span>Live CoinMarketCap data</span><span>One Lens</span></p>
+      <p class="landing-marks"><span>Persistent</span><span>Live CoinMarketCap data</span><span>One Analyst</span></p>
       <h1>Your persistent <em>crypto intelligence</em> workspace</h1>
       <p class="landing-lead">Ask questions. Investigate markets. Monitor what matters. Get answers grounded in live CoinMarketCap data.</p>
       <p>Instead of searching dashboards, charts, news feeds, and market tables, tell KryptoLens what you want to know. A Lens persists, so the work stays when the conversation ends.</p>
       <div class="actions">
-        <a class="btn btn-primary" href="{% url 'signup' %}">Create a Lens</a>
+        <a class="btn btn-primary" href="{% url 'signup' %}">Create an Analyst</a>
       </div>
-      <p class="lede">Create a Lens. Tell it what matters. Let it investigate.</p>
+      <p class="lede">Create an Analyst. Tell it what matters. Let it investigate.</p>
     </div>
 
     <div class="landing-stage">
@@ -47,7 +47,7 @@
           {% include "workspace/partials/bot_face.html" with face_id=1 kind="ok" %}
           <div>
             <p class="landing-window-name" data-lens-name>Market Watch</p>
-            <p class="landing-window-presence">Your Lens</p>
+            <p class="landing-window-presence">Your Analyst</p>
           </div>
         </div>
         <div class="landing-preview">
@@ -97,7 +97,7 @@
           <label for="landing-intent">Tell KryptoLens what you want.</label>
           <div class="composer-shell">
             <textarea id="landing-intent" name="intent" required rows="3" placeholder="Watch BTC and tell me when it drops more than 2%."></textarea>
-            <button class="btn btn-primary" type="submit">Create a Lens</button>
+            <button class="btn btn-primary" type="submit">Create an Analyst</button>
           </div>
           <p class="quiet">Your words wait here until you have an account.</p>
         </form>
@@ -125,11 +125,11 @@
 
   <section class="landing-spec" id="how-it-works">
     <h2>How KryptoLens works</h2>
-    <p>You don't need to configure a complicated agent or choose a specialist. Create a Lens, tell it what matters, and the investigation stays in that workspace.</p>
+    <p>You don't need to configure a complicated agent or choose a specialist. Create an Analyst, tell it what matters, and the investigation stays in that workspace.</p>
     <div class="landing-meet">
       <dl class="landing-steps">
         <div>
-          <dt>Create a Lens</dt>
+          <dt>Create an Analyst</dt>
           <dd>A Lens is a persistent intelligence workspace. Name it Market Watch, BTC Reaction, Altcoin Monitor, or Market Research.</dd>
         </div>
         <div>
@@ -282,7 +282,7 @@
   </section>
 
   <section class="landing-spec">
-    <h2>One Lens. Multiple kinds of work.</h2>
+    <h2>One Analyst. Multiple kinds of work.</h2>
     <p>A Lens supports different kinds of intelligence work without a different bot for every task. That turns it into a persistent workspace rather than a disposable chat.</p>
     <dl class="landing-work">
       <div>
@@ -340,7 +340,7 @@
   </section>
 
   <section class="landing-spec">
-    <h2>Your Lens remembers the work</h2>
+    <h2>Your Analyst remembers the work</h2>
     <p>A Lens keeps continuity, so you return to previous work instead of starting from zero. It can evolve from a simple question into an ongoing research and monitoring workspace.</p>
     <ul class="landing-data">
       <li>Conversations</li>
@@ -439,10 +439,10 @@
 
   <section class="landing-close">
     <h2>Start with a question</h2>
-    <p>You don't need to build a dashboard, configure a complicated agent, or know which API endpoint contains the answer. Create a Lens. Give it a name. Tell it what matters.</p>
-    <p class="landing-close-line">Create a Lens. Tell it what matters.</p>
+    <p>You don't need to build a dashboard, configure a complicated agent, or know which API endpoint contains the answer. Create an Analyst. Give it a name. Tell it what matters.</p>
+    <p class="landing-close-line">Create an Analyst. Tell it what matters.</p>
     <div class="actions">
-      <a class="btn btn-primary" href="{% url 'signup' %}">Create Your Lens</a>
+      <a class="btn btn-primary" href="{% url 'signup' %}">Create an Analyst</a>
       <a class="btn btn-ghost" href="{% url 'login' %}">Log In</a>
     </div>
   </section>

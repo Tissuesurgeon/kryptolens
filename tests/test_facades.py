@@ -418,6 +418,24 @@ def test_telegram_webhook_rejects_bad_secret(settings):
 
 
 @pytest.mark.django_db
+def test_capability_question_does_not_rewrite_the_job_or_quote_btc():
+    user = _user()
+    lens = AgentService.create(user, "Market Watch", "")
+    ConversationService.handle(lens, "Watch BTC and tell me when it drops more than 2%.")
+    version = lens.current_version().version
+    runs_before = lens.runs.count()
+    result = ConversationService.handle(lens, "what can you do ?")
+    lens.refresh_from_db()
+    assert result.kind == "replied"
+    assert result.run is None
+    assert lens.current_version().version == version
+    assert lens.runs.count() == runs_before
+    reply = lens.conversation_items.filter(item_type="assistant_message").order_by("-created_at").first()
+    assert "CoinMarketCap" in reply.payload_json["text"]
+    assert "do not place trades" in reply.payload_json["text"].lower()
+
+
+@pytest.mark.django_db
 def test_pause_resume_check_now_are_state_messages():
     user = _user()
     lens = AgentService.create(user, "Scout", "")

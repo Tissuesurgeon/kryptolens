@@ -23,6 +23,7 @@ class AnomalyCapability:
         extras: dict | None = None,
     ) -> CapabilityResult:
         _ = context, extras
+        price_bar, volume_bar = _criteria(task)
         baseline = next((item for item in observations if item.symbol.upper() == "BTC"), None)
         flagged: list[dict] = []
         claims: list[str] = []
@@ -30,8 +31,8 @@ class AnomalyCapability:
             rel = relative_performance(item, baseline) if baseline and item is not baseline else None
             vol = volume_ratio(item)
             change = rank_change(item)
-            unusual_price = item.price_change_24h is not None and abs(item.price_change_24h) >= 5
-            unusual_volume = vol is not None and abs(vol) >= 80
+            unusual_price = item.price_change_24h is not None and abs(item.price_change_24h) >= price_bar
+            unusual_volume = vol is not None and abs(vol) >= volume_bar
             if unusual_price or unusual_volume or (change is not None and abs(change) >= 5):
                 flagged.append(
                     {
@@ -52,3 +53,21 @@ class AnomalyCapability:
         if not claims:
             claims.append("No unusual price, volume, or rank moves met the configured bars.")
         return CapabilityResult(name=self.name, claims=claims, metrics={"flagged": len(flagged)}, rows=flagged)
+
+
+def _criteria(task: ClarifiedTask) -> tuple[float, float]:
+    price_bar = 5.0
+    volume_bar = 80.0
+    for cond in task.trigger.conditions or []:
+        if not isinstance(cond, dict):
+            continue
+        metric = str(cond.get("metric") or "")
+        try:
+            value = abs(float(cond.get("value")))
+        except (TypeError, ValueError):
+            continue
+        if metric == "price_change_24h":
+            price_bar = value
+        elif metric == "volume_change_24h":
+            volume_bar = value
+    return price_bar, volume_bar

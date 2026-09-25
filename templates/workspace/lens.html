@@ -8,6 +8,14 @@
 <div class="thread">
   <div class="thread-scroll">
     <div class="transcript">
+        {% if research_plan.steps %}
+        <section class="turn turn-status">
+          <p>Research</p>
+          <ol class="plain-list">
+            {% for step in research_plan.steps %}<li>{{ step.label }}</li>{% endfor %}
+          </ol>
+        </section>
+        {% endif %}
         {% for item in conversation_items %}
           {% include "workspace/partials/conversation_item.html" %}
         {% empty %}
@@ -15,7 +23,7 @@
             {% include "workspace/partials/bot_face.html" with face_id=lens.id kind=lens_state.kind %}
             <div>
               <h2>{{ lens.name }}</h2>
-              <p class="lede">Tell this Lens what you want.</p>
+              <p class="lede">What would you like to research?</p>
             </div>
           </div>
         {% endfor %}

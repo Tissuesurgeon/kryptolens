@@ -159,15 +159,28 @@ class AgentRuntime:
         if result:
             job.last_result = result
             job.save(update_fields=["last_result", "updated_at"])
-            lens.context_json = {
-                **(lens.context_json or {}),
-                "last_findings": {
-                    "result_id": result.id,
-                    "kind": result.kind,
-                    "title": result.title,
-                    "verification": verification["status"],
-                },
+            from apps.intelligence.research.context import ResearchContext
+            from apps.intelligence.research.finding import finding_from_result
+
+            finding = finding_from_result(result, verification, evidence_items)
+            if result.payload_json is not None:
+                payload = dict(result.payload_json)
+                payload["finding"] = finding.model_dump(mode="json")
+                result.payload_json = payload
+                result.save(update_fields=["payload_json"])
+            research = ResearchContext.from_json(lens.context_json)
+            research.remember_finding(finding)
+            stored = research.dump_into(lens.context_json)
+            stored["last_findings"] = {
+                "result_id": result.id,
+                "kind": result.kind,
+                "title": result.title,
+                "verification": verification["status"],
+                "claim": finding.claim,
+                "supported": finding.supported,
+                "evidence": finding.evidence[:4],
             }
+            lens.context_json = stored
             lens.save(update_fields=["context_json", "updated_at"])
 
         if verification["status"] == "needs_more_evidence":

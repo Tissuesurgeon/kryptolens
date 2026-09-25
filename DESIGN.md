@@ -4,11 +4,11 @@ UI work follows `docs/ui-design-skills.md` (hierarchy, proximity, 8px scale, WCA
 
 ## Scene
 
-Sage checker field, from the Harvest Call system in `.cursor/skills/harvest-ui/SKILL.md`. Cream paper panels sit on the field. Landing composition stays the product window and one primary action. The workspace is a roster of Lenses and one transcript. Not a neon terminal, not a farm illustration, not a generic SaaS card grid.
+Sage checker field, from the Harvest Call system in `.cursor/skills/harvest-ui/SKILL.md`. Cream paper panels sit on the field. Landing composition stays the product window and one primary action. The workspace is a roster of analysts and one transcript. Not a neon terminal, not a farm illustration, not a generic SaaS card grid.
 
 ## Strategy
 
-Restrained in the app. Workspace follows **Grok Bot** layout, not grok.com chat: a sidebar roster of persistent Lenses | one transcript | a composer. First-run is Create a Lens (name only). A new Lens opens an empty thread — the user writes the first message. No canned greeting, no preset job chips. After a job exists, the thread is a work log: messages, clarifications, compact work previews, results, evidence, verification. No Chat/Routines/Jobs tabs, specialist picker, or computer-control panel. Presence sits on the Lens face and a quiet line under the name (Watching / Working / Idle). A live CMC strip stays in the slim conversation head. Composer placeholder is **Ask KryptoLens…**. One work surface per view.
+Restrained in the app. Workspace follows **Grok Bot** layout, not grok.com chat: a sidebar roster of analysts | one transcript | a composer. First-run is Create an Analyst (name only). A new analyst opens an empty thread — the user writes the first message. No canned greeting, no preset job chips. The thread shows the question, clarification, research steps, finding, evidence, and verification. No Chat/Routines/Jobs tabs, specialist picker, or computer-control panel. Presence sits on the analyst face and a quiet line under the name (Ready, Investigating, Analyzing, Verifying, Needs attention). A live CMC strip stays in the slim conversation head. Composer placeholder is **Ask {name}…**. One work surface per view.
 
 ## Tokens
 
@@ -37,4 +37,4 @@ Fredoka for headings and buttons. Nunito for product UI. Source Code Pro for the
 
 ## Bans
 
-No neon, iMessage-style chat bubbles, identical auto-fill card grids, display fonts in the workspace, borderless invented form controls, chart walls, side-stripe accents, gradient text, or “demo” chrome. Lens home is a single-column list of rows. Transcript uses named work-log rows. Create a Lens asks only for a name.
+No neon, iMessage-style chat bubbles, identical auto-fill card grids, display fonts in the workspace, borderless invented form controls, chart walls, side-stripe accents, gradient text, or “demo” chrome. Analyst home is a single-column list of rows. Transcript uses named work-log rows. Create an Analyst asks only for a name.

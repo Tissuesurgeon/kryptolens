@@ -1,12 +1,12 @@
 {% load static humanize %}
-<aside class="roster" aria-label="Your Lenses">
+<aside class="roster" aria-label="Your Analysts">
   <a class="brand roster-brand" href="{% url 'agent_home' %}">
     <img src="{% static 'img/mark.svg' %}" alt="">
     <span>KryptoLens</span>
   </a>
   <div class="roster-head">
-    <p class="roster-kicker">Your Lenses</p>
-    <a class="roster-new" href="{% url 'agent_create' %}">+ New Lens</a>
+    <p class="roster-kicker">Your Analysts</p>
+    <a class="roster-new" href="{% url 'agent_create' %}">+ New Analyst</a>
   </div>
   {% if workspace_lenses %}
   <label class="visually-hidden" for="roster-search">Search lenses</label>

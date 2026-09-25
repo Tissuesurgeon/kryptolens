@@ -1,17 +1,17 @@
 # KryptoLens
 
-Tell KryptoLens what you want. A Lens keeps watch for you.
+Ask an analyst. It researches live CoinMarketCap data in one conversation.
 
-KryptoLens is a persistent crypto intelligence workspace. Users create a **Lens**, talk to it in natural language, and leave jobs running against live CoinMarketCap data.
+KryptoLens is a conversational crypto analyst. Users create an **Analyst**, ask a question, and get a finding with evidence. The stored object is still a Lens.
 
-The user does not pick capabilities or specialists. They create a Lens, tell it what they want, clarify when asked, and continue the same conversation.
+The user does not pick capabilities or specialists. They create an analyst, ask what they want to research, clarify when asked, and continue the same conversation.
 
 ```
-Create a Lens.
-Tell it what you want.
+Create an Analyst.
+Ask what you want to research.
 Clarify when asked.
-Let it investigate.
-Continue the conversation.
+Read the finding and the evidence.
+Keep watching only when you say so.
 ```
 
 ## Platform
@@ -25,25 +25,21 @@ product
 ## Core loop
 
 ```
-User
-  → Lens conversation
-  → Understanding Agent (LLM JSON)
-  → ClarifiedTask
-  → Chief Agent
-  → CapabilityPlan
-  → Capabilities + CMC tools
-  → Workflow
-  → Deterministic analysis
-  → Verification
-  → Response
-  → Same Lens thread
+User message
+  → Understanding
+  → ResearchTask + ResearchContext
+  → ResearchPlanner
+  → ResearchPlan + CapabilityPlan
+  → Existing runtime
+  → Finding, evidence, verification
+  → Same analyst conversation
 ```
 
-Create a Lens (name only) → open an empty conversation → send the first message. A Routine is the standing watch that follows from that message. Unattended Beat writes back into the same conversation. Jobs are LensRuns. Market numbers come from live CoinMarketCap only. `IntelligencePolicy` is a compiled artifact, not the user mental model.
+Create an Analyst (name only) → open an empty conversation → ask the first question. A Routine is created only from “keep watching this”. Unattended Beat writes later findings into the same conversation. Jobs are LensRuns. Market numbers come from live CoinMarketCap only. `IntelligencePolicy` is a compiled artifact, not the user mental model.
 
 ## Core concepts
 
-- **Lens** — persistent crypto teammate
+- **Analyst** — the conversation the user sees. Stored as a Lens
 - **Job** — a run of work (`LensRun`) plus a standing assignment snapshot
 - **ClarifiedTask** — what the user actually asked for
 - **CapabilityPlan** — Chief Agent's validated capabilities, tools, and workflow
@@ -96,7 +92,7 @@ Direct. Specific. Tell → Clarify → Watch → Act → Return. Never claims re
 
 ## Surfaces
 
-Landing (Get Started / Log In) → signup or login → Your Lenses → Create a Lens → empty conversation → Ask KryptoLens…. Pause, resume, and check now are messages. Live CMC strip on the workspace. Settings / Log Out.
+Landing (Create an Analyst / Log In) → signup or login → Your Analysts → Create an Analyst → empty conversation → Ask {name}…. Pause, resume, and check now are messages. Live CMC strip on the workspace. Settings / Log Out.
 
 ## Out of scope
 

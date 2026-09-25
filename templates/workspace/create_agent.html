@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Create a Lens · KryptoLens{% endblock %}
-{% block workspace_title %}Create a Lens{% endblock %}
+{% block title %}Create an Analyst · KryptoLens{% endblock %}
+{% block workspace_title %}Create an Analyst{% endblock %}
 
 {% block content %}
 <div class="thread">
   <form method="post" class="form-narrow create-agent">
     {% csrf_token %}
-    <h1>Create a Lens</h1>
+    <h1>Create an Analyst</h1>
     <p class="lede">Give it a name. You can tell it what to do after this.</p>
     <p>
       <label for="agent-name">Lens name</label>
@@ -15,7 +15,7 @@
     </p>
     <div class="actions">
       <a class="btn btn-ghost" href="{% url 'agent_home' %}">Cancel</a>
-      <button class="btn btn-primary" type="submit">Create a Lens</button>
+      <button class="btn btn-primary" type="submit">Create an Analyst</button>
     </div>
   </form>
 </div>
