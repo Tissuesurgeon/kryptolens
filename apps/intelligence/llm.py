@@ -89,6 +89,8 @@ class HeuristicProvider:
 
 
 def get_provider() -> LLMProvider:
+    if os.getenv("PYTEST_CURRENT_TEST"):
+        return HeuristicProvider()
     if os.getenv("CURSOR_API_KEY"):
         return CursorComposerProvider()
     if os.getenv("LLM_API_KEY") and os.getenv("LLM_BASE_URL"):

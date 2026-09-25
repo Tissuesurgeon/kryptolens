@@ -61,7 +61,7 @@ and the current job is about BTC, the new task is about ETH.
 Rules:
 - "Compare BTC and ETH over the last 30 days." → ready, mode=ask, historical+market.
 - "Compare BTC and ETH right now." → ready, mode=ask, one-shot, no routine.
-- "How is BTC doing?" / "what is ETH doing right now" → ready, mode=ask. Use the named asset.
+- "How is BTC doing?" / "what is ETH doing right now" / "how is AR doing?" → ready, mode=ask. Use the named ticker, including tickers other than BTC and ETH. Never substitute BTC for a ticker the user named.
 - "Find me the coins with the highest gains within 24hrs." → ready, mode=ask, universe=top_100, action=rank_gains, requested_output=ranked_table. Not a BTC quote.
 - "Watch BTC for unusual activity." → needs_input. Ask what unusual means for this task.
 - "Watch BTC and tell me when something important happens." → needs_input.
@@ -126,7 +126,14 @@ class ConversationAgent:
 
 
 def _understand_llm(text: str, *, history, current_job, provider) -> TurnResult:
-    prompt = TURN_SYSTEM + "\n\nUser message:\n" + text
+    prompt = (
+        "Read the user message first. Decide what they are asking, which asset or universe it is about, "
+        "and what data would answer it. Do not replace their subject with a different coin.\n\n"
+        "User message:\n"
+        + text
+        + "\n\n"
+        + TURN_SYSTEM
+    )
     if current_job:
         prompt += "\n\nCurrent job JSON:\n" + current_job.model_dump_json()
     if history:
@@ -150,7 +157,7 @@ def _understand_llm(text: str, *, history, current_job, provider) -> TurnResult:
 def _task_from_llm(text: str, data: dict) -> ClarifiedTask:
     mentioned = _extract_symbols(text)
     llm_assets = [str(item).upper() for item in (data.get("assets") or []) if item]
-    assets = llm_assets if llm_assets else list(mentioned)
+    assets = list(mentioned) if mentioned else llm_assets
     capabilities = list(data.get("capabilities") or _default_capabilities(data.get("task_type") or "", data.get("window") or ""))
     conditions = list(data.get("trigger_conditions") or [])
     for item in conditions:

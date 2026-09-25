@@ -320,16 +320,98 @@ def _make_stricter(policy: IntelligencePolicy, text: str) -> IntelligencePolicy:
     return IntelligencePolicy.model_validate(data)
 
 
+_KNOWN_SYMBOLS = ("BTC", "ETH", "SOL", "XRP", "ADA", "DOGE", "AVAX", "LINK", "DOT", "UNI", "AR")
+_SYMBOL_ALIASES = {
+    "bitcoin": "BTC",
+    "ethereum": "ETH",
+    "solana": "SOL",
+    "arweave": "AR",
+}
+_NOT_ASSETS = frozenset(
+    {
+        "A",
+        "AN",
+        "AND",
+        "ARE",
+        "THE",
+        "THIS",
+        "THAT",
+        "IT",
+        "ITS",
+        "MY",
+        "YOUR",
+        "OUR",
+        "HOW",
+        "WHAT",
+        "WHEN",
+        "WHICH",
+        "WHO",
+        "WHY",
+        "IS",
+        "DOING",
+        "NOW",
+        "TODAY",
+        "RIGHT",
+        "CURRENT",
+        "CURRENTLY",
+        "MARKET",
+        "COIN",
+        "COINS",
+        "CRYPTO",
+        "PRICE",
+        "TOP",
+        "ALL",
+        "SOME",
+        "ANY",
+        "FOR",
+        "WITH",
+        "OVER",
+        "LAST",
+        "DAYS",
+        "DAY",
+        "HOUR",
+        "HOURS",
+        "WATCH",
+        "DROP",
+        "TELL",
+        "FIND",
+        "RANK",
+        "COMPARE",
+        "NOT",
+        "YOU",
+        "ME",
+    }
+)
+_STATUS_ASSET = re.compile(
+    r"\b(?:how(?:'s| is| are)|what(?:'s| is))\s+([A-Za-z][A-Za-z0-9]{1,14})\b",
+    re.I,
+)
+
+
 def _extract_symbols(text: str) -> list[str]:
-    known = ["BTC", "ETH", "SOL", "XRP", "ADA", "DOGE", "AVAX", "LINK", "DOT", "UNI"]
-    found = []
-    for symbol in known:
+    found: list[str] = []
+
+    def add(symbol: str) -> None:
+        ticker = (symbol or "").upper()
+        if ticker in _NOT_ASSETS or ticker in found:
+            return
+        if not re.fullmatch(r"[A-Z][A-Z0-9]{1,9}", ticker):
+            return
+        found.append(ticker)
+
+    for symbol in _KNOWN_SYMBOLS:
         if re.search(rf"\b{symbol}\b", text, re.I):
-            found.append(symbol)
-    aliases = {"bitcoin": "BTC", "ethereum": "ETH", "solana": "SOL"}
-    for word, symbol in aliases.items():
-        if word in text.lower() and symbol not in found:
-            found.append(symbol)
+            add(symbol)
+    for word, symbol in _SYMBOL_ALIASES.items():
+        if re.search(rf"\b{word}\b", text, re.I):
+            add(symbol)
+    for match in re.finditer(r"\$([A-Za-z][A-Za-z0-9]{1,9})\b", text):
+        add(match.group(1))
+    for match in _STATUS_ASSET.finditer(text):
+        token = match.group(1).lower()
+        add(_SYMBOL_ALIASES.get(token, match.group(1)))
+    for match in re.finditer(r"\b([A-Z][A-Z0-9]{1,9})\b", text):
+        add(match.group(1))
     return found
 
 

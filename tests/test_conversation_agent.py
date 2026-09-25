@@ -21,6 +21,20 @@ def test_compare_btc_eth_30d_is_ready_ask():
     assert "market" in turn.task.capabilities
 
 
+def test_how_is_ar_doing_uses_ar_not_btc():
+    turn = ConversationAgent.understand("how is AR doing ?")
+    assert turn.status == "ready"
+    assert turn.task.scope.assets == ["AR"]
+    report = compile_from_task(turn.task)
+    assert report["policy"].universe.symbols == ["AR"]
+    assert report["workflow"].steps[0].symbols == ["AR"]
+    replaced = _task_from_llm(
+        "how is AR doing ?",
+        {"assets": ["BTC"], "mode": "ask", "task_type": "one_shot_research", "objective": "Report how BTC is doing"},
+    )
+    assert replaced.scope.assets == ["AR"]
+
+
 def test_how_is_btc_is_ready_ask():
     turn = ConversationAgent.understand("How is BTC doing?")
     assert turn.status == "ready"
@@ -229,6 +243,74 @@ def test_highest_drop_watch_does_not_keep_a_prior_gains_filter():
     sort = next(step for step in report["workflow"].steps if step.type == "sort")
     assert sort.order == "ascending"
     assert not any(step.type == "filter" and step.operator == ">" for step in report["workflow"].steps)
+
+
+def test_reply_answers_the_user_message_from_verified_numbers():
+    from types import SimpleNamespace
+
+    from apps.intelligence.response import compose_reply
+
+    class Stub:
+        def __init__(self):
+            self.prompt = ""
+
+        def generate(self, prompt, kind=""):
+            self.prompt = prompt
+            return "AR is at $12.50, up 1.20% over 24 hours."
+
+    result = SimpleNamespace(
+        kind="comparison",
+        title="AR",
+        payload_json={"rows": [{"symbol": "AR", "name": "Arweave", "price": 12.5, "price_change_24h": 1.2}]},
+    )
+    provider = Stub()
+    text = compose_reply(
+        result,
+        provider=provider,
+        task={"you_asked": ["how is AR doing ?"], "scope": {"assets": ["AR"]}, "source_text": "how is AR doing ?"},
+    )
+    assert "how is AR doing" in provider.prompt
+    assert "AR is at $12.50" in text
+    assert "Bitcoin" not in text
+
+
+def test_reply_rejects_a_number_the_data_does_not_contain():
+    from types import SimpleNamespace
+
+    from apps.intelligence.response import compose_reply
+
+    class Stub:
+        def generate(self, prompt, kind=""):
+            return "AR is at $99999.00, up 1.20% over 24 hours."
+
+    result = SimpleNamespace(
+        kind="comparison",
+        title="AR",
+        payload_json={"rows": [{"symbol": "AR", "name": "Arweave", "price": 12.5, "price_change_24h": 1.2}]},
+    )
+    text = compose_reply(
+        result,
+        provider=Stub(),
+        task={"you_asked": ["how is AR doing ?"], "scope": {"assets": ["AR"]}},
+    )
+    assert "99999" not in text
+    assert "12.50" in text or "12.5" in text
+
+
+def test_reply_does_not_quote_a_different_asset():
+    from types import SimpleNamespace
+
+    from apps.intelligence.response import compose_reply
+
+    result = SimpleNamespace(
+        kind="comparison",
+        title="Bitcoin",
+        payload_json={"rows": [{"symbol": "BTC", "name": "Bitcoin", "price": 84559.92, "price_change_24h": 0.61}]},
+    )
+    text = compose_reply(result, task={"you_asked": ["how is AR doing ?"], "scope": {"assets": ["AR"]}})
+    assert "AR" in text
+    assert "84559" not in text.replace(",", "")
+    assert "Bitcoin" not in text
 
 
 def test_no_result_reply_stays_grounded():
