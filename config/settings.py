@@ -234,7 +234,7 @@ CELERY_BEAT_SCHEDULE = {
 
 CMC_API_KEY = os.getenv("CMC_API_KEY", "")
 CURSOR_API_KEY = os.getenv("CURSOR_API_KEY", "")
-LLM_MODEL = os.getenv("LLM_MODEL", "composer-2.5")
+LLM_MODEL = os.getenv("LLM_MODEL", "grok-4.6")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_BOT_USERNAME = os.getenv("TELEGRAM_BOT_USERNAME", "").lstrip("@")
 TELEGRAM_WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET", "")

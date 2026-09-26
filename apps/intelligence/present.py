@@ -43,8 +43,18 @@ def spoken_result(result) -> str | None:
             return f"{assets} assets analyzed."
         direction = "up" if mean > 0 else "down" if mean < 0 else "unchanged"
         if mean == 0:
-            return f"{assets} assets analyzed; the mean 24h change is unchanged."
-        return f"{assets} assets analyzed; the mean 24h change is {direction} {abs(mean):.2f}%."
+            text = f"{assets} assets analyzed; the mean 24h change is unchanged."
+        else:
+            text = f"{assets} assets analyzed; the mean 24h change is {direction} {abs(mean):.2f}%."
+        context = payload.get("context") or {}
+        label = context.get("fear_greed_label")
+        value = context.get("fear_greed_value")
+        if label:
+            reading = f"Fear & Greed is {label}"
+            if value is not None:
+                reading += f" ({value})"
+            text = text.rstrip(".") + ". " + reading + "."
+        return text
     if kind == "news_brief":
         analysis = (payload.get("analysis") or "").strip()
         if analysis:

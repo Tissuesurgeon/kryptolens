@@ -12,11 +12,16 @@ from apps.intelligence.compiler import _extract_symbols
 from apps.intelligence.research.finding import Finding
 from apps.intelligence.research.task import ResearchTask
 
-ADD_RE = re.compile(r"\b(?:now\s+)?(?:add|include|also)\s+([A-Za-z]{2,12})\b", re.I)
+ADD_RE = re.compile(
+    r"\b(?:now\s+)?(?:add|include|also)(?:\s+look(?:\s+at)?|\s+check|\s+see)?\s+([A-Za-z]{2,12})\b",
+    re.I,
+)
 TOP_RE = re.compile(r"\btop\s+(\d+)\b", re.I)
-SAME_PERIOD = ("same period", "same window", "same timeframe", "same time frame", "use the same period")
-DEEPER = ("go deeper", "dig deeper", "more detail", "look closer")
-UNUSUAL = ("was that unusual", "is that unusual", "was this unusual", "is this unusual", "is that unusual?")
+WINDOW_RE = re.compile(r"\b(?:last|past)\s+(\d+)\s*(d|day|days|w|week|weeks)\b", re.I)
+SAME_PERIOD = ("same period", "same window", "same timeframe", "same time frame", "use the same period", "same coins")
+DEEPER = ("go deeper", "dig deeper", "dig into", "more detail", "look closer")
+UNUSUAL = ("was that unusual", "is that unusual", "was this unusual", "is this unusual", "weird", "was the move")
+_ADD_SKIP = {"LOOK", "CHECK", "SEE", "AT", "THE", "THIS", "THAT", "SAME", "PERIOD", "TOP", "COIN", "COINS"}
 
 
 class ResearchContext(BaseModel):
@@ -98,13 +103,26 @@ def resolve_follow_up(text: str, context: ResearchContext | None) -> TurnResult 
     inherited.question = ""
     inherited.pending_field = ""
 
+    correction = re.search(r"\b(?:meant|mean)\s+([A-Za-z]{2,10})\s+not\s+([A-Za-z]{2,10})\b", raw, re.I)
+    if correction:
+        inherited.assets = [correction.group(1).upper()]
+        inherited.objective = _objective(inherited)
+        return _ready_turn(inherited)
+
     add = ADD_RE.search(raw)
     if add:
         symbol = add.group(1).upper()
-        if symbol in {"THE", "THIS", "THAT", "SAME", "PERIOD", "TOP"}:
+        if symbol in _ADD_SKIP:
             symbol = ""
         if symbol and symbol not in inherited.assets:
             inherited.assets = list(inherited.assets) + [symbol]
+        inherited.objective = _objective(inherited)
+        return _ready_turn(inherited)
+
+    follow_window = _follow_window(raw)
+    if follow_window and not _extract_symbols(raw):
+        inherited.window = follow_window
+        inherited.capabilities = list(dict.fromkeys(["historical", "market"] + list(inherited.capabilities)))
         inherited.objective = _objective(inherited)
         return _ready_turn(inherited)
 
@@ -120,7 +138,8 @@ def resolve_follow_up(text: str, context: ResearchContext | None) -> TurnResult 
         return _ready_turn(inherited)
 
     if any(phrase in lowered for phrase in UNUSUAL):
-        assets = inherited.assets or list(context.active_entities)
+        named = _extract_symbols(raw)
+        assets = named or inherited.assets or list(context.active_entities)
         inherited.assets = assets
         inherited.capabilities = list(dict.fromkeys(list(inherited.capabilities) + ["anomaly", "market"]))
         inherited.action = "report"
@@ -164,6 +183,19 @@ def _ready_turn(task: ResearchTask) -> TurnResult:
     clarified = task.to_clarified()
     clarified.status = "ready"
     return TurnResult(status="ready", task=clarified)
+
+
+def _follow_window(text: str) -> str:
+    lowered = text.lower()
+    if "this week" in lowered:
+        return "7d"
+    match = WINDOW_RE.search(text)
+    if not match:
+        return ""
+    amount, unit = int(match.group(1)), match.group(2).lower()
+    if unit.startswith("w"):
+        return f"{amount * 7}d"
+    return f"{amount}d"
 
 
 def _objective(task: ResearchTask) -> str:

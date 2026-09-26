@@ -669,10 +669,28 @@ def workflow_from_task(task) -> WorkflowDefinition:
                 operator=cond.get("operator") or "<=",
                 value=float(cond.get("value")),
             )
-        return WorkflowDefinition(trigger=trigger, steps=[])
+        steps = []
+        if asset:
+            steps = [
+                WorkflowStep(type="get_quotes", symbols=[asset]),
+                WorkflowStep(type="present", format="comparison"),
+            ]
+        return WorkflowDefinition(trigger=trigger, steps=steps)
     if task.action in {"rank_gains", "rank_declines"} or task.requested_output == "ranked_table":
         direction = "gainers" if task.action == "rank_gains" else "losers"
         return _listings_rank_workflow(direction, limit)
+    if task.action == "market_summary" or ("regime" in (task.capabilities or []) and not assets):
+        return WorkflowDefinition(
+            trigger=None,
+            steps=[
+                WorkflowStep(type="get_global_metrics"),
+                WorkflowStep(type="get_fear_and_greed"),
+                WorkflowStep(type="get_universe", source="cmc", universe=f"top_{limit}", limit=limit),
+                WorkflowStep(type="get_market_data", fields=["price_change_24h", "market_cap"]),
+                WorkflowStep(type="aggregate", operation="mean"),
+                WorkflowStep(type="present", format="market_summary"),
+            ],
+        )
     symbols = assets[:4] or ["BTC"]
     if len(assets) >= 2:
         symbols = assets[:4]

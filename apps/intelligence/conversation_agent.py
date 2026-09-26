@@ -6,6 +6,7 @@ import json
 import re
 
 from apps.intelligence.clarified_task import ClarifiedTask, TaskScope, TaskTrigger, TurnResult
+from apps.intelligence.compiler import _SYMBOL_ALIASES
 from apps.intelligence.compiler import (
     _extract_json,
     _extract_symbols,
@@ -51,7 +52,7 @@ and the current job is about BTC, the new task is about ETH.
   "window": "30d" | "",
   "listing_limit": 100,
   "trigger_conditions": [{"metric": "price_change_24h", "operator": "<=", "value": -2, "asset": "ETH"}],
-  "action": "report" | "notify" | "investigate_market_reaction" | "rank_gains" | "rank_declines",
+  "action": "report" | "notify" | "investigate_market_reaction" | "rank_gains" | "rank_declines" | "market_summary",
   "requested_output": "natural_language_report" | "ranked_table" | "comparison" | "market_summary",
   "you_asked": ["the user's wording"],
   "assumptions": ["only real interpretation, never invented thresholds"],
@@ -69,9 +70,14 @@ Rules:
 - "When ETH drops by 2%, rank the top 100 declines." → ready, mode=work, trigger asset ETH, not BTC.
 - "When BTC drops by 2%, find me the coins with the highest drop." → ready, mode=work, watch_plus_investigate. Rank declines.
 - "What can you do?" / "help" / "who are you" is not a market task. Do not invent an asset or a BTC quote.
+- "ETH vs SOL this week" / "over the past 14 days" / "last 30 days" → set window (this week = 7d, this month = 30d, last or past N days = Nd) and capabilities historical and market.
+- "worst 10" / "best 30" / "top 20" → set listing_limit to that number. Declines use rank_declines. Gains use rank_gains. assets stays empty.
+- "how is the whole market" / "show fear and greed" → ready, action=market_summary, assets=[], universe=top_100, capabilities market and regime. Not a BTC quote.
+- "can you short ETH" / "buy me some SOL" → needs_input. The question says this analyst does not place trades and can quote, rank, or watch. Do not research how to open a position.
+- "thanks" / "ok" / "forget it" → needs_input. assets=[]. The question acknowledges them and asks what to look up. Do not mark it ready.
 - News/headlines → ready, mode=ask, news_brief.
 - Every morning summarize → ready, mode=work, scheduled_brief.
-- Never call CMC. Never invent a percent the user did not state.
+- Never call CMC. Never invent a percent the user did not state. A ready task must name an asset, a ranking, a market summary, or news. Otherwise status is needs_input.
 """
 
 MERGE_SYSTEM = """You merge a user's clarification answer into a pending KryptoLens task.
@@ -105,17 +111,23 @@ def understand(
     provider = provider or get_provider()
     if pending:
         return _merge_answer(text, pending, current_job=current_job, provider=provider, history=history)
+    if provider_is_llm(provider):
+        try:
+            return _understand_llm(
+                text,
+                history=history,
+                current_job=current_job,
+                provider=provider,
+                research_context=research_context,
+            )
+        except Exception:
+            return _ask(text, "I couldn't read that message. Send it again.", pending_field="subject")
     if research_context is not None:
         from apps.intelligence.research.context import resolve_follow_up
 
         followed = resolve_follow_up(text, research_context)
         if followed is not None:
             return followed
-    if provider_is_llm(provider):
-        try:
-            return _understand_llm(text, history=history, current_job=current_job, provider=provider)
-        except Exception:
-            pass
     return _understand_heuristic(text, current_job=current_job)
 
 
@@ -125,15 +137,26 @@ class ConversationAgent:
         return understand(text, **kwargs)
 
 
-def _understand_llm(text: str, *, history, current_job, provider) -> TurnResult:
+def _understand_llm(text: str, *, history, current_job, provider, research_context=None) -> TurnResult:
     prompt = (
         "Read the user message first. Decide what they are asking, which asset or universe it is about, "
-        "and what data would answer it. Do not replace their subject with a different coin.\n\n"
+        "and what data would answer it. Do not replace their subject with a different coin. "
+        "If a research context is attached, treat a short follow-up as a change to that research. "
+        "Treat a new question as a new request.\n\n"
         "User message:\n"
         + text
         + "\n\n"
         + TURN_SYSTEM
     )
+    if research_context is not None and getattr(research_context, "current_task", None):
+        prompt += "\n\nCurrent research context:\n" + json.dumps(
+            {
+                "current_task": research_context.current_task,
+                "active_entities": list(research_context.active_entities or []),
+                "timeframe": research_context.timeframe,
+            },
+            default=str,
+        )[:4000]
     if current_job:
         prompt += "\n\nCurrent job JSON:\n" + current_job.model_dump_json()
     if history:
@@ -150,14 +173,38 @@ def _understand_llm(text: str, *, history, current_job, provider) -> TurnResult:
         task.question = question
         task.pending_field = data.get("pending_field") or task.pending_field or "unusual_definition"
         return TurnResult(status="needs_input", question=question, task=task)
+    if _nothing_to_fetch(task):
+        question = (data.get("question") or task.objective or "").strip()
+        if not question:
+            raise ValueError("LLM returned a ready task with nothing to look up")
+        task.status = "needs_input"
+        task.question = question
+        return TurnResult(status="needs_input", question=question, task=task)
     task.status = "ready"
     return TurnResult(status="ready", task=task)
+
+
+def _nothing_to_fetch(task: ClarifiedTask) -> bool:
+    if task.scope.assets or task.scope.universe:
+        return False
+    if task.action in {"rank_gains", "rank_declines", "market_summary"}:
+        return False
+    if task.task_type in {"news_brief", "scheduled_brief", "watch_plus_investigate"}:
+        return False
+    if task.trigger.conditions:
+        return False
+    return True
 
 
 def _task_from_llm(text: str, data: dict) -> ClarifiedTask:
     mentioned = _extract_symbols(text)
     llm_assets = [str(item).upper() for item in (data.get("assets") or []) if item]
-    assets = list(mentioned) if mentioned else llm_assets
+    if llm_assets and mentioned and not (set(mentioned) & set(llm_assets)):
+        assets = list(mentioned)
+    elif llm_assets:
+        assets = llm_assets
+    else:
+        assets = list(mentioned)
     capabilities = list(data.get("capabilities") or _default_capabilities(data.get("task_type") or "", data.get("window") or ""))
     conditions = list(data.get("trigger_conditions") or [])
     for item in conditions:
@@ -188,17 +235,47 @@ def _task_from_llm(text: str, data: dict) -> ClarifiedTask:
 
 def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None) -> TurnResult:
     lowered = text.lower()
-    assets = _extract_symbols(text) or ["BTC"]
+    assets = _correction_assets(text) or _extract_symbols(text)
     window = _window(text)
+    if _is_trade_request(lowered):
+        question = "I do not place trades. I can quote a coin, rank the market, or watch a condition."
+        return _ask(text, question, pending_field="trade")
+    if _is_acknowledgement(lowered):
+        question = "Okay. Ask for a quote, a ranking, or a condition to watch."
+        return _ask(text, question, pending_field="acknowledgement")
     if is_news_request(text):
         return _ready(
             text,
             mode="ask",
             task_type="news_brief",
-            assets=assets,
+            assets=assets or ["BTC"],
             action="report",
             capabilities=["market"],
             objective="Relate CoinMarketCap headlines to live quotes.",
+        )
+    if _is_market_wide(lowered) and not assets:
+        return _ready(
+            text,
+            mode="ask",
+            task_type="one_shot_research",
+            assets=[],
+            universe="top_100",
+            listing_limit=100,
+            action="market_summary",
+            capabilities=["market", "regime"],
+            objective="Summarize the live crypto market from CoinMarketCap.",
+        )
+    if "fear" in lowered and "greed" in lowered:
+        return _ready(
+            text,
+            mode="ask",
+            task_type="one_shot_research",
+            assets=[],
+            universe="top_100",
+            listing_limit=100,
+            action="market_summary",
+            capabilities=["regime", "market"],
+            objective="Read the Fear and Greed reading and the live market context.",
         )
     if _is_scheduled_brief(lowered) or ("morning" in lowered and "brief" in lowered):
         return _ready(
@@ -213,8 +290,8 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             objective="Summarize overnight crypto using live CMC listings.",
         )
     if _is_reaction_watch(lowered) or (_has_threshold(text) and _has_universe(lowered) and _has_rank(lowered)):
-        threshold = _signed_percent(text, -2.0)
         asset = assets[0] if assets else "BTC"
+        trigger = _price_trigger(text, asset)
         return _ready(
             text,
             mode="work",
@@ -226,12 +303,25 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             capabilities=["reaction", "market", "anomaly"],
             objective="Monitor the trigger and analyze how the market reacts.",
             requested_output="ranked_table",
-            trigger_conditions=[
-                {"metric": "price_change_24h", "operator": "<=", "value": threshold, "asset": asset}
-            ],
-            assumptions=[f"Trigger is {asset} 24h change <= {threshold}%."],
+            trigger_conditions=[trigger],
+            assumptions=[f"Trigger is {asset} 24h change {trigger['operator']} {trigger['value']}%."],
+        )
+    if window and assets:
+        return _ready(
+            text,
+            mode="ask",
+            task_type="one_shot_research",
+            assets=assets[:4],
+            window=window,
+            action="report",
+            capabilities=["historical", "market"],
+            objective=f"Compare {' and '.join(assets[:4])} across {window} from CoinMarketCap observations.",
+            assumptions=["comparable observations, not a prediction."],
         )
     if is_now_status(text) or _is_plain_status(lowered):
+        if not assets:
+            question = "Which coin should I quote?"
+            return _ask(text, question, pending_field="subject")
         return _ready(
             text,
             mode="ask",
@@ -242,7 +332,7 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             objective=f"Report how {' and '.join(assets)} is doing from live CMC quotes.",
             assumptions=[f"Interpreted named asset as {', '.join(assets)}."] if assets else [],
         )
-    if _is_compare_now(lowered) or (window and len(assets) >= 2):
+    if _is_compare_now(lowered) or len(assets) >= 2:
         caps = ["historical", "market"] if window else ["market"]
         return _ready(
             text,
@@ -308,7 +398,6 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             objective=f"Report how {' and '.join(assets)} is doing from live CMC quotes.",
         )
     if _looks_like_watch(lowered) and _has_threshold(text):
-        threshold = _signed_percent(text, -2.0)
         action = (
             "investigate_market_reaction"
             if any(word in lowered for word in ("investigat", "check", "find me", "highest drop", "rank"))
@@ -322,17 +411,41 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             action=action,
             capabilities=["anomaly", "market", "reaction"] if action == "investigate_market_reaction" else ["anomaly", "market"],
             objective=text.strip(),
-            trigger_conditions=[
-                {
-                    "metric": "price_change_24h",
-                    "operator": "<=",
-                    "value": threshold,
-                    "asset": assets[0] if assets else "BTC",
-                }
-            ],
+            trigger_conditions=[_price_trigger(text, assets[0] if assets else "BTC")],
         )
-    mentioned = _extract_symbols(text)
-    if not mentioned:
+    if "keep an eye on" in lowered and assets and not _has_threshold(text):
+        question = f"What change in {assets[0]} should I watch for?"
+        return _ask(text, question, pending_field="unusual_definition", assets=assets)
+    if _is_keep_watching(lowered):
+        question = "Tell me which research to keep watching, or name the coin and the condition."
+        task = ClarifiedTask(
+            status="needs_input",
+            mode="ask",
+            objective=text.strip(),
+            you_asked=[text.strip()],
+            question=question,
+            pending_field="follow_up",
+            source_text=text,
+        )
+        return TurnResult(status="needs_input", question=question, task=task)
+    if _is_volume_question(lowered) and not _extract_symbols(text):
+        question = (
+            "I rank listings by 24h price change. "
+            "Ask for the biggest gainers or the biggest declines, or name one coin."
+        )
+        task = ClarifiedTask(
+            status="needs_input",
+            mode="ask",
+            objective=text.strip(),
+            scope=TaskScope(universe="top_100", listing_limit=_listing_limit(text)),
+            you_asked=[text.strip()],
+            question=question,
+            pending_field="ranking",
+            source_text=text,
+            capabilities=["market", "discovery"],
+        )
+        return TurnResult(status="needs_input", question=question, task=task)
+    if not assets:
         question = "What should I research? Name an asset, a ranking, or a condition to watch."
         task = ClarifiedTask(
             status="needs_input",
@@ -349,7 +462,7 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
         text,
         mode="ask",
         task_type="one_shot_research",
-        assets=mentioned,
+        assets=assets,
         action="report",
         capabilities=["market"],
         objective=text.strip() or "Report live CoinMarketCap quotes.",
@@ -368,7 +481,7 @@ def _merge_answer(
         try:
             return _merge_answer_llm(text, pending, current_job=current_job, provider=provider, history=history)
         except Exception:
-            pass
+            return _ask(text, "I couldn't read that answer. Send the missing detail again.", pending_field="subject")
     return _merge_answer_heuristic(text, pending, current_job=current_job)
 
 
@@ -467,6 +580,47 @@ def _finish_work(draft: ClarifiedTask, text: str) -> TurnResult:
     draft.pending_field = ""
     draft.source_text = (draft.source_text + " " + text).strip()
     return TurnResult(status="ready", task=draft)
+
+
+def _ask(text: str, question: str, pending_field: str = "subject", assets: list[str] | None = None) -> TurnResult:
+    task = ClarifiedTask(
+        status="needs_input",
+        mode="ask",
+        objective=text.strip(),
+        scope=TaskScope(assets=list(assets or [])),
+        you_asked=[text.strip()] if text.strip() else [],
+        question=question,
+        pending_field=pending_field,
+        source_text=text,
+    )
+    return TurnResult(status="needs_input", question=question, task=task)
+
+
+def _correction_assets(text: str) -> list[str]:
+    match = re.search(r"\b(?:meant|mean)\s+([A-Za-z]{2,10})\s+not\s+([A-Za-z]{2,10})\b", text, re.I)
+    if not match:
+        return []
+    keep = _SYMBOL_ALIASES.get(match.group(1).lower(), match.group(1).upper())
+    return [keep]
+
+
+def _is_trade_request(lowered: str) -> bool:
+    if not re.search(r"\b(buy|sell|short|long|trade|swap)\b", lowered):
+        return False
+    return bool(re.search(r"\b(me|some|a position|for me)\b", lowered) or lowered.startswith("can you "))
+
+
+def _is_acknowledgement(lowered: str) -> bool:
+    return lowered.strip() in {"thanks", "thank you", "ok", "okay", "forget it", "never mind", "nvm"}
+
+
+def _is_market_wide(lowered: str) -> bool:
+    if "market cap" in lowered:
+        return False
+    return any(
+        phrase in lowered
+        for phrase in ("whole market", "the market", "entire market", "crypto market", "how is crypto", "how's the market")
+    )
 
 
 def _ready(
@@ -570,7 +724,12 @@ def _is_discovery(lowered: str) -> bool:
 def _window(text: str) -> str:
     match = WINDOW_RE.search(text)
     if not match:
-        if "30 day" in text.lower() or "30-day" in text.lower() or "last 30" in text.lower():
+        lowered = text.lower()
+        if "this week" in lowered or "the week" in lowered:
+            return "7d"
+        if "this month" in lowered:
+            return "30d"
+        if "30 day" in lowered or "30-day" in lowered or "last 30" in lowered:
             return "30d"
         return ""
     amount, unit = match.group(1), match.group(2).lower()
@@ -587,12 +746,37 @@ def _listing_limit(text: str) -> int:
     return extract_listing_limit(text)
 
 
+def _price_trigger(text: str, asset: str, default: float = -2.0) -> dict:
+    value = _signed_percent(text, default)
+    return {
+        "metric": "price_change_24h",
+        "operator": ">=" if value > 0 else "<=",
+        "value": value,
+        "asset": asset,
+    }
+
+
+def _is_keep_watching(lowered: str) -> bool:
+    if _extract_symbols(lowered):
+        return False
+    return "keep watching" in lowered or "keep an eye" in lowered or "keep monitoring" in lowered
+
+
+def _is_volume_question(lowered: str) -> bool:
+    return "volume" in lowered and any(word in lowered for word in ("highest", "unusual", "most", "top", "biggest"))
+
+
 def _signed_percent(text: str, default: float) -> float:
     found = PERCENT_RE.findall(text)
     if not found:
         return default
     value = float(found[0])
-    if any(word in text.lower() for word in ("drop", "fall", "declin", "down")):
+    lowered = text.lower()
+    rise = bool(re.search(r"\b(rise|rises|rising|climb|climbs|climbing|rally|rallies|surge|surges|gain|gains|pump|above|increas|up)\b", lowered))
+    drop = bool(re.search(r"\b(drop|drops|fall|falls|fell|declin|down|crash|below)\b", lowered))
+    if rise and not drop:
+        return abs(value)
+    if drop:
         return -abs(value)
     return -abs(value) if default < 0 else abs(value)
 

@@ -112,7 +112,7 @@ Copy `.env.example` to `.env`. Never commit secrets.
 | Variable | Purpose |
 | --- | --- |
 | `CMC_API_KEY` | CoinMarketCap Pro API. Required for live monitoring. |
-| `CURSOR_API_KEY` | Composer 2.5 for intent and explanation. Optional. |
+| `CURSOR_API_KEY` | Grok 4.6 for intent and explanation. Optional. |
 | `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL` | Alternate OpenAI-compatible provider. Optional. |
 | `TELEGRAM_BOT_TOKEN` | Optional Event → Telegram delivery. |
 | `EMAIL_BACKEND` | Password-reset delivery. Defaults to console. |

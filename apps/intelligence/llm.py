@@ -10,7 +10,7 @@ class LLMProvider(Protocol):
 
 
 class CursorComposerProvider:
-    """One-shot Composer 2.5 via the official Cursor agent SDK."""
+    """One-shot Grok 4.6 via the official Cursor agent SDK."""
 
     def generate(self, prompt: str, **kwargs) -> str:
         from cursor_sdk import Agent, AgentOptions, LocalAgentOptions
@@ -19,7 +19,7 @@ class CursorComposerProvider:
         timeout = int(os.getenv("LLM_TIMEOUT_SECONDS", "30"))
         options = AgentOptions(
             api_key=os.environ["CURSOR_API_KEY"],
-            model=os.getenv("LLM_MODEL", "composer-2.5"),
+            model=os.getenv("LLM_MODEL", "grok-4.6"),
             local=LocalAgentOptions(cwd=sandbox),
         )
         result = Agent.prompt(

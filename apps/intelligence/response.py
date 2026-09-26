@@ -46,7 +46,7 @@ def compose_reply(
         names = ", ".join(asked)
         return f"I read that as a request about {names}. CoinMarketCap did not return that asset in this result."
     provider = provider or get_provider()
-    if provider_is_llm(provider) and not isinstance(provider, HeuristicProvider) and not _verification_blocks(verification):
+    if provider_is_llm(provider) and not isinstance(provider, HeuristicProvider):
         answered = _answer_with_model(
             provider,
             question=question,
@@ -62,8 +62,11 @@ def compose_reply(
         )
         if answered:
             return answered
+        if _verification_blocks(verification):
+            return _heuristic_reply(fallback, claims, limitations, historical, verification)
+        return "I have the CoinMarketCap result, but I won't state a number that isn't in it."
     if getattr(result, "kind", "") in {"comparison", "ranked_table"}:
-        text = fallback
+        text = _with_requested_market_cap(fallback, question, payload)
         if historical and "comparable observations, not a prediction" not in text.lower():
             text = text.rstrip(".") + ". These are comparable observations, not a prediction."
         return text
@@ -92,16 +95,83 @@ def _answer_with_model(
         prompt += f"verification={(verification or {}).get('status')}\n"
         if evidence:
             prompt += "evidence=" + ", ".join(getattr(item, "claim", "") for item in evidence[:8]) + "\n"
-        text = provider.generate(prompt, kind="response").strip()
+        text = _accepted_reply(
+            provider.generate(prompt, kind="response").strip(),
+            payload=payload,
+            fallback=fallback,
+            verification=verification,
+            asked=asked,
+            rows=rows,
+            historical=historical,
+        )
+        if text:
+            return text
+        retry = (
+            prompt
+            + "\n\nThe previous answer was rejected. Rewrite it from the verified facts only. "
+            + "Do not add a price, percent, rank, or asset that is not in those facts."
+        )
+        text = _accepted_reply(
+            provider.generate(retry, kind="response").strip(),
+            payload=payload,
+            fallback=fallback,
+            verification=verification,
+            asked=asked,
+            rows=rows,
+            historical=historical,
+        )
+        return text or ""
     except Exception:
         return ""
+
+
+def _accepted_reply(
+    text: str,
+    *,
+    payload: dict,
+    fallback: str,
+    verification: dict | None,
+    asked: list[str],
+    rows: list,
+    historical: bool,
+) -> str:
     if not text or not _uses_only_known_numbers(text, payload, fallback):
+        return ""
+    if _verification_blocks(verification) and any(number not in {24, 100} for number in _numeric_tokens(text)):
         return ""
     if asked and not _mentions_request(text, asked, rows):
         return ""
     if historical and "comparable observations, not a prediction" not in text.lower():
         text = text.rstrip(".") + ". These are comparable observations, not a prediction."
     return text[:2000]
+
+
+def _with_requested_market_cap(text: str, question: str, payload: dict) -> str:
+    if "market cap" not in (question or "").lower():
+        return text
+    bits = []
+    for row in payload.get("rows") or []:
+        if not isinstance(row, dict) or row.get("market_cap") in (None, ""):
+            continue
+        bits.append(f"{row.get('symbol') or row.get('name')} market cap is {_compact_usd(row.get('market_cap'))}")
+    if not bits:
+        return text
+    return text.rstrip(".") + ". " + ". ".join(bits) + "."
+
+
+def _compact_usd(value) -> str:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return "unavailable"
+    absolute = abs(number)
+    if absolute >= 1_000_000_000_000:
+        return f"${number / 1_000_000_000_000:.2f}T"
+    if absolute >= 1_000_000_000:
+        return f"${number / 1_000_000_000:.2f}B"
+    if absolute >= 1_000_000:
+        return f"${number / 1_000_000:.2f}M"
+    return f"${number:,.0f}"
 
 
 def _question_from_task(task) -> str:

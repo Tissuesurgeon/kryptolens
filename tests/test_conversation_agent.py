@@ -294,7 +294,8 @@ def test_reply_rejects_a_number_the_data_does_not_contain():
         task={"you_asked": ["how is AR doing ?"], "scope": {"assets": ["AR"]}},
     )
     assert "99999" not in text
-    assert "12.50" in text or "12.5" in text
+    assert "12.50" not in text
+    assert "won't state a number" in text
 
 
 def test_reply_does_not_quote_a_different_asset():
@@ -311,6 +312,87 @@ def test_reply_does_not_quote_a_different_asset():
     assert "AR" in text
     assert "84559" not in text.replace(",", "")
     assert "Bitcoin" not in text
+
+
+def test_llm_reads_the_message_instead_of_a_canned_reply():
+    class Stub:
+        def generate(self, prompt, kind=""):
+            assert "thanks" in prompt
+            return """{
+              "status": "needs_input",
+              "question": "What coin should I look at?",
+              "mode": "ask",
+              "assets": [],
+              "action": "report"
+            }"""
+
+    turn = ConversationAgent.understand("thanks", provider=Stub())
+    assert turn.question == "What coin should I look at?"
+    assert "Okay" not in (turn.question or "")
+
+
+def test_llm_follow_up_uses_the_model_task():
+    from apps.intelligence.research.context import ResearchContext
+    from apps.intelligence.research.task import ResearchTask
+
+    context = ResearchContext()
+    context.apply_task(
+        ResearchTask(
+            assets=["ETH", "SOL"],
+            window="7d",
+            objective="Compare ETH and SOL",
+            capabilities=["historical", "market"],
+            source_text="ETH vs SOL this week",
+            mode="ask",
+        )
+    )
+
+    class Stub:
+        def generate(self, prompt, kind=""):
+            assert "also look at XRP" in prompt
+            assert "ETH" in prompt
+            return """{
+              "status": "ready",
+              "mode": "ask",
+              "assets": ["ETH", "SOL", "XRP"],
+              "window": "7d",
+              "action": "report",
+              "capabilities": ["historical", "market"]
+            }"""
+
+    turn = ConversationAgent.understand("also look at XRP", provider=Stub(), research_context=context)
+    assert turn.status == "ready"
+    assert turn.task.scope.assets == ["ETH", "SOL", "XRP"]
+    assert turn.task.scope.window == "7d"
+
+
+def test_llm_ready_with_nothing_to_fetch_does_not_become_a_quote():
+    class Stub:
+        def generate(self, prompt, kind=""):
+            return """{
+              "status": "ready",
+              "mode": "ask",
+              "action": "report",
+              "assets": [],
+              "objective": "The user said thanks and did not ask for a market lookup."
+            }"""
+
+    turn = ConversationAgent.understand("thanks", provider=Stub())
+    assert turn.status == "needs_input"
+    assert turn.task.scope.assets == []
+    assert "Bitcoin" not in turn.question
+
+
+def test_llm_failure_does_not_invent_a_market_answer():
+    class Stub:
+        def generate(self, prompt, kind=""):
+            raise RuntimeError("model down")
+
+    turn = ConversationAgent.understand("how is AR doing ?", provider=Stub())
+    assert turn.status == "needs_input"
+    assert turn.task.scope.assets == []
+    assert "Bitcoin" not in turn.question
+    assert "AR" not in turn.question
 
 
 def test_no_result_reply_stays_grounded():

@@ -64,6 +64,19 @@ def compile_from_task(
         policy = current_policy or _policy_from_task(task, text)
         job, workflow, policy = _event_watch(text or task.objective, policy)
         _apply_task_trigger(job, workflow, task)
+    elif task.action == "market_summary":
+        policy = _policy_from_task(task, text)
+        workflow = workflow_from_task(task)
+        job = JobDefinition(
+            purpose=task.objective or "Summarize the live crypto market.",
+            summary=text.strip(),
+            execution_model="task",
+            routine_kind=None,
+            trigger_summary="",
+            workflow_summary="Live market context",
+            you_asked=list(task.you_asked) or [text.strip()],
+            steps_explained=workflow.explained_steps(),
+        )
     elif task.action in {"rank_gains", "rank_declines"} or task.requested_output == "ranked_table":
         policy = _policy_from_task(task, text)
         direction = "gainers" if task.action == "rank_gains" else "losers"

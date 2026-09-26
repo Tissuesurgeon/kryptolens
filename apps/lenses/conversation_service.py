@@ -89,6 +89,12 @@ class ChatResult:
     draft: str = ""
 
 
+def _command_names_asset(phrase: str) -> bool:
+    from apps.intelligence.compiler import _extract_symbols
+
+    return bool(_extract_symbols(phrase))
+
+
 class ConversationService:
     @staticmethod
     def normalize(text: str) -> str:
@@ -113,9 +119,12 @@ class ConversationService:
             return "why"
         if phrase in DOING_PHRASES:
             return "doing"
-        if phrase in CAPABILITY_PHRASES:
+        if phrase in CAPABILITY_PHRASES or phrase.startswith("what can you do"):
             return "capabilities"
-        if phrase in WATCH_PHRASES:
+        if phrase in WATCH_PHRASES or (
+            ("keep watching" in phrase or "keep an eye" in phrase or "keep monitoring" in phrase)
+            and not _command_names_asset(phrase)
+        ):
             return "watch"
         return None
 

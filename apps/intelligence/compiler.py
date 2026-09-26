@@ -77,6 +77,9 @@ GAINERS_ASKS = (
     "biggest winner",
     "gainers",
     "most gained",
+    "up the most",
+    "gained the most",
+    "best performer",
     "24h gain",
     "24hr gain",
     "24 hour gain",
@@ -90,6 +93,17 @@ LOSERS_ASKS = (
     "largest declin",
     "biggest drop",
     "losers",
+    "faller",
+    "fell the most",
+    "fell the hardest",
+    "fell hardest",
+    "dropped the most",
+    "down the most",
+    "lost the most",
+    "declined the most",
+    "worst",
+    "dumping",
+    "dump",
 )
 
 
@@ -125,7 +139,7 @@ def is_losers_ask(text: str) -> bool:
 
 def extract_listing_limit(text: str, default: int = 100) -> int:
     """Honor an explicit 'top N'. Last match wins on edits like 'instead of top 100, use top 20'."""
-    matches = re.findall(r"\btop\s+(\d+)\b", text, flags=re.I)
+    matches = re.findall(r"\b(?:top|worst|best|bottom)\s+(\d+)\b", text, flags=re.I)
     if not matches:
         return default
     return max(1, min(int(matches[-1]), 500))
@@ -357,8 +371,17 @@ _NOT_ASSETS = frozenset(
         "MARKET",
         "COIN",
         "COINS",
+        "MEME",
+        "MEMES",
+        "WHOLE",
         "CRYPTO",
         "PRICE",
+        "HAPPENING",
+        "GOING",
+        "WITH",
+        "ABOUT",
+        "SHOW",
+        "TELL",
         "TOP",
         "ALL",
         "SOME",
@@ -383,7 +406,7 @@ _NOT_ASSETS = frozenset(
     }
 )
 _STATUS_ASSET = re.compile(
-    r"\b(?:how(?:'s| is| are)|what(?:'s| is))\s+([A-Za-z][A-Za-z0-9]{1,14})\b",
+    r"\b(?:how(?:'s| is| are)|what(?:'s| is)|price of|about|with)\s+([A-Za-z][A-Za-z0-9]{1,14})\b",
     re.I,
 )
 
