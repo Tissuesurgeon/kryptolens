@@ -270,6 +270,8 @@ def test_reply_answers_the_user_message_from_verified_numbers():
         task={"you_asked": ["how is AR doing ?"], "scope": {"assets": ["AR"]}, "source_text": "how is AR doing ?"},
     )
     assert "how is AR doing" in provider.prompt
+    assert "analyst" in provider.prompt.lower()
+    assert "verified facts" in provider.prompt
     assert "AR is at $12.50" in text
     assert "Bitcoin" not in text
 

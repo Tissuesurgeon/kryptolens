@@ -66,6 +66,70 @@ def normalize_listing(item: dict, previous_ranks: dict[int, int] | None = None) 
     )
 
 
+def chart_series(payload: dict) -> list[dict]:
+    """Keep the full quotes/historical series. Flattening keeps only the last print."""
+    data = payload.get("data") or {}
+    values = data.values() if isinstance(data, dict) else data if isinstance(data, list) else []
+    series = []
+    for asset in values:
+        if isinstance(asset, list):
+            asset = asset[0] if asset else None
+        if not isinstance(asset, dict):
+            continue
+        points = []
+        for quote in asset.get("quotes") or []:
+            if not isinstance(quote, dict):
+                continue
+            usd = quote.get("quote")
+            if isinstance(usd, dict):
+                usd = usd.get("USD") or next(iter(usd.values()), {})
+            if not isinstance(usd, dict):
+                continue
+            price = usd.get("price")
+            if price is None:
+                price = usd.get("close")
+            stamp = quote.get("timestamp") or quote.get("time_close") or quote.get("time_open")
+            if price is None or not stamp:
+                continue
+            points.append({"t": str(stamp), "price": float(price)})
+        if len(points) >= 2:
+            series.append(
+                {
+                    "symbol": str(asset.get("symbol") or ""),
+                    "name": str(asset.get("name") or ""),
+                    "points": points,
+                }
+            )
+    return series
+
+
+def draw_chart(series: list[dict], width: float = 320, height: float = 96, pad: float = 8) -> list[dict]:
+    prices = [point["price"] for item in series for point in item.get("points") or []]
+    if len(prices) < 2:
+        return []
+    low, high = min(prices), max(prices)
+    span = high - low or 1
+    drawn = []
+    for item in series:
+        points = list(item.get("points") or [])
+        if len(points) < 2:
+            continue
+        last_index = max(len(points) - 1, 1)
+        coords = []
+        for index, point in enumerate(points):
+            x = pad + (width - 2 * pad) * (index / last_index)
+            y = pad + (height - 2 * pad) * (1 - (point["price"] - low) / span)
+            coords.append(f"{x:.1f},{y:.1f}")
+        drawn.append(
+            {
+                "symbol": item.get("symbol") or "",
+                "name": item.get("name") or "",
+                "polyline": " ".join(coords),
+            }
+        )
+    return drawn
+
+
 def flatten_historical_quotes(payload: dict) -> dict:
     """Turn CMC quotes/historical into the quotes/latest shape normalize_listings expects."""
     data = payload.get("data") or {}

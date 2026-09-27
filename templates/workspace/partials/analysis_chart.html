@@ -1,0 +1,12 @@
+{% if chart %}
+<figure class="analysis-chart">
+  <svg viewBox="0 0 320 96" role="img" aria-label="Price chart from CoinMarketCap">
+    {% for series in chart %}
+      <polyline class="stroke-{{ forloop.counter0 }}" points="{{ series.polyline }}" fill="none"></polyline>
+    {% endfor %}
+  </svg>
+  <figcaption class="quiet mono">
+    {% for series in chart %}{{ series.symbol }}{% if not forloop.last %} · {% endif %}{% endfor %}
+  </figcaption>
+</figure>
+{% endif %}

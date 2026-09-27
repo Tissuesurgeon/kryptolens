@@ -59,9 +59,10 @@ def spoken_result(result) -> str | None:
         analysis = (payload.get("analysis") or "").strip()
         if analysis:
             return analysis
-        headlines = payload.get("headlines") or len(payload.get("items") or [])
-        if headlines:
-            return f"{headlines} CoinMarketCap headlines, related to live quotes."
+        headlines = payload.get("headlines")
+        count = len(headlines) if isinstance(headlines, list) else headlines or len(payload.get("items") or [])
+        if count:
+            return f"{count} CoinMarketCap headlines, related to live quotes."
         return "CoinMarketCap returned no News/Headlines for this request."
     if kind == "no_result":
         return (

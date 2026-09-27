@@ -42,7 +42,7 @@ def test_llm_understands_bitcoin_today_as_snapshot():
     assert job.is_persistent() is False
     assert job.you_asked == ["how is bitcoin doing on the market today"]
     assert workflow.trigger is None
-    assert [step.type for step in workflow.steps] == ["get_quotes", "present"]
+    assert [step.type for step in workflow.steps] == ["get_quotes", "get_quotes_historical", "present"]
     assert workflow.steps[0].symbols == ["BTC"]
     plan, planned = ChiefAgent().plan_from_text("how is bitcoin doing on the market today", provider=provider)
     assert plan.job_type == "investigate"

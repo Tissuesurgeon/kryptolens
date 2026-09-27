@@ -150,6 +150,30 @@ def test_quotes_excerpt_omits_tags_and_keeps_price():
     assert "-1.42" in excerpt
 
 
+def test_chart_series_keeps_the_price_path():
+    from apps.cmc.normalize import chart_series, draw_chart
+
+    series = chart_series(
+        {
+            "data": {
+                "ETH": {
+                    "symbol": "ETH",
+                    "name": "Ethereum",
+                    "quotes": [
+                        {"timestamp": "2026-09-25T00:00:00.000Z", "quote": {"USD": {"price": 2600}}},
+                        {"timestamp": "2026-09-26T00:00:00.000Z", "quote": {"USD": {"price": 2687.39}}},
+                    ],
+                }
+            }
+        }
+    )
+    assert series[0]["symbol"] == "ETH"
+    assert len(series[0]["points"]) == 2
+    drawn = draw_chart(series)
+    assert "ETH" == drawn[0]["symbol"]
+    assert "," in drawn[0]["polyline"]
+
+
 def test_spoken_comparison_states_price_and_24h_move():
     class Result:
         kind = "comparison"

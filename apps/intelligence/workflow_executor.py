@@ -13,6 +13,7 @@ from apps.cmc.normalize import (
     select_quoted_assets,
 )
 from apps.intelligence.news import analyze_news, attach_quotes, build_news_payload, symbols_from_items
+from apps.intelligence.web_news import fetch_headlines, headlines_as_news_items, headlines_from_content
 from apps.intelligence.present import comparison_title
 from apps.intelligence.calculations import aggregate_mean, filter_threshold, rank_assets, sort_assets
 from apps.intelligence.engine import compare
@@ -93,18 +94,22 @@ def execute_steps(
         elif step.type == "get_content":
             run.set_stage("fetching_cmc")
             news_type = step.source if step.source in {"news", "community", "alexandria", "all"} else "news"
-            call = dispatch_cmc(
-                adapter,
-                "get_content",
-                permissions,
-                start=1,
-                limit=step.limit or 20,
-                symbols=list(step.symbols or []),
-                news_type=news_type,
-            )
-            persist_call(call, run)
-            tools_used.append("get_content")
-            news_items = normalize_content(call.payload)
+            try:
+                call = dispatch_cmc(
+                    adapter,
+                    "get_content",
+                    permissions,
+                    start=1,
+                    limit=step.limit or 20,
+                    symbols=list(step.symbols or []),
+                    news_type=news_type,
+                )
+            except CMCError:
+                news_items = []
+            else:
+                persist_call(call, run)
+                tools_used.append("get_content")
+                news_items = normalize_content(call.payload)
         elif step.type == "get_quotes_historical":
             extras.update(
                 _optional_tool(
@@ -207,6 +212,11 @@ def execute_steps(
         else:
             raise WorkflowExecutionError(f"unknown workflow step: {step.type}")
 
+    page_headlines = fetch_headlines()
+    if present_format == "news_brief" and not news_items and page_headlines:
+        news_items = headlines_as_news_items(page_headlines)
+    headline_rows = page_headlines or headlines_from_content(news_items)
+
     payload: dict
     if present_format == "news_brief":
         run.set_stage("analyzing")
@@ -227,6 +237,9 @@ def execute_steps(
             kind = "news_brief"
             title = "Market news"
     elif present_format == "comparison":
+        from apps.cmc.normalize import draw_chart
+
+        historical_payload = getattr(extras.get("historical_call"), "payload", None) or {}
         payload = {
             "rows": [
                 {
@@ -235,9 +248,13 @@ def execute_steps(
                     "price": item.price,
                     "price_change_24h": item.price_change_24h,
                     "market_cap": item.market_cap,
+                    "volume_24h": item.volume_24h,
+                    "volume_change_24h": item.volume_change_24h,
+                    "market_cap_rank": item.market_cap_rank,
                 }
                 for item in observations
-            ]
+            ],
+            "chart": draw_chart(list(historical_payload.get("chart") or [])),
         }
         kind = "comparison"
         title = comparison_title(observations)
@@ -268,6 +285,7 @@ def execute_steps(
         else:
             title = "Market reaction"
 
+    payload["headlines"] = headline_rows
     return {
         "kind": kind,
         "title": title,

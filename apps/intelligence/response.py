@@ -5,18 +5,44 @@ from __future__ import annotations
 import json
 import re
 
+from apps.intelligence.compiler import _extract_json
 from apps.intelligence.llm import HeuristicProvider, get_provider
 from apps.intelligence.present import spoken_result
 from apps.intelligence.understanding import provider_is_llm
 
-RESPONSE_SYSTEM = """Read the user's message and answer that request.
-Use only the verified facts, claims, and limitations provided.
-Do not invent prices, percents, ranks, or headlines.
+RESPONSE_SYSTEM = """You are a crypto market analyst answering the user's message.
+Write a briefing, not a one-line quote and not a system status.
+
+Use only numbers, names, and labels that appear in the verified facts or payload.
+Do not invent prices, percents, ranks, volume, headlines, catalysts, or support levels.
+Do not round a figure into a different number. Quote the figures as given.
 Do not answer about a different asset than the one they asked about.
+Do not recommend buying, selling, or shorting.
 Do not name hidden capabilities (Market, Anomaly, Reaction, Historical, Discovery, Regime).
+When verification is supported or absent, do not mention verification, evidence, or "verified facts".
+When verification is inconclusive or unsupported, say the evidence does not support a finding and do not state the price as a finding.
 If historical comparisons are present, include: comparable observations, not a prediction.
-If verification is inconclusive or unsupported, say so plainly.
-Return plain text only.
+
+Shape:
+- Open with the direct answer in the asset's name: the live level and the 24-hour change when those are present.
+- Then two or three short paragraphs on what those figures show. Use market cap, rank, volume, and volume change when the payload includes them. If a field is missing, leave it out. Write market cap and volume in billions or trillions, not as a raw integer.
+- A "today" question is the trailing 24-hour CoinMarketCap snapshot, not a forecast and not a full session replay.
+- For a ranking, name the leaders from the rows and what the ordering is.
+- For a comparison, take each named asset in turn, then the difference that the figures support.
+
+News, from relevant_headlines only:
+- Answer the user's question first from the CoinMarketCap quote.
+- If relevant_headlines has one or more items, add one short paragraph. Quote those titles, say they are CoinMarketCap headlines, and use each reason. Do not claim a headline caused the price move.
+- If headlines_fetched is true, headlines_judged is true, and relevant_headlines is empty, answer the market question and say the latest CoinMarketCap headlines were not relevant to the request. Do not recite unrelated titles.
+- If headlines_fetched is false or headlines_judged is false, omit news. Do not invent a story.
+Return plain text only. No headings, no bullets.
+"""
+
+RELEVANCE_SYSTEM = """You judge whether CoinMarketCap headlines bear on the user's question.
+You receive the user's message and headline titles only.
+Return ONLY JSON: {"relevant": [{"title": "<exact title>", "reason": "<one line>"}]}
+Include a title only when it bears on what they asked. Leave the rest out.
+Do not invent titles. Copy titles exactly. If none bear on the question, return {"relevant": []}.
 """
 
 
@@ -47,6 +73,7 @@ def compose_reply(
         return f"I read that as a request about {names}. CoinMarketCap did not return that asset in this result."
     provider = provider or get_provider()
     if provider_is_llm(provider) and not isinstance(provider, HeuristicProvider):
+        _judge_headlines(provider, question, payload, result)
         answered = _answer_with_model(
             provider,
             question=question,
@@ -90,7 +117,8 @@ def _answer_with_model(
     try:
         prompt = RESPONSE_SYSTEM + "\n\nUser message:\n" + (question or "Answer from the verified facts.")
         prompt += "\n\nVerified facts:\n" + fallback
-        prompt += "\n\nPayload:\n" + json.dumps(payload, default=str)[:6000]
+        briefing = {key: value for key, value in payload.items() if key != "headlines"}
+        prompt += "\n\nPayload:\n" + json.dumps(briefing, default=str)[:6000]
         prompt += f"\nclaims={claims}\nlimitations={limitations}\n"
         prompt += f"verification={(verification or {}).get('status')}\n"
         if evidence:
@@ -143,7 +171,7 @@ def _accepted_reply(
         return ""
     if historical and "comparable observations, not a prediction" not in text.lower():
         text = text.rstrip(".") + ". These are comparable observations, not a prediction."
-    return text[:2000]
+    return text[:4000]
 
 
 def _with_requested_market_cap(text: str, question: str, payload: dict) -> str:
@@ -172,6 +200,55 @@ def _compact_usd(value) -> str:
     if absolute >= 1_000_000:
         return f"${number / 1_000_000:.2f}M"
     return f"${number:,.0f}"
+
+
+def _judge_headlines(provider, question: str, payload: dict, result) -> None:
+    headlines = payload.get("headlines")
+    if not isinstance(headlines, list) or not headlines:
+        payload["headlines_fetched"] = False
+        payload["headlines_judged"] = True
+        payload["relevant_headlines"] = []
+        _store_relevance(result, payload)
+        return
+    payload["headlines_fetched"] = True
+    judged, relevant = _select_relevant(provider, question, headlines)
+    payload["headlines_judged"] = judged
+    payload["relevant_headlines"] = relevant
+    _store_relevance(result, payload)
+
+
+def _select_relevant(provider, question: str, headlines: list[dict]) -> tuple[bool, list[dict]]:
+    titles = [item.get("title") for item in headlines if item.get("title")]
+    prompt = RELEVANCE_SYSTEM + "\n\nUser message:\n" + (question or "") + "\n\nTitles:\n" + json.dumps(titles)
+    try:
+        data = _extract_json(provider.generate(prompt, kind="relevance"))
+    except Exception:
+        return False, []
+    by_title = {item.get("title"): item for item in headlines if item.get("title")}
+    kept: list[dict] = []
+    seen: set[str] = set()
+    for row in data.get("relevant") or []:
+        if not isinstance(row, dict):
+            continue
+        title = str(row.get("title") or "")
+        match = by_title.get(title)
+        if not match or title in seen:
+            continue
+        seen.add(title)
+        kept.append({**match, "reason": str(row.get("reason") or "").strip()})
+    return True, kept
+
+
+def _store_relevance(result, payload: dict) -> None:
+    if result is None:
+        return
+    current = dict(getattr(result, "payload_json", None) or {})
+    current["headlines_fetched"] = payload.get("headlines_fetched")
+    current["headlines_judged"] = payload.get("headlines_judged")
+    current["relevant_headlines"] = payload.get("relevant_headlines") or []
+    result.payload_json = current
+    if getattr(result, "pk", None) and callable(getattr(result, "save", None)):
+        result.save(update_fields=["payload_json"])
 
 
 def _question_from_task(task) -> str:
@@ -215,6 +292,12 @@ def _mentions_request(text: str, asked: list[str], rows: list) -> bool:
 
 def _uses_only_known_numbers(text: str, payload: dict, fallback: str) -> bool:
     allowed = _numeric_tokens(json.dumps(payload, default=str) + "\n" + fallback)
+    scaled = []
+    for item in allowed:
+        for divisor in (1_000_000, 1_000_000_000, 1_000_000_000_000):
+            if abs(item) >= divisor:
+                scaled.append(item / divisor)
+    allowed = allowed + scaled
     for number in _numeric_tokens(text):
         if number in {24, 100}:
             continue

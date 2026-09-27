@@ -93,7 +93,10 @@ def test_news_question_relates_headlines_to_quotes():
     assert run.status == "ok"
     result = Result.objects.get(lens=lens)
     assert result.kind == "news_brief"
-    assert result.payload_json["headlines"] == 2
+    assert [item["title"] for item in result.payload_json["headlines"]] == [
+        "Bitcoin holds near session highs as ETF inflows continue",
+        "Ethereum staking queue shortens",
+    ]
     assert "Bitcoin holds near session highs as ETF inflows continue" in result.payload_json["analysis"]
     assert any(row["symbol"] == "BTC" and row["price"] == 76665.95 for row in result.payload_json["rows"])
 

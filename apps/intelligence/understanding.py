@@ -221,14 +221,10 @@ def _asked(understanding: Understanding, text: str) -> list[str]:
 
 
 def _snapshot(text: str, understanding: Understanding, policy: IntelligencePolicy):
+    from apps.intelligence.job_compiler import _snapshot_workflow
+
     symbols = policy.universe.symbols or understanding.symbols or ["BTC"]
-    workflow = WorkflowDefinition(
-        trigger=None,
-        steps=[
-            WorkflowStep(type="get_quotes", symbols=symbols),
-            WorkflowStep(type="present", format=understanding.present or "comparison"),
-        ],
-    )
+    workflow = _snapshot_workflow(list(symbols))
     job = JobDefinition(
         purpose=understanding.purpose or f"Report how {' and '.join(symbols)} is doing from live CMC quotes.",
         summary=text.strip(),
@@ -248,13 +244,9 @@ def _compare(text: str, understanding: Understanding, policy: IntelligencePolicy
     policy = policy.model_copy(
         update={"universe": policy.universe.model_copy(update={"type": "symbols", "symbols": symbols})}
     )
-    workflow = WorkflowDefinition(
-        trigger=None,
-        steps=[
-            WorkflowStep(type="get_quotes", symbols=symbols),
-            WorkflowStep(type="present", format="comparison"),
-        ],
-    )
+    from apps.intelligence.job_compiler import _snapshot_workflow
+
+    workflow = _snapshot_workflow(list(symbols))
     job = JobDefinition(
         purpose=understanding.purpose or f"Compare {' and '.join(symbols)} from live CMC quotes.",
         summary=text.strip(),

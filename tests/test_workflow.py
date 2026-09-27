@@ -37,7 +37,7 @@ def test_how_is_bitcoin_doing_today_is_a_one_shot_quote_check():
     assert job.execution_model == "task"
     assert job.routine_kind is None
     assert workflow.trigger is None
-    assert [step.type for step in workflow.steps] == ["get_quotes", "present"]
+    assert [step.type for step in workflow.steps] == ["get_quotes", "get_quotes_historical", "present"]
     assert workflow.steps[0].symbols == ["BTC"]
     assert job.you_asked == ["how is bitcoin doing on the market today"]
     assert report["policy"].asset_conditions == []

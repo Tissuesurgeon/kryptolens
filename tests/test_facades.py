@@ -132,6 +132,25 @@ def test_status_question_answers_with_live_btc_quote():
     respx.get("https://pro-api.coinmarketcap.com/v3/cryptocurrency/quotes/latest").mock(
         return_value=httpx.Response(200, json=payload)
     )
+    respx.get("https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/historical").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "status": {"error_code": "0"},
+                "data": {
+                    "BTC": {
+                        "id": 1,
+                        "name": "Bitcoin",
+                        "symbol": "BTC",
+                        "quotes": [
+                            {"timestamp": "2026-09-25T12:00:00.000Z", "quote": {"USD": {"price": 116000.0}}},
+                            {"timestamp": "2026-09-26T12:00:00.000Z", "quote": {"USD": {"price": 115432.18}}},
+                        ],
+                    }
+                },
+            },
+        )
+    )
     user = _user()
     lens = AgentService.create(user, "analyst", "")
     ConversationService.handle(lens, "how is bitcoin doing on the market today")
@@ -153,6 +172,8 @@ def test_status_question_answers_with_live_btc_quote():
     page = client.get(f"/lenses/{lens.id}")
     html = page.content
     assert b"Bitcoin is at $115,432.18" in html
+    assert b"analysis-chart" in html
+    assert b'aria-label="Price chart from CoinMarketCap"' in html
     assert b"I understand the job" not in html
     assert b"I'll do" not in html
     assert b"Evidence" not in html
@@ -194,6 +215,23 @@ def test_eth_followup_quotes_eth_not_the_previous_btc_snapshot():
         return httpx.Response(200, json=_quote_payload("BTC", "Bitcoin", 77962.46, 1.73, 1))
 
     respx.get("https://pro-api.coinmarketcap.com/v3/cryptocurrency/quotes/latest").mock(side_effect=quotes)
+    respx.get("https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/historical").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "status": {"error_code": "0"},
+                "data": {
+                    "ETH": {
+                        "symbol": "ETH",
+                        "quotes": [
+                            {"timestamp": "2026-09-25T12:00:00.000Z", "quote": {"USD": {"price": 2400}}},
+                            {"timestamp": "2026-09-26T12:00:00.000Z", "quote": {"USD": {"price": 2459.31}}},
+                        ],
+                    }
+                },
+            },
+        )
+    )
     user = _user()
     lens = AgentService.create(user, "analyst", "")
     ConversationService.handle(lens, "what is btc doing right now")

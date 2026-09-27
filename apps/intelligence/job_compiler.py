@@ -234,11 +234,12 @@ def _reaction_workflow(
     )
 
 
-def _snapshot_workflow(symbols: list[str]) -> WorkflowDefinition:
+def _snapshot_workflow(symbols: list[str], window: str = "24h") -> WorkflowDefinition:
     return WorkflowDefinition(
         trigger=None,
         steps=[
             WorkflowStep(type="get_quotes", symbols=list(symbols)),
+            WorkflowStep(type="get_quotes_historical", symbols=list(symbols), operation=window or "24h"),
             WorkflowStep(type="present", format="comparison"),
         ],
     )
@@ -694,20 +695,8 @@ def workflow_from_task(task) -> WorkflowDefinition:
     symbols = assets[:4] or ["BTC"]
     if len(assets) >= 2:
         symbols = assets[:4]
-    workflow = _snapshot_workflow(symbols)
-    if task.scope.window or "historical" in task.capabilities:
-        steps = list(workflow.steps)
-        insert_at = next((i for i, step in enumerate(steps) if step.type == "present"), len(steps))
-        steps.insert(
-            insert_at,
-            WorkflowStep(
-                type="get_quotes_historical",
-                symbols=list(symbols),
-                operation=task.scope.window or "30d",
-            ),
-        )
-        workflow = workflow.model_copy(update={"steps": steps})
-    return workflow
+    chart_window = task.scope.window or ("30d" if "historical" in (task.capabilities or []) else "24h")
+    return _snapshot_workflow(symbols, chart_window)
 
 
 def _task_is_reaction(task) -> bool:

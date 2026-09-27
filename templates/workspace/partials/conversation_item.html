@@ -90,6 +90,18 @@
   <div class="turn-body">
     <p class="turn-name">{{ lens.name }}</p>
     <p>{{ item.payload_json.text }}</p>
+    {% if item.result.payload_json.chart %}
+      {% include "workspace/partials/analysis_chart.html" with chart=item.result.payload_json.chart %}
+    {% endif %}
+    {% if item.result.payload_json.relevant_headlines %}
+      <ul class="plain-list">
+        {% for headline in item.result.payload_json.relevant_headlines %}
+          {% if headline.link %}
+            <li><a href="{{ headline.link }}" rel="noreferrer">{{ headline.title }}</a></li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    {% endif %}
   </div>
 </section>
 {% elif item.item_type == "policy_diff" %}

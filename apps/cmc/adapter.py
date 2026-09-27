@@ -165,9 +165,12 @@ class CMCAdapter:
             },
             fields=["price", "percent_change_24h", "volume_24h", "market_cap"],
         )
-        from apps.cmc.normalize import flatten_historical_quotes
+        from apps.cmc.normalize import chart_series, flatten_historical_quotes
 
+        series = chart_series(call.payload)
         call.payload = flatten_historical_quotes(call.payload)
+        if series:
+            call.payload["chart"] = series
         return call
 
     def get_ohlcv_historical(self, symbols: list[str], window: str = "30d", convert: str = "USD") -> CMCCall:
