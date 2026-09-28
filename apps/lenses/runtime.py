@@ -133,7 +133,7 @@ class LensRuntime:
                 fired, trigger_obs = trigger_fired(workflow.trigger, [trigger_obs] if trigger_obs else [])
                 if not fired:
                     actual = trigger_obs.price_change_24h if trigger_obs else None
-                    change_text = f"{actual}%" if actual is not None else "unavailable"
+                    name = (trigger_obs.name if trigger_obs and trigger_obs.name else symbol)
                     result = Result.objects.create(
                         lens=lens,
                         lens_version=version,
@@ -141,7 +141,7 @@ class LensRuntime:
                         kind="no_result",
                         title="Trigger condition not met",
                         payload_json={
-                            "message": f"Trigger condition not met. Current {symbol} change: {change_text}.",
+                            "message": _waiting_message(name, symbol, actual, workflow),
                             "trigger": workflow.trigger.model_dump(mode="json"),
                             "actual": actual,
                             "assets": 0,
@@ -354,6 +354,29 @@ class LensRuntime:
             result=result,
         )
         return event
+
+
+def _waiting_message(name: str, symbol: str, actual: float | None, workflow) -> str:
+    trigger = workflow.trigger
+    limit = next((step.limit for step in workflow.steps if step.limit), None)
+    ranking = f"the top {limit}" if limit else "the other coins"
+    drop = abs(trigger.value) if trigger and trigger.value is not None else None
+    drop_text = ""
+    if drop is not None:
+        drop_text = f"{drop:.0f}" if float(drop).is_integer() else f"{drop:.2f}"
+    if actual is None:
+        return f"I could not read the live {name} change. I'll rank {ranking} when the condition is met."
+    if actual > 0:
+        move = f"{name} is up {abs(actual):.2f}% over 24 hours"
+    elif actual < 0:
+        move = f"{name} is down {abs(actual):.2f}% over 24 hours"
+    else:
+        move = f"{name} is unchanged over 24 hours"
+    if drop_text and trigger and trigger.operator in {"<=", "<"} and trigger.value < 0:
+        return f"{move}. I'll rank {ranking} when {name} drops {drop_text}%."
+    shown = trigger.value if trigger else ""
+    operator = trigger.operator if trigger else ""
+    return f"{move}. I'll run the analysis when {symbol} meets {operator} {shown}."
 
 
 def _json_extras(extras: dict) -> dict:

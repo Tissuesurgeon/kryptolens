@@ -82,7 +82,7 @@
       <p>
         {{ result.payload_json.trigger.asset|default:"Trigger" }}
         {% if result.payload_json.trigger.actual != None %}
-          {{ result.payload_json.trigger.actual }}%
+          {{ result.payload_json.trigger.actual|floatformat:2 }}%
         {% endif %}
       </p>
     {% endif %}

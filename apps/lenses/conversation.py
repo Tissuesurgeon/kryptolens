@@ -26,6 +26,8 @@ def is_visible_thread_item(item) -> bool:
     run = getattr(item, "lens_run", None)
     ask_run = bool(run and (getattr(run, "summary_json", None) or {}).get("mode") == "ask")
     direction = ((result.payload_json or {}).get("direction") if result else "") or ""
+    if kind == "no_result" and item.item_type in {"scan_result", "evidence", "verification"}:
+        return False
     if item.item_type in {"evidence", "verification"} and (
         kind == "comparison" or ask_run or direction in {"gainers", "losers"}
     ):

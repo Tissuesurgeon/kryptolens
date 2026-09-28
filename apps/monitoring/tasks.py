@@ -32,6 +32,6 @@ def run_lens(lens_id: int, trigger: str = "scheduled", run_id: int | None = None
 
     existing = LensRun.objects.filter(pk=run_id).first() if run_id else None
     runtime = AgentRuntime(as_of=as_of)
-    if as_of or trigger in {"manual", "historical", "chat"}:
+    if as_of or trigger in {"manual", "historical"}:
         return runtime.run_now(lens_id, trigger=trigger, run=existing).id
     return runtime.trigger_routine(lens_id, trigger=trigger, run=existing).id

@@ -67,12 +67,14 @@ def execute_steps(
             if listings_fetched:
                 continue
             run.set_stage("fetching_cmc")
-            call = dispatch_cmc(adapter, "get_market_listings", permissions, limit=limit)
+            fetch_limit = min(500, limit + 25) if exclude_stablecoins else limit
+            call = dispatch_cmc(adapter, "get_market_listings", permissions, limit=fetch_limit)
             persist_call(call, run)
             tools_used.append("get_market_listings")
             observations = normalize_listings(call.payload, previous_ranks)
             if exclude_stablecoins:
                 observations = [item for item in observations if not is_stablecoin(item)]
+            observations = observations[:limit]
             listings_fetched = True
         elif step.type == "get_quotes":
             run.set_stage("fetching_cmc")

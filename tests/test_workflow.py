@@ -192,6 +192,87 @@ def test_trigger_routine_zero_result_when_btc_has_not_dropped():
     assert run.status == "ok"
     result = Result.objects.get(lens=lens)
     assert result.kind == "no_result"
+    assert "Bitcoin is up 1.40% over 24 hours" in result.payload_json["message"]
+    assert "drops 2%" in result.payload_json["message"]
+
+
+def _listing(asset_id: int, name: str, symbol: str, rank: int, change: float) -> dict:
+    return {
+        "id": asset_id,
+        "name": name,
+        "symbol": symbol,
+        "cmc_rank": rank,
+        "quote": {"USD": {"price": 1, "percent_change_24h": change, "market_cap": 1_000_000_000 - rank}},
+    }
+
+
+@respx.mock
+@pytest.mark.django_db
+def test_chat_watch_waits_until_bitcoin_drops():
+    from apps.lenses.conversation import is_visible_thread_item
+    from apps.lenses.models import LensRun
+    from apps.monitoring.tasks import run_lens
+
+    user = User.objects.create_user(username="wait", email="wait@kryptolens.app", password="x")
+    lens, version, _ = create_lens_from_intent(user, "when BTC drops 2%, analyze how it affects top 10 coins")
+    run = LensRun.objects.create(
+        lens=lens,
+        lens_version=version,
+        trigger="chat",
+        status="running",
+        stage="queued",
+        workflow_json=version.workflow_json,
+    )
+    respx.get("https://pro-api.coinmarketcap.com/v3/cryptocurrency/quotes/latest").mock(
+        return_value=httpx.Response(200, json=_btc_drop_payload(0.19))
+    )
+    run_lens(lens.id, "chat", run.id)
+    result = Result.objects.get(lens=lens)
+    assert result.kind == "no_result"
+    assert "up 0.19%" in result.payload_json["message"]
+    assert "top 10" in result.payload_json["message"]
+    assert "drops 2%" in result.payload_json["message"]
+    visible = [item.item_type for item in lens.conversation_items.all() if is_visible_thread_item(item)]
+    assert "scan_result" not in visible
+    assert "evidence" not in visible
+    assert "verification" not in visible
+
+
+@respx.mock
+@pytest.mark.django_db
+def test_top_10_keeps_ten_coins_after_stablecoins_are_removed():
+    user = User.objects.create_user(username="ten", email="ten@kryptolens.app", password="x")
+    lens, _, _ = create_lens_from_intent(user, "when BTC drops 2%, analyze how it affects top 10 coins")
+    names = [
+        (1, "Bitcoin", "BTC"),
+        (1027, "Ethereum", "ETH"),
+        (825, "Tether", "USDT"),
+        (52, "XRP", "XRP"),
+        (1839, "BNB", "BNB"),
+        (5426, "Solana", "SOL"),
+        (3408, "USDC", "USDC"),
+        (1958, "TRON", "TRX"),
+        (74, "Dogecoin", "DOGE"),
+        (2010, "Cardano", "ADA"),
+        (5805, "Avalanche", "AVAX"),
+        (1975, "Chainlink", "LINK"),
+    ]
+    payload = {
+        "status": {"error_code": 0},
+        "data": [_listing(asset_id, name, symbol, index + 1, -index) for index, (asset_id, name, symbol) in enumerate(names)],
+    }
+    respx.get("https://pro-api.coinmarketcap.com/v3/cryptocurrency/listings/latest").mock(
+        return_value=httpx.Response(200, json=payload)
+    )
+    run = LensRuntime(adapter=CMCAdapter(api_key="test-key")).run_now(lens.id)
+    result = Result.objects.get(lens=lens, kind="ranked_table")
+    symbols = [row["symbol"] for row in result.payload_json["rows"]]
+    assert len(symbols) == 10
+    assert "USDT" not in symbols
+    assert "USDC" not in symbols
+    assert "AVAX" in symbols
+    requested = [call for call in respx.calls if "listings/latest" in str(call.request.url)]
+    assert int(requested[0].request.url.params["limit"]) > 10
 
 
 @respx.mock
