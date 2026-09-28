@@ -137,12 +137,83 @@ def is_losers_ask(text: str) -> bool:
     return any(stem in lowered for stem in LOSERS_ASKS)
 
 
+_NUMBER_WORDS = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "twelve": 12,
+    "fifteen": 15,
+    "twenty": 20,
+    "thirty": 30,
+    "fifty": 50,
+    "hundred": 100,
+}
+
+
+def _parse_listing_limit(text: str) -> int | None:
+    matches = re.findall(r"\b(?:top|worst|best|bottom)\s+(\d+|[a-z]+)\b", text, flags=re.I)
+    for raw in reversed(matches):
+        if raw.isdigit():
+            return max(1, min(int(raw), 500))
+        number = _NUMBER_WORDS.get(raw.lower())
+        if number:
+            return number
+    return None
+
+
 def extract_listing_limit(text: str, default: int = 100) -> int:
     """Honor an explicit 'top N'. Last match wins on edits like 'instead of top 100, use top 20'."""
-    matches = re.findall(r"\b(?:top|worst|best|bottom)\s+(\d+)\b", text, flags=re.I)
-    if not matches:
+    parsed = _parse_listing_limit(text)
+    return parsed if parsed is not None else default
+
+
+def has_explicit_listing_limit(text: str) -> bool:
+    return _parse_listing_limit(text) is not None
+
+
+def extract_percent(text: str) -> float | None:
+    match = re.search(r"(\d+(?:\.\d+)?)\s*(?:%|percent\b)", text, flags=re.I)
+    if match:
+        return float(match.group(1))
+    word = re.search(
+        r"\b(" + "|".join(_NUMBER_WORDS) + r")\s+percent\b",
+        text,
+        flags=re.I,
+    )
+    if not word:
+        return None
+    return float(_NUMBER_WORDS[word.group(1).lower()])
+
+
+def signed_percent(text: str, default: float = -2.0) -> float:
+    value = extract_percent(text)
+    if value is None:
         return default
-    return max(1, min(int(matches[-1]), 500))
+    lowered = text.lower()
+    rise = bool(
+        re.search(
+            r"\b(rises?|rising|climbs?|climbing|rall(?:y|ies|ing)|surges?|surging|gains?|gained|pumps?|pumping|above|increas\w*|up)\b",
+            lowered,
+        )
+    )
+    drop = bool(
+        re.search(
+            r"\b(drops?|dropping|falls?|fell|falling|declin\w*|down|crashes?|crash|dumps?|dumping|loses|lose|lost|below)\b",
+            lowered,
+        )
+    )
+    if rise and not drop:
+        return abs(value)
+    if drop or default < 0:
+        return -abs(value)
+    return abs(value)
 
 
 def compile_intent(

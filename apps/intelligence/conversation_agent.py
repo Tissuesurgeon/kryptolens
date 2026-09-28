@@ -67,6 +67,7 @@ Rules:
 - "Watch BTC for unusual activity." → needs_input. Ask what unusual means for this task.
 - "Watch BTC and tell me when something important happens." → needs_input.
 - "When BTC drops by 2%, check the top 100..." → ready, mode=work, watch_plus_investigate immediately.
+- "when BTC drops 2%, analyze the top 10" and close paraphrases (falls, crashes, dumps, down N percent, top ten) → ready, mode=work, watch_plus_investigate. The trigger asset is the coin that moves. A drop is a negative threshold. A rise, pump, or climb is positive. listing_limit is the named top, worst, or best N. A second coin mentioned only for comparison does not replace the trigger.
 - "When ETH drops by 2%, rank the top 100 declines." → ready, mode=work, trigger asset ETH, not BTC.
 - "When BTC drops by 2%, find me the coins with the highest drop." → ready, mode=work, watch_plus_investigate. Rank declines.
 - "What can you do?" / "help" / "who are you" is not a market task. Do not invent an asset or a BTC quote.
@@ -95,7 +96,7 @@ ACTION_QUESTION = "When that happens, should I notify you or investigate how the
 WATCH_STEMS = ("watch ", "watch", "alert", "notify me", "tell me when", "when something")
 UNUSUAL_STEMS = ("unusual", "important", "significant", "something happens", "something important")
 WINDOW_RE = re.compile(r"\b(?:last|past)\s+(\d+)\s*(d|day|days|h|hour|hours|m|min|minutes)\b", re.I)
-PERCENT_RE = re.compile(r"(\d+(?:\.\d+)?)\s*%")
+PERCENT_RE = re.compile(r"(\d+(?:\.\d+)?)\s*(?:%|percent\b)", re.I)
 
 
 def understand(
@@ -113,7 +114,7 @@ def understand(
         return _merge_answer(text, pending, current_job=current_job, provider=provider, history=history)
     if provider_is_llm(provider):
         try:
-            return _understand_llm(
+            result = _understand_llm(
                 text,
                 history=history,
                 current_job=current_job,
@@ -121,14 +122,19 @@ def understand(
                 research_context=research_context,
             )
         except Exception:
-            return _ask(text, "I couldn't read that message. Send it again.", pending_field="subject")
-    if research_context is not None:
-        from apps.intelligence.research.context import resolve_follow_up
+            if _is_reaction_watch(text.lower()):
+                result = _understand_heuristic(text, current_job=current_job)
+            else:
+                return _ask(text, "I couldn't read that message. Send it again.", pending_field="subject")
+    else:
+        if research_context is not None:
+            from apps.intelligence.research.context import resolve_follow_up
 
-        followed = resolve_follow_up(text, research_context)
-        if followed is not None:
-            return followed
-    return _understand_heuristic(text, current_job=current_job)
+            followed = resolve_follow_up(text, research_context)
+            if followed is not None:
+                return _lock_reaction_turn(text, followed)
+        result = _understand_heuristic(text, current_job=current_job)
+    return _lock_reaction_turn(text, result)
 
 
 class ConversationAgent:
@@ -290,7 +296,9 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             objective="Summarize overnight crypto using live CMC listings.",
         )
     if _is_reaction_watch(lowered) or (_has_threshold(text) and _has_universe(lowered) and _has_rank(lowered)):
-        asset = assets[0] if assets else "BTC"
+        from apps.intelligence.job_compiler import _trigger_asset
+
+        asset = _trigger_asset(text)
         trigger = _price_trigger(text, asset)
         return _ready(
             text,
@@ -767,18 +775,43 @@ def _is_volume_question(lowered: str) -> bool:
 
 
 def _signed_percent(text: str, default: float) -> float:
-    found = PERCENT_RE.findall(text)
-    if not found:
-        return default
-    value = float(found[0])
-    lowered = text.lower()
-    rise = bool(re.search(r"\b(rise|rises|rising|climb|climbs|climbing|rally|rallies|surge|surges|gain|gains|pump|above|increas|up)\b", lowered))
-    drop = bool(re.search(r"\b(drop|drops|fall|falls|fell|declin|down|crash|below)\b", lowered))
-    if rise and not drop:
-        return abs(value)
-    if drop:
-        return -abs(value)
-    return -abs(value) if default < 0 else abs(value)
+    from apps.intelligence.compiler import signed_percent
+
+    return signed_percent(text, default)
+
+
+def _lock_reaction_turn(text: str, result: TurnResult) -> TurnResult:
+    if not _is_reaction_watch(text.lower()):
+        return result
+    from apps.intelligence.compiler import extract_listing_limit, has_explicit_listing_limit, signed_percent
+    from apps.intelligence.job_compiler import _trigger_asset
+
+    asset = _trigger_asset(text)
+    value = signed_percent(text, -2.0)
+    operator = ">=" if value > 0 else "<="
+    if result.task is None or result.status != "ready" or result.task.task_type != "watch_plus_investigate":
+        result = _understand_heuristic(text)
+    task = result.task
+    if task is None:
+        return result
+    limit = extract_listing_limit(text) if has_explicit_listing_limit(text) else (task.scope.listing_limit or extract_listing_limit(text))
+    task.status = "ready"
+    task.mode = "work"
+    task.task_type = "watch_plus_investigate"
+    task.action = "investigate_market_reaction"
+    task.requested_output = "ranked_table"
+    task.scope.assets = [asset]
+    task.scope.universe = "top_100"
+    task.scope.listing_limit = limit
+    task.trigger.conditions = [
+        {"metric": "price_change_24h", "operator": operator, "value": value, "asset": asset}
+    ]
+    task.capabilities = ["reaction", "market", "anomaly"]
+    task.source_text = text
+    result.status = "ready"
+    result.question = ""
+    result.task = task
+    return result
 
 
 def _default_capabilities(task_type: str, window: str) -> list[str]:

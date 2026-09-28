@@ -599,17 +599,32 @@ button.agent-remove.is-labeled {
   min-width: 0;
 }
 .roster-delete {
-  opacity: 0;
   padding-top: var(--space-2);
-  transition: opacity 180ms var(--ease);
 }
-.roster-item-wrap:hover .roster-delete,
-.roster-item-wrap:focus-within .roster-delete {
+.roster-delete button.agent-remove {
+  opacity: 0;
+}
+.roster-item-wrap:hover .roster-delete button.agent-remove,
+.roster-item-wrap:focus-within .roster-delete button.agent-remove {
   opacity: 1;
 }
 @media (hover: none) {
-  .roster-delete { opacity: 1; }
+  .roster-delete button.agent-remove { opacity: 1; }
 }
+.delete-dialog {
+  width: min(22rem, calc(100% - 2rem));
+  margin: auto;
+  padding: var(--space-6);
+  border: 3px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 6px 0 var(--line);
+}
+.delete-dialog::backdrop { background: rgb(51 41 31 / 0.45); }
+.delete-dialog h2 { margin: 0 0 var(--space-2); }
+.delete-dialog p { margin: 0 0 var(--space-6); color: var(--muted); }
+.delete-dialog .actions { justify-content: flex-end; }
 .create-modal {
   border: 1px solid var(--line);
   background: var(--surface);

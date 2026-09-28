@@ -307,6 +307,8 @@ def test_home_with_agents_does_not_redirect():
     assert b"Your Analysts" in home.content
     assert b"Delete" in home.content
     assert b"agent-remove" in home.content
+    assert b"delete-dialog" in home.content
+    assert b"confirm(" not in home.content
 
 
 @pytest.mark.django_db

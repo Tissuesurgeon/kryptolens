@@ -1,13 +1,15 @@
+{% with form_key=form_class|default:"agent-delete"|slugify %}
 <form
+  id="delete-{{ form_key }}-{{ agent.id }}"
   method="post"
   action="{% url 'agent_delete' agent.id %}"
   class="{{ form_class|default:'agent-delete' }}"
-  onsubmit="return confirm('Delete {{ agent.name|escapejs }}?');"
 >
   {% csrf_token %}
   <button
     class="agent-remove{% if labeled %} is-labeled{% endif %}"
-    type="submit"
+    type="button"
+    data-delete-open
     aria-label="Delete {{ agent.name }}"
     title="Delete {{ agent.name }}"
   >
@@ -27,4 +29,13 @@
       <span class="visually-hidden">Delete</span>
     {% endif %}
   </button>
+  <dialog class="delete-dialog" aria-label="Delete {{ agent.name }}">
+    <h2>Delete {{ agent.name }}?</h2>
+    <p>This removes the analyst and its conversation.</p>
+    <div class="actions">
+      <button class="btn btn-ghost" type="button" data-delete-cancel>Cancel</button>
+      <button class="btn btn-primary" type="submit" form="delete-{{ form_key }}-{{ agent.id }}">Delete</button>
+    </div>
+  </dialog>
 </form>
+{% endwith %}

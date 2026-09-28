@@ -54,5 +54,33 @@
   <main id="main">{% block landing %}{% endblock %}</main>
   {% endif %}
   {% include "partials/messages.html" %}
+  <script>
+    document.addEventListener("click", function (event) {
+      var opener = event.target.closest("[data-delete-open]");
+      if (opener) {
+        var form = opener.closest("form");
+        var dialog = form && form.querySelector("dialog.delete-dialog");
+        if (!dialog || typeof dialog.showModal !== "function") return;
+        dialog._klHome = form;
+        document.body.appendChild(dialog);
+        dialog.showModal();
+        return;
+      }
+      if (event.target.matches && event.target.matches("dialog.delete-dialog")) {
+        event.target.close();
+        return;
+      }
+      var cancel = event.target.closest("[data-delete-cancel]");
+      if (cancel) {
+        var dialog = cancel.closest("dialog");
+        if (dialog) dialog.close();
+      }
+    });
+    document.addEventListener("close", function (event) {
+      var dialog = event.target;
+      if (!dialog.classList || !dialog.classList.contains("delete-dialog")) return;
+      if (dialog._klHome) dialog._klHome.appendChild(dialog);
+    }, true);
+  </script>
 </body>
 </html>

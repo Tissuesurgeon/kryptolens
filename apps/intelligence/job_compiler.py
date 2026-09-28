@@ -162,21 +162,70 @@ def _is_edit(lowered: str) -> bool:
     ) or bool(re.search(r"\btop\s+\d+\b", lowered))
 
 
-def _is_reaction_watch(lowered: str) -> bool:
-    has_drop = any(word in lowered for word in ("drop", "fall", "fell", "declin"))
-    has_percent = bool(re.search(r"\d+(?:\.\d+)?\s*%", lowered))
-    has_when = any(stem in lowered for stem in ("when ", "whenever", "every time", "each time"))
-    has_universe = bool(re.search(r"\btop\s+\d+\b", lowered)) or (
-        "top" in lowered and any(token in lowered for token in ("coins", "assets", "altcoins"))
-    ) or ("coin" in lowered and any(stem in lowered for stem in ("find", "show", "rank", "list")))
-    has_rank = any(
-        word in lowered for word in ("rank", "list", "sort", "biggest", "highest", "find me", "show me")
-    )
-    if not (has_drop and has_percent):
-        return False
-    if has_when and has_universe and has_rank:
+_MOVE_RE = re.compile(
+    r"\b(drops?|dropping|falls?|fell|falling|declin\w*|crashes?|crash|dumps?|dumping|loses|lose|lost|"
+    r"down|rises?|rising|climbs?|climbing|pumps?|pumping|surges?|surging|rall(?:y|ies|ing))\b",
+    re.I,
+)
+_WHEN_RE = re.compile(r"\b(when|if|whenever|once|after|every time|each time)\b", re.I)
+_ACTION_RE = re.compile(
+    r"\b(analy[sz]e|check|rank|show|list|investigat\w*|look at|what happens|react\w*|affect\w*|gainers|declines)\b",
+    re.I,
+)
+
+
+def _has_move(lowered: str) -> bool:
+    return bool(_MOVE_RE.search(lowered))
+
+
+def _has_reaction_percent(lowered: str) -> bool:
+    from apps.intelligence.compiler import extract_percent
+
+    return extract_percent(lowered) is not None
+
+
+def _has_reaction_universe(lowered: str) -> bool:
+    if re.search(
+        r"\b(?:top|worst|best|bottom)\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|twelve|fifteen|twenty|thirty|fifty|hundred)\b",
+        lowered,
+    ):
         return True
-    return has_universe and (has_rank or "check" in lowered or "analyze" in lowered)
+    if "top" in lowered and any(token in lowered for token in ("coin", "asset", "altcoin")):
+        return True
+    return "coin" in lowered and any(stem in lowered for stem in ("find", "show", "rank", "list"))
+
+
+def _is_reaction_watch(lowered: str) -> bool:
+    if not (_has_move(lowered) and _has_reaction_percent(lowered) and _has_reaction_universe(lowered)):
+        return False
+    return bool(_WHEN_RE.search(lowered) or _ACTION_RE.search(lowered))
+
+
+def _trigger_asset(text: str) -> str:
+    from apps.intelligence.compiler import _SYMBOL_ALIASES, _extract_symbols
+
+    symbols = _extract_symbols(text)
+    if not symbols:
+        return "BTC"
+    if len(symbols) == 1:
+        return symbols[0]
+    lowered = text.lower()
+    verb = _MOVE_RE.search(lowered)
+    if not verb:
+        return symbols[0]
+    before = lowered[: verb.start()]
+    names = {symbol.lower(): symbol for symbol in symbols}
+    for word, symbol in _SYMBOL_ALIASES.items():
+        if symbol in symbols:
+            names[word.lower()] = symbol
+    best = None
+    best_at = -1
+    for name, symbol in names.items():
+        for match in re.finditer(rf"\b{re.escape(name)}\b", before):
+            if match.start() >= best_at:
+                best_at = match.start()
+                best = symbol
+    return best or symbols[0]
 
 
 def _is_btc_reaction(lowered: str) -> bool:
@@ -200,8 +249,9 @@ def _is_event_only(lowered: str, policy: IntelligencePolicy) -> bool:
 
 
 def _percent(text: str, default: float) -> float:
-    found = re.findall(r"(\d+(?:\.\d+)?)\s*%", text)
-    return float(found[0]) if found else default
+    from apps.intelligence.compiler import signed_percent
+
+    return signed_percent(text, default)
 
 
 def _reaction_workflow(
@@ -276,6 +326,8 @@ def _asset_reaction(
     order: str = "ascending",
 ) -> tuple[JobDefinition, WorkflowDefinition, IntelligencePolicy]:
     asset = (asset or "BTC").upper()
+    operator = ">=" if threshold > 0 else "<="
+    order = "descending" if threshold > 0 else order
     policy = IntelligencePolicy.model_validate(
         {
             **policy.model_dump(),
@@ -294,24 +346,26 @@ def _asset_reaction(
             "asset_conditions": [],
             "market_context": [],
             "summary": text.strip(),
-            "interesting_event": f"{asset} 24h move <= {threshold}% then rank top {limit} declines",
+            "interesting_event": f"{asset} 24h move {operator} {threshold}% then rank top {limit}",
             "assumptions": list(policy.assumptions)
-            + [f"Trigger is {asset} 24h change <= {threshold}%. Ranking uses live listings."],
+            + [f"Trigger is {asset} 24h change {operator} {threshold}%. Ranking uses live listings."],
         }
     )
-    workflow = _reaction_workflow(asset, threshold, limit, order=order)
+    workflow = _reaction_workflow(asset, threshold, limit, order=order, operator=operator)
     verb = "Check" if "check" in text.lower() else "Analyze"
+    move = "rises by" if threshold > 0 else "drops by"
+    ranking = "biggest gain to smallest" if threshold > 0 else "biggest drop to smallest"
     job = JobDefinition(
         purpose=f"Monitor {asset} and analyze how the broader market reacts to major {asset} moves.",
         summary=text.strip(),
         execution_model="watch_plus_workflow",
         routine_kind="event_triggered",
-        trigger_summary=f"{asset} 24h change <= {threshold}%",
-        workflow_summary=f"Rank top {limit} by 24h decline",
+        trigger_summary=f"{asset} 24h change {operator} {threshold}%",
+        workflow_summary=f"Rank top {limit} by 24h {'gain' if threshold > 0 else 'decline'}",
         you_asked=[
-            f"When {asset} drops by {abs(threshold)}%",
+            f"When {asset} {move} {abs(threshold)}%",
             f"{verb} the top {limit} coins",
-            "Rank them from biggest drop to smallest",
+            f"Rank them from {ranking}",
         ],
         steps_explained=workflow.explained_steps(),
     )
@@ -319,13 +373,11 @@ def _asset_reaction(
 
 
 def _reaction_from_text(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition, WorkflowDefinition, IntelligencePolicy]:
-    symbols = _extract_symbols(text)
-    asset = symbols[0] if symbols else "BTC"
-    return _asset_reaction(text, policy, asset, -abs(_percent(text, 2.0)), extract_listing_limit(text))
+    return _asset_reaction(text, policy, _trigger_asset(text), _percent(text, -2.0), extract_listing_limit(text))
 
 
 def _btc_reaction(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition, WorkflowDefinition, IntelligencePolicy]:
-    return _asset_reaction(text, policy, "BTC", -abs(_percent(text, 2.0)), extract_listing_limit(text))
+    return _asset_reaction(text, policy, "BTC", _percent(text, -2.0), extract_listing_limit(text))
 
 
 def _snapshot_symbols(text: str, policy: IntelligencePolicy) -> list[str]:
@@ -656,8 +708,9 @@ def workflow_from_task(task) -> WorkflowDefinition:
         except (TypeError, ValueError):
             threshold = -2.0
         metric = cond.get("metric") or "price_change_24h"
-        operator = cond.get("operator") or "<="
-        return _reaction_workflow(asset, threshold, limit, metric=metric, operator=operator)
+        operator = cond.get("operator") or ("<=" if threshold < 0 else ">=")
+        rank_order = "descending" if operator in {">", ">="} or threshold > 0 else "ascending"
+        return _reaction_workflow(asset, threshold, limit, order=rank_order, metric=metric, operator=operator)
     if task.mode == "work":
         cond = task.trigger.conditions[0] if task.trigger.conditions else None
         asset = task.trigger_asset() or (assets[0] if assets else "BTC")
