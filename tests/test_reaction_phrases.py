@@ -35,6 +35,12 @@ CASES = [
     ("when ETH pumps 4%, rank the top 10 gainers", "ETH", ">=", 4.0, 10, "descending"),
     ("alert me when BTC rises more than 5% and rank the top 30 gainers", "BTC", ">=", 5.0, 30, "descending"),
     ("when BTC climbs 3%, show the top 20 that gained the most", "BTC", ">=", 3.0, 20, "descending"),
+    ("as soon as bitcoin dips 2%, look through the top 10", "BTC", "<=", -2.0, 10, "ascending"),
+    ("when btc loses two percent, check the ten biggest coins", "BTC", "<=", -2.0, 10, "ascending"),
+    ("when BTC gains 2%, analyze the top 10", "BTC", ">=", 2.0, 10, "descending"),
+    ("the moment ETH falls 1.5%, analyze top 10", "ETH", "<=", -1.5, 10, "ascending"),
+    ("if solana dumps 3 percent, show the worst 8", "SOL", "<=", -3.0, 8, "ascending"),
+    ("should BTC slide 2%, rank the top 10 losers", "BTC", "<=", -2.0, 10, "ascending"),
 ]
 
 

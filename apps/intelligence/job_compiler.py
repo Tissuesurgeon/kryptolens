@@ -132,10 +132,10 @@ def infer_job_and_workflow(
         return _apply_edit(text, policy, current_job, current_workflow)
     if is_now_status(text):
         return _status_now(text, policy)
-    if is_gainers_ask(text) or is_losers_ask(text):
-        return _listings_rank(text, policy, "gainers" if is_gainers_ask(text) else "losers")
     if _is_reaction_watch(lowered):
         return _reaction_from_text(text, policy)
+    if is_gainers_ask(text) or is_losers_ask(text):
+        return _listings_rank(text, policy, "gainers" if is_gainers_ask(text) else "losers")
     if _is_compare_now(lowered):
         return _compare_now(text, policy)
     if _is_scheduled_brief(lowered):
@@ -164,12 +164,16 @@ def _is_edit(lowered: str) -> bool:
 
 _MOVE_RE = re.compile(
     r"\b(drops?|dropping|falls?|fell|falling|declin\w*|crashes?|crash|dumps?|dumping|loses|lose|lost|"
-    r"down|rises?|rising|climbs?|climbing|pumps?|pumping|surges?|surging|rall(?:y|ies|ing))\b",
+    r"dips?|slides?|tumbles?|sinks?|down|rises?|rising|climbs?|climbing|pumps?|pumping|"
+    r"surges?|surging|rall(?:y|ies|ing)|gains?|gained)\b",
     re.I,
 )
-_WHEN_RE = re.compile(r"\b(when|if|whenever|once|after|every time|each time)\b", re.I)
+_WHEN_RE = re.compile(
+    r"\b(when|if|whenever|once|after|every time|each time|as soon as|the moment)\b",
+    re.I,
+)
 _ACTION_RE = re.compile(
-    r"\b(analy[sz]e|check|rank|show|list|investigat\w*|look at|what happens|react\w*|affect\w*|gainers|declines)\b",
+    r"\b(analy[sz]e|check|rank|show|list|investigat\w*|look at|look through|what happens|react\w*|affect\w*|gainers|declines)\b",
     re.I,
 )
 
@@ -184,11 +188,18 @@ def _has_reaction_percent(lowered: str) -> bool:
     return extract_percent(lowered) is not None
 
 
+_UNIVERSE_WORD = (
+    r"one|two|three|four|five|six|seven|eight|nine|ten|twelve|fifteen|twenty|thirty|fifty|hundred"
+)
+
+
 def _has_reaction_universe(lowered: str) -> bool:
     if re.search(
-        r"\b(?:top|worst|best|bottom)\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|twelve|fifteen|twenty|thirty|fifty|hundred)\b",
+        rf"\b(?:top|worst|best|bottom)\s+(?:\d+|{_UNIVERSE_WORD})\b",
         lowered,
     ):
+        return True
+    if re.search(rf"\b(?:the\s+)?(?:\d+|{_UNIVERSE_WORD})\s+(?:biggest|largest)\b", lowered):
         return True
     if "top" in lowered and any(token in lowered for token in ("coin", "asset", "altcoin")):
         return True

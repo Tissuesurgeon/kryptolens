@@ -158,8 +158,17 @@ _NUMBER_WORDS = {
 
 
 def _parse_listing_limit(text: str) -> int | None:
-    matches = re.findall(r"\b(?:top|worst|best|bottom)\s+(\d+|[a-z]+)\b", text, flags=re.I)
-    for raw in reversed(matches):
+    pattern = re.compile(
+        r"\b(?:top|worst|best|bottom)\s+(\d+|[a-z]+)\b"
+        r"|\b(?:the\s+)?(\d+|[a-z]+)\s+(?:biggest|largest)\b",
+        re.I,
+    )
+    found: list[str] = []
+    for match in pattern.finditer(text):
+        raw = match.group(1) or match.group(2)
+        if raw:
+            found.append(raw)
+    for raw in reversed(found):
         if raw.isdigit():
             return max(1, min(int(raw), 500))
         number = _NUMBER_WORDS.get(raw.lower())
@@ -205,7 +214,7 @@ def signed_percent(text: str, default: float = -2.0) -> float:
     )
     drop = bool(
         re.search(
-            r"\b(drops?|dropping|falls?|fell|falling|declin\w*|down|crashes?|crash|dumps?|dumping|loses|lose|lost|below)\b",
+            r"\b(drops?|dropping|falls?|fell|falling|declin\w*|down|crashes?|crash|dumps?|dumping|loses|lose|lost|dips?|slides?|tumbles?|sinks?|below)\b",
             lowered,
         )
     )
