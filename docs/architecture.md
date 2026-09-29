@@ -25,7 +25,7 @@ Run now creates a `LensRun` (`stage=queued`), queues the same Celery task, and r
 
 - Policy JSON field names stay frozen: `metrics`, `asset_conditions`, `market_context`. UI copy may say “Signals.”
 - No mock CoinMarketCap data on the product path. Fixtures live under `tests/fixtures/`.
-- The LLM understands the user message into a ResearchTask. Heuristics run only when the provider is non-LLM, the call fails, or the JSON is invalid. A valid task is not rewritten by a keyword detector. ResearchPlanner names capabilities and tools that already exist. It does not call CMC. ClarifiedTask is the compiler adapter.
+- The LLM understands the user message into a ResearchTask. Heuristics run only when the provider is non-LLM, the call fails, or the JSON is invalid. A valid task is not rewritten by a keyword detector. ResearchPlanner names capabilities and tools that already exist. It does not call CMC. ClarifiedTask is the compiler adapter. AgentRuntime executes the stored CapabilityPlan. It does not build a second plan from the sentence, and BTC is not a separate planning step.
 - Capabilities are internal analytical modules. `onchain` / `defi` / `risk` / `security` are architectural boundaries, not personas. News is CMC Content Latest.
 - Scoring is deterministic (`apps/intelligence/scoring.py`). The engine calls it; `evaluate_policy` is not replaced.
 - Zero events is a successful scan. The summary is persisted so the workspace can say so.

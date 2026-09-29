@@ -32,12 +32,15 @@ def routine_live_status(lens: Lens, routine: Routine | None, adapter: CMCAdapter
     client = adapter or CMCAdapter(api_key=settings.CMC_API_KEY)
     permissions = version.tool_permissions() if version else DEFAULT_TOOL_PERMISSIONS
     try:
-        call = dispatch_cmc(client, "get_quotes", permissions, symbols=[trigger.asset or "BTC"])
+        if not trigger.asset:
+            payload["error"] = "This watch has no asset."
+            return payload
+        call = dispatch_cmc(client, "get_quotes", permissions, symbols=[trigger.asset])
     except CMCError as exc:
         payload["error"] = str(exc)
         return payload
     observations = normalize_listings(call.payload)
-    symbol = (trigger.asset or "BTC").upper()
+    symbol = trigger.asset.upper()
     observation = next((item for item in observations if item.symbol.upper() == symbol), None)
     if observation is None:
         payload["error"] = "No live quote for the trigger asset."

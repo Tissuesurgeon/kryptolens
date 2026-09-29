@@ -198,7 +198,8 @@ def test_agent_runtime_golden_btc_os_path():
     assert job.category == "investigate"
     assert version.job_definition_json
     assert AgentTask.objects.filter(lens=lens, assigned_agent="chief").exists()
-    assert AgentTask.objects.filter(lens=lens, assigned_agent="market").exists()
+    plan_artifact = Artifact.objects.filter(lens=lens, lens_run=run, kind="plan").first()
+    assert plan_artifact.payload_json.get("specialist") is None
     evidence = list(Evidence.objects.filter(lens=lens, lens_run=run))
     assert evidence
     assert any(item.observation_ids for item in evidence)

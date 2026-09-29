@@ -47,7 +47,7 @@ def verify_result(result, workflow: WorkflowDefinition | None, plan: AgentPlan |
 def _default_requirements(workflow: WorkflowDefinition | None, result) -> list[str]:
     reqs: list[str] = []
     if workflow and workflow.trigger and workflow.trigger.asset:
-        reqs.append("btc_trigger_verified" if workflow.trigger.asset.upper() == "BTC" else "trigger_verified")
+        reqs.append("trigger_verified")
     if result.kind == "ranked_table":
         reqs.extend(["assets_loaded", "decline_calculation_verified", "ranking_verified", "required_fields_present"])
     elif result.kind in {"comparison", "market_summary", "news_brief"}:

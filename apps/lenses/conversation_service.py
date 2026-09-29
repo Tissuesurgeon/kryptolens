@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from apps.intelligence.agent import ChiefAgent
 from apps.intelligence.clarified_task import ClarifiedTask
 from apps.intelligence.compiler import infer_you_asked
 from apps.intelligence.conversation_agent import ConversationAgent
-from apps.intelligence.job_compiler import compile_job_report
 from apps.intelligence.policy import policy_diff
-from apps.intelligence.task_compiler import compile_from_task
+from apps.intelligence.research.planner import ResearchPlanner
+from apps.intelligence.research.task import ResearchTask
+from apps.intelligence.task_compiler import compile_from_task, compile_message
 from apps.lenses.agent_service import AgentService
 from apps.lenses.conversation import add_item, ensure_conversation, is_visible_thread_item
 from apps.lenses.models import Lens
@@ -212,22 +212,29 @@ class ConversationService:
         if turn.status == "needs_input" and turn.task:
             add_item(lens, "user_message", {"text": text})
             add_item(lens, "assistant_message", {"text": turn.question, "clarifying": True})
-            ConversationService._store_pending(lens, turn.task)
+            ConversationService._store_pending(lens, turn.task, research=turn.research)
             return ChatResult(kind="needs_input")
         ConversationService._clear_pending(lens)
         task = turn.task
-        if not task:
+        if turn.research:
+            research_task = ResearchTask.model_validate(turn.research)
+        elif task:
+            research_task = ResearchTask.from_clarified(task, session_id=research.ensure_session())
+        else:
+            research_task = None
+        if not research_task:
             return ChatResult(kind="error", flash="Give this Lens a job.", flash_level="error")
-        research_task = ResearchTask.from_clarified(task, session_id=research.ensure_session())
-        research_plan, plan = ChiefAgent().plan(research_task, research)
+        research_task.id = research_task.id or research.ensure_session()
+        research_plan, plan = ResearchPlanner().plan(research_task, research)
         report = compile_from_task(
-            task,
+            research_task,
             capability_plan=plan,
             current_policy=current_policy,
             current_job=current_job,
             current_workflow=current_workflow,
         )
         report["research_plan"] = research_plan.model_dump(mode="json")
+        report["research_task"] = research_task.model_dump(mode="json")
         research.apply_task(research_task, report["research_plan"])
         lens.context_json = research.dump_into(lens.context_json)
         lens.save(update_fields=["context_json", "updated_at"])
@@ -239,15 +246,15 @@ class ConversationService:
         job = report.get("job")
         if job and job.news_unavailable:
             return ConversationService._reply_news(lens, text)
-        if task.mode == "ask" and current_job and current_job.is_persistent():
+        if research_task.mode == "ask" and current_job and current_job.is_persistent():
             add_item(lens, "user_message", {"text": text})
             return ConversationService._begin_ask(lens, report)
         if not version:
-            attach_compiled_job(lens, text, report, persist_routine=task.mode == "work")
-            if task.mode == "ask":
+            attach_compiled_job(lens, text, report, persist_routine=research_task.mode == "work")
+            if research_task.mode == "ask":
                 return ConversationService._begin_ask(lens, report)
-            return ConversationService._begin_work(lens, persistent=task.mode == "work")
-        if task.mode == "work":
+            return ConversationService._begin_work(lens, persistent=research_task.mode == "work")
+        if research_task.mode == "work":
             version, diffs = apply_compiled_edit(
                 lens,
                 text,
@@ -286,16 +293,15 @@ class ConversationService:
             task.task_type = "watch_plus_investigate" if task.trigger_conditions else "persistent_monitor"
         if "anomaly" not in task.capabilities and "reaction" not in task.capabilities:
             task.capabilities = list(dict.fromkeys(list(task.capabilities) + ["anomaly", "market"]))
-        clarified = task.to_clarified()
         version = lens.current_version()
         current_job = version.as_job() if version else None
         try:
             current_workflow = version.as_workflow() if version else None
         except Exception:
             current_workflow = None
-        research_plan, plan = ChiefAgent().plan(task, research)
+        research_plan, plan = ResearchPlanner().plan(task, research)
         report = compile_from_task(
-            clarified,
+            task,
             capability_plan=plan,
             current_policy=lens.current_policy(),
             current_job=current_job,
@@ -330,6 +336,9 @@ class ConversationService:
                 "job": job.model_dump(mode="json") if job else {},
                 "capabilities": report.get("capabilities") or [],
                 "clarified_task": report.get("clarified_task") or {},
+                "capability_plan": report.get("capability_plan") or {},
+                "research_plan": report.get("research_plan") or {},
+                "research_task": report.get("research_task") or {},
             },
             workflow=report.get("workflow"),
             objective=job.purpose if job else "",
@@ -339,11 +348,14 @@ class ConversationService:
         return ChatResult(kind="run", run=run)
 
     @staticmethod
-    def _store_pending(lens: Lens, task: ClarifiedTask) -> None:
+    def _store_pending(lens: Lens, task: ClarifiedTask | None, research: dict | None = None) -> None:
         context = dict(lens.context_json or {})
+        stored = research
+        if not stored and task is not None:
+            stored = ResearchTask.from_clarified(task).model_dump(mode="json")
         context["pending_task"] = {
-            "task": task.model_dump(mode="json"),
-            "pending_field": task.pending_field,
+            "task": stored or {},
+            "pending_field": (stored or {}).get("pending_field") or (task.pending_field if task else ""),
         }
         lens.context_json = context
         lens.save(update_fields=["context_json", "updated_at"])
@@ -402,12 +414,26 @@ class ConversationService:
         if not current:
             return ChatResult(kind="error", flash="This Lens has no job definition yet.", flash_level="error")
         version = lens.current_version()
-        report = compile_job_report(
+        from apps.intelligence.research.context import ResearchContext
+
+        report = compile_message(
             text,
             current_policy=current,
             current_job=version.as_job() if version else None,
             current_workflow=version.as_workflow() if version else None,
+            research_context=ResearchContext.from_json(lens.context_json),
         )
+        if not report.get("job"):
+            from apps.intelligence.job_compiler import compile_job_report
+
+            report = compile_job_report(
+                text,
+                current_policy=current,
+                current_job=version.as_job() if version else None,
+                current_workflow=version.as_workflow() if version else None,
+            )
+        if not report.get("policy"):
+            return ChatResult(kind="needs_input", flash=report.get("clarification") or "I need a clearer request.")
         return ChatResult(kind="preview", preview=report["policy"], diffs=policy_diff(current, report["policy"]), draft=text)
 
     @staticmethod

@@ -90,12 +90,23 @@ class RoutineService:
     @staticmethod
     def proposal_payload(lens: Lens, text: str) -> dict:
         version = lens.current_version()
-        report = compile_job_report(
+        from apps.intelligence.research.context import ResearchContext
+        from apps.intelligence.task_compiler import compile_message
+
+        report = compile_message(
             text,
             current_policy=lens.current_policy(),
             current_job=version.as_job() if version else None,
             current_workflow=version.as_workflow() if version else None,
+            research_context=ResearchContext.from_json(lens.context_json),
         )
+        if not report.get("job"):
+            report = compile_job_report(
+                text,
+                current_policy=lens.current_policy(),
+                current_job=version.as_job() if version else None,
+                current_workflow=version.as_workflow() if version else None,
+            )
         job = report.get("job")
         workflow = report.get("workflow")
         trigger = workflow.trigger if workflow else None

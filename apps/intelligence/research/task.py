@@ -49,6 +49,15 @@ class ResearchTask(BaseModel):
             self.id = uuid.uuid4().hex[:12]
         return self.id
 
+    def trigger_asset(self) -> str | None:
+        for item in self.trigger_conditions:
+            asset = str(item.get("asset") or "").strip().upper()
+            if asset:
+                return asset
+        if self.assets:
+            return str(self.assets[0]).upper()
+        return None
+
     def to_clarified(self) -> ClarifiedTask:
         return ClarifiedTask(
             status=self.status,

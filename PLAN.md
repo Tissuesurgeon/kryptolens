@@ -6,18 +6,19 @@ Authenticated persistent-agent workspace. There is no demo product.
 
 KryptoLens is a persistent crypto intelligence workspace where users create Lenses, talk to them in natural language, give them crypto-market jobs, and leave those jobs running against live market data. There is no demo product. Current capability is live CoinMarketCap market intelligence only.
 
-A Lens is the teammate. Chief Agent plans. Workflow executes.
+A Lens is the stored analyst. ResearchPlanner plans from a ResearchTask. Workflow executes that plan.
 
 ## Hierarchy
 
 ```
-User instruction → ConversationAgent → ClarifiedTask → ChiefAgent → Job + AgentPlan
-  → PlanValidator → Workflow
-    → AgentRuntime → AgentTask → LensRuntime
-      → Crypto Tool Layer → CMC
-      → Observation rows → capabilities → Evidence → Verification → Result
-      → Response LLM → Conversation
+User message → Conversation understanding → ResearchTask
+  → ResearchPlanner → CapabilityPlan + ResearchPlan
+    → execution compiler → Job + Workflow
+      → ResearchRuntime (AgentRuntime) → LensRuntime → CMC
+        → Observations → capabilities → Finding → Evidence → Verification → Response
 ```
+
+ClarifiedTask, AgentPlan, and ChiefAgent remain compatibility adapters. They do not re-read the user's sentence after a ResearchTask exists. BTC has no separate planning step.
 
 Events are only one kind of Result. Policy remains the deterministic evaluator for trigger-only Lenses via `MonitoringService.run_lens`.
 

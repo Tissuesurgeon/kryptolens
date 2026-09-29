@@ -175,8 +175,6 @@ def policy_from_understanding(understanding: Understanding, text: str) -> Intell
     if understanding.kind in {"snapshot", "compare", "watch"} or (
         understanding.kind == "watch_plus_workflow" and symbols and not understanding.listing_limit
     ):
-        if not symbols:
-            symbols = ["BTC"]
         universe = {
             "type": "symbols",
             "limit": 100,
@@ -223,7 +221,7 @@ def _asked(understanding: Understanding, text: str) -> list[str]:
 def _snapshot(text: str, understanding: Understanding, policy: IntelligencePolicy):
     from apps.intelligence.job_compiler import _snapshot_workflow
 
-    symbols = policy.universe.symbols or understanding.symbols or ["BTC"]
+    symbols = list(policy.universe.symbols or understanding.symbols or [])
     workflow = _snapshot_workflow(list(symbols))
     job = JobDefinition(
         purpose=understanding.purpose or f"Report how {' and '.join(symbols)} is doing from live CMC quotes.",
@@ -238,9 +236,7 @@ def _snapshot(text: str, understanding: Understanding, policy: IntelligencePolic
 
 
 def _compare(text: str, understanding: Understanding, policy: IntelligencePolicy):
-    symbols = policy.universe.symbols or understanding.symbols or ["BTC", "ETH"]
-    if len(symbols) < 2:
-        symbols = (symbols + ["BTC", "ETH"])[:2]
+    symbols = list(policy.universe.symbols or understanding.symbols or [])
     policy = policy.model_copy(
         update={"universe": policy.universe.model_copy(update={"type": "symbols", "symbols": symbols})}
     )
@@ -299,7 +295,8 @@ def _watch(text: str, understanding: Understanding, policy: IntelligencePolicy):
         )
     workflow = WorkflowDefinition(trigger=trigger, steps=[])
     cond = policy.asset_conditions[0] if policy.asset_conditions else None
-    asset = (policy.universe.symbols or ["BTC"])[0]
+    symbols = list(policy.universe.symbols or [])
+    asset = symbols[0] if symbols else ""
     job = JobDefinition(
         purpose=understanding.purpose or policy.summary or text.strip(),
         summary=text.strip(),
@@ -316,7 +313,7 @@ def _watch_plus(text: str, understanding: Understanding, policy: IntelligencePol
     limit = understanding.listing_limit or policy.universe.limit or extract_listing_limit(text)
     trigger = understanding.trigger
     threshold = float(trigger.value) if trigger and trigger.value is not None else -2.0
-    asset = (trigger.asset if trigger else "BTC") or "BTC"
+    asset = (trigger.asset if trigger else "") or ""
     operator = trigger.operator if trigger else "<="
     metric = trigger.metric if trigger else "price_change_24h"
     workflow = WorkflowDefinition(

@@ -78,7 +78,9 @@ def execute_steps(
             listings_fetched = True
         elif step.type == "get_quotes":
             run.set_stage("fetching_cmc")
-            symbols = list(step.symbols or []) or symbols_from_items(news_items) or ["BTC"]
+            symbols = list(step.symbols or []) or symbols_from_items(news_items)
+            if not symbols:
+                continue
             call = dispatch_cmc(adapter, "get_quotes", permissions, symbols=symbols)
             persist_call(call, run)
             tools_used.append("get_quotes")

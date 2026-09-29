@@ -111,7 +111,7 @@ def understand(
     text = (text or "").strip()
     provider = provider or get_provider()
     if pending:
-        return _merge_answer(text, pending, current_job=current_job, provider=provider, history=history)
+        return _attach_research(_merge_answer(text, pending, current_job=current_job, provider=provider, history=history))
     if provider_is_llm(provider):
         try:
             result = _understand_llm(
@@ -125,16 +125,18 @@ def understand(
             if _is_reaction_watch(text.lower()):
                 result = _understand_heuristic(text, current_job=current_job)
             else:
-                return _ask(text, "I couldn't read that message. Send it again.", pending_field="subject")
-    else:
-        if research_context is not None:
-            from apps.intelligence.research.context import resolve_follow_up
+                result = _ask(text, "I couldn't read that message. Send it again.", pending_field="subject")
+            return _attach_research(_lock_reaction_turn(text, result))
+        # A valid model task is authoritative. Heuristics do not rewrite it.
+        return _attach_research(result)
+    if research_context is not None:
+        from apps.intelligence.research.context import resolve_follow_up
 
-            followed = resolve_follow_up(text, research_context)
-            if followed is not None:
-                return _lock_reaction_turn(text, followed)
-        result = _understand_heuristic(text, current_job=current_job)
-    return _lock_reaction_turn(text, result)
+        followed = resolve_follow_up(text, research_context)
+        if followed is not None:
+            return _attach_research(_lock_reaction_turn(text, followed))
+    result = _understand_heuristic(text, current_job=current_job)
+    return _attach_research(_lock_reaction_turn(text, result))
 
 
 class ConversationAgent:
@@ -178,16 +180,28 @@ def _understand_llm(text: str, *, history, current_job, provider, research_conte
         task.status = "needs_input"
         task.question = question
         task.pending_field = data.get("pending_field") or task.pending_field or "unusual_definition"
-        return TurnResult(status="needs_input", question=question, task=task)
+        return _attach_research(
+            TurnResult(status="needs_input", question=question, task=task),
+            metrics=data.get("metrics"),
+            comparisons=data.get("comparisons"),
+        )
     if _nothing_to_fetch(task):
         question = (data.get("question") or task.objective or "").strip()
         if not question:
             raise ValueError("LLM returned a ready task with nothing to look up")
         task.status = "needs_input"
         task.question = question
-        return TurnResult(status="needs_input", question=question, task=task)
+        return _attach_research(
+            TurnResult(status="needs_input", question=question, task=task),
+            metrics=data.get("metrics"),
+            comparisons=data.get("comparisons"),
+        )
     task.status = "ready"
-    return TurnResult(status="ready", task=task)
+    return _attach_research(
+        TurnResult(status="ready", task=task),
+        metrics=data.get("metrics"),
+        comparisons=data.get("comparisons"),
+    )
 
 
 def _nothing_to_fetch(task: ClarifiedTask) -> bool:
@@ -254,7 +268,7 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             text,
             mode="ask",
             task_type="news_brief",
-            assets=assets or ["BTC"],
+            assets=assets,
             action="report",
             capabilities=["market"],
             objective="Relate CoinMarketCap headlines to live quotes.",
@@ -299,6 +313,8 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
         from apps.intelligence.job_compiler import _trigger_asset
 
         asset = _trigger_asset(text)
+        if not asset:
+            return _ask(text, "Which coin should I watch?", pending_field="subject")
         trigger = _price_trigger(text, asset)
         return _ready(
             text,
@@ -313,6 +329,32 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             requested_output="ranked_table",
             trigger_conditions=[trigger],
             assumptions=[f"Trigger is {asset} 24h change {trigger['operator']} {trigger['value']}%."],
+        )
+    year = _calendar_year(text)
+    if year and assets and any(word in lowered for word in ("perform", "during", "throughout", "over")):
+        return _ready(
+            text,
+            mode="ask",
+            task_type="one_shot_research",
+            assets=assets[:4],
+            window=year,
+            action="report",
+            capabilities=["historical", "market"],
+            objective=f"Review how {' and '.join(assets[:4])} performed during {year} from CoinMarketCap history.",
+            assumptions=["Historical observations, not a prediction."],
+        )
+    if _is_market_cap_list(lowered):
+        return _ready(
+            text,
+            mode="ask",
+            task_type="one_shot_research",
+            assets=[],
+            universe="top_100",
+            listing_limit=_listing_limit(text),
+            action="report",
+            capabilities=["market", "discovery"],
+            objective="List the top cryptocurrencies by market cap from live CoinMarketCap listings.",
+            requested_output="ranked_table",
         )
     if window and assets:
         return _ready(
@@ -340,17 +382,19 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             objective=f"Report how {' and '.join(assets)} is doing from live CMC quotes.",
             assumptions=[f"Interpreted named asset as {', '.join(assets)}."] if assets else [],
         )
+    if (_is_compare_now(lowered) or len(assets) >= 2) and not assets:
+        return _ask(text, "Which coins should I compare?", pending_field="subject")
     if _is_compare_now(lowered) or len(assets) >= 2:
         caps = ["historical", "market"] if window else ["market"]
         return _ready(
             text,
             mode="ask",
             task_type="one_shot_research",
-            assets=assets[:4] or ["BTC", "ETH"],
+            assets=assets[:4],
             window=window,
             action="report",
             capabilities=caps,
-            objective=f"Compare {' and '.join(assets[:4] or ['BTC', 'ETH'])} from live CMC quotes.",
+            objective=f"Compare {' and '.join(assets[:4])} from live CMC quotes." if assets else "Compare the named coins from live CMC quotes.",
             assumptions=["comparable observations, not a prediction."] if window else [],
         )
     if is_gainers_ask(text) or is_losers_ask(text):
@@ -379,7 +423,9 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             objective="Flag assets with unusual attention, volume, and rank together.",
         )
     if _needs_unusual_question(lowered) and not _has_threshold(text):
-        asset = assets[0] if assets else "BTC"
+        if not assets:
+            return _ask(text, "Which coin should I watch?", pending_field="subject")
+        asset = assets[0]
         question = UNUSUAL_QUESTION.replace("move", f"{asset} move")
         task = ClarifiedTask(
             status="needs_input",
@@ -405,6 +451,8 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             capabilities=["market"],
             objective=f"Report how {' and '.join(assets)} is doing from live CMC quotes.",
         )
+    if _looks_like_watch(lowered) and _has_threshold(text) and not assets:
+        return _ask(text, "Which coin should I watch?", pending_field="subject")
     if _looks_like_watch(lowered) and _has_threshold(text):
         action = (
             "investigate_market_reaction"
@@ -419,7 +467,7 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             action=action,
             capabilities=["anomaly", "market", "reaction"] if action == "investigate_market_reaction" else ["anomaly", "market"],
             objective=text.strip(),
-            trigger_conditions=[_price_trigger(text, assets[0] if assets else "BTC")],
+            trigger_conditions=[_price_trigger(text, assets[0])],
         )
     if "keep an eye on" in lowered and assets and not _has_threshold(text):
         question = f"What change in {assets[0]} should I watch for?"
@@ -453,6 +501,19 @@ def _understand_heuristic(text: str, *, current_job: JobDefinition | None = None
             capabilities=["market", "discovery"],
         )
         return TurnResult(status="needs_input", question=question, task=task)
+    if _explicit_decline_list(text):
+        return _ready(
+            text,
+            mode="ask",
+            task_type="one_shot_research",
+            assets=[],
+            universe="top_100",
+            listing_limit=_listing_limit(text),
+            action="rank_declines",
+            capabilities=["market", "discovery"],
+            objective="Rank listings by the largest 24h decline from live CMC data.",
+            requested_output="ranked_table",
+        )
     if not assets:
         question = "What should I research? Name an asset, a ranking, or a condition to watch."
         task = ClarifiedTask(
@@ -494,7 +555,7 @@ def _merge_answer(
 
 
 def _merge_answer_llm(text: str, pending: dict, *, current_job, provider, history) -> TurnResult:
-    draft = ClarifiedTask.model_validate(pending.get("task") or pending)
+    draft = _pending_clarified(pending)
     prompt = MERGE_SYSTEM
     prompt += "\n\nOriginal task JSON:\n" + draft.model_dump_json()
     prompt += "\n\nClarification question:\n" + (draft.question or pending.get("pending_field") or "")
@@ -529,11 +590,14 @@ def _merge_answer_llm(text: str, pending: dict, *, current_job, provider, histor
 
 
 def _merge_answer_heuristic(text: str, pending: dict, current_job: JobDefinition | None = None) -> TurnResult:
-    draft = ClarifiedTask.model_validate(pending.get("task") or pending)
+    draft = _pending_clarified(pending)
     field = pending.get("pending_field") or draft.pending_field or "unusual_definition"
     lowered = text.lower()
     if field == "unusual_definition":
-        conditions = _parse_unusual(text, draft.scope.assets[0] if draft.scope.assets else "BTC")
+        asset = draft.scope.assets[0] if draft.scope.assets else ""
+        if not asset:
+            return _ask(text, "Which coin should I watch?", pending_field="subject")
+        conditions = _parse_unusual(text, asset)
         if not conditions:
             question = UNUSUAL_QUESTION
             draft.question = question
@@ -778,6 +842,50 @@ def _signed_percent(text: str, default: float) -> float:
     from apps.intelligence.compiler import signed_percent
 
     return signed_percent(text, default)
+
+
+def _pending_clarified(pending: dict) -> ClarifiedTask:
+    raw = pending.get("task") or pending
+    if isinstance(raw, dict) and "scope" not in raw and "assets" in raw:
+        from apps.intelligence.research.task import ResearchTask
+
+        return ResearchTask.model_validate(raw).to_clarified()
+    return ClarifiedTask.model_validate(raw)
+
+
+def _attach_research(result: TurnResult, *, metrics=None, comparisons=None, follow_up: bool = False) -> TurnResult:
+    """Record the canonical ResearchTask. Leave the ClarifiedTask adapter in place."""
+    if result.research or result.task is None:
+        return result
+    from apps.intelligence.research.task import ResearchTask
+
+    research = ResearchTask.from_clarified(result.task, follow_up=follow_up)
+    if metrics:
+        research.metrics = [str(item) for item in metrics if item]
+    if comparisons:
+        research.comparisons = [str(item) for item in comparisons if item]
+    result.research = research.model_dump(mode="json")
+    return result
+
+
+def _calendar_year(text: str) -> str:
+    match = re.search(r"\b(20\d{2})\b", text)
+    return match.group(1) if match else ""
+
+
+def _explicit_decline_list(text: str) -> bool:
+    from apps.intelligence.compiler import has_explicit_listing_limit
+
+    lowered = text.lower()
+    if not has_explicit_listing_limit(text):
+        return False
+    return any(word in lowered for word in ("drop", "declin", "fell", "loser", "down"))
+
+
+def _is_market_cap_list(lowered: str) -> bool:
+    if "market cap" not in lowered and "cryptocurrenc" not in lowered:
+        return False
+    return "top" in lowered or "largest" in lowered or "biggest" in lowered
 
 
 def _lock_reaction_turn(text: str, result: TurnResult) -> TurnResult:

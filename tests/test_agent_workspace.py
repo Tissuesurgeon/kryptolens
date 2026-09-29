@@ -132,7 +132,7 @@ def test_routine_run_now_unmet_trigger_is_no_result():
     assert run.status == "ok"
     result = Result.objects.get(lens=lens)
     assert result.kind == "no_result"
-    assert "Trigger condition not met" in result.payload_json["message"]
+    assert "drops 2%" in result.payload_json["message"]
     assert result.payload_json["actual"] == 1.4
     assert run.cmc_calls.exists()
 

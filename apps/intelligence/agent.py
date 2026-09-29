@@ -107,8 +107,6 @@ def validate_agent_plan(plan: AgentPlan, permissions: dict | None = None) -> Age
         if plan.steps or plan.tools:
             raise PlanValidationError("unavailable specialists cannot emit an executable plan")
         return plan
-    if not plan.specialist:
-        plan.specialist = "market"
     for tool in plan.tools:
         if not tool_in_registry(tool):
             raise PlanValidationError(f"unknown tool: {tool}")
@@ -154,14 +152,11 @@ def build_agent_plan(job: JobDefinition | None, workflow: WorkflowDefinition | N
 
     if workflow.trigger and workflow.trigger.asset:
         asset = workflow.trigger.asset.upper()
-        if asset == "BTC":
-            steps.append("check_btc")
-        else:
-            steps.append("watch_trigger")
+        steps.append("watch_trigger")
         if "get_quotes" not in tools:
             tools.append("get_quotes")
         required.append(asset)
-        verification.append("btc_trigger_verified" if asset == "BTC" else "trigger_verified")
+        verification.append("trigger_verified")
 
     limit = 100
     for step in workflow.steps:
@@ -308,6 +303,27 @@ class ChiefAgent(ResearchPlanner):
     """Plans from an understood research task. Does not interpret language and does not call CMC."""
 
     def plan_from_text(
+        self,
+        text: str,
+        provider=None,
+        current_policy=None,
+        current_job: JobDefinition | None = None,
+        current_workflow: WorkflowDefinition | None = None,
+    ) -> tuple[AgentPlan, dict]:
+        """Compatibility reader for tests. Production chat does not call this.
+
+        It recompiles natural language, which is a second planner. New research
+        goes through ResearchPlanner.plan.
+        """
+        return self._plan_from_text_compat(
+            text,
+            provider=provider,
+            current_policy=current_policy,
+            current_job=current_job,
+            current_workflow=current_workflow,
+        )
+
+    def _plan_from_text_compat(
         self,
         text: str,
         provider=None,

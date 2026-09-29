@@ -13,8 +13,8 @@ class ResearchPlanner:
     """Selects capabilities and tools that already exist. Does not call CMC."""
 
     def plan(self, task, context=None, report: dict | None = None):
-        _ = context
         research_task = task if isinstance(task, ResearchTask) else ResearchTask.from_clarified(task)
+        research_task = _inherit(research_task, context)
         clarified = research_task.to_clarified()
         capabilities = list(clarified.capabilities or _default_capabilities(clarified))
         workflow = workflow_from_task(clarified)
@@ -38,6 +38,24 @@ class ResearchPlanner:
             research_task,
         )
         return research_plan, capability_plan
+
+
+def _inherit(task: ResearchTask, context) -> ResearchTask:
+    """Fill only fields the follow-up left blank. A fresh task is left alone."""
+    if context is None or not task.follow_up:
+        return task
+    if not task.window and getattr(context, "timeframe", ""):
+        task.window = context.timeframe
+        task.capabilities = list(dict.fromkeys(list(task.capabilities) + ["historical", "market"]))
+    if not task.assets and getattr(context, "active_entities", None):
+        task.assets = list(context.active_entities)
+    if not task.universe and getattr(context, "universe", ""):
+        task.universe = context.universe
+    if not task.metrics and getattr(context, "metrics", None):
+        task.metrics = list(context.metrics)
+    if not task.comparisons and getattr(context, "comparisons", None):
+        task.comparisons = list(context.comparisons)
+    return task
 
 
 def _default_capabilities(task) -> list[str]:

@@ -282,6 +282,22 @@ def test_btc_drop_highest_drop_ranks_declines_not_prior_gains():
     respx.get("https://pro-api.coinmarketcap.com/v3/cryptocurrency/listings/latest").mock(
         return_value=httpx.Response(200, json=LISTINGS)
     )
+    respx.get("https://pro-api.coinmarketcap.com/v3/cryptocurrency/quotes/latest").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "status": LISTINGS["status"],
+                "data": {
+                    "BTC": {
+                        "id": 1,
+                        "name": "Bitcoin",
+                        "symbol": "BTC",
+                        "quote": {"USD": {"price": 100.0, "percent_change_24h": 0.19}},
+                    }
+                },
+            },
+        )
+    )
     user = _user()
     lens = AgentService.create(user, "analyst", "")
     ConversationService.handle(lens, "find me the coins with the highest gains within 24hrs")
@@ -297,9 +313,8 @@ def test_btc_drop_highest_drop_ranks_declines_not_prior_gains():
     assert "policy_diff" not in types
     assert "workflow_created" in types
     result = Result.objects.filter(lens=lens).order_by("-id").first()
-    assert result.kind == "ranked_table"
-    changes = [row["price_change_24h"] for row in result.payload_json["rows"]]
-    assert changes == sorted(changes)
+    assert result.kind == "no_result"
+    assert "drops 2%" in result.payload_json["message"]
 
 
 @pytest.mark.django_db

@@ -65,3 +65,5 @@ class TurnResult(BaseModel):
     status: TaskStatus
     question: str = ""
     task: ClarifiedTask | None = None
+    # Canonical research task. `task` is the ClarifiedTask adapter for existing callers.
+    research: dict | None = None

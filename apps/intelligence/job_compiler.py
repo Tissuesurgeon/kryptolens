@@ -206,7 +206,7 @@ def _trigger_asset(text: str) -> str:
 
     symbols = _extract_symbols(text)
     if not symbols:
-        return "BTC"
+        return ""
     if len(symbols) == 1:
         return symbols[0]
     lowered = text.lower()
@@ -262,7 +262,9 @@ def _reaction_workflow(
     metric: str = "price_change_24h",
     operator: str = "<=",
 ) -> WorkflowDefinition:
-    asset = (asset or "BTC").upper()
+    asset = (asset or "").upper()
+    if not asset:
+        return WorkflowDefinition()
     return WorkflowDefinition(
         trigger=WorkflowTrigger(
             type="asset_condition",
@@ -325,7 +327,9 @@ def _asset_reaction(
     limit: int,
     order: str = "ascending",
 ) -> tuple[JobDefinition, WorkflowDefinition, IntelligencePolicy]:
-    asset = (asset or "BTC").upper()
+    asset = (asset or "").upper()
+    if not asset:
+        return JobDefinition(purpose=text.strip() or "Watch a named coin."), WorkflowDefinition(), policy
     operator = ">=" if threshold > 0 else "<="
     order = "descending" if threshold > 0 else order
     policy = IntelligencePolicy.model_validate(
@@ -395,11 +399,19 @@ def _snapshot_symbols(text: str, policy: IntelligencePolicy) -> list[str]:
         symbols.append("BTC")
     if "ETHEREUM" in lowered and "ETH" not in symbols:
         symbols.append("ETH")
-    return symbols[:4] or ["BTC"]
+    return symbols[:4]
 
 
 def _status_now(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition, WorkflowDefinition, IntelligencePolicy]:
     symbols = _snapshot_symbols(text, policy)
+    if not symbols:
+        job = JobDefinition(
+            purpose=text.strip() or "Name a coin to quote.",
+            summary=text.strip(),
+            execution_model="task",
+            you_asked=[text.strip()] if text.strip() else [],
+        )
+        return job, WorkflowDefinition(), policy
     policy = policy.model_copy(
         update={
             "name": f"{symbols[0]} now",
@@ -431,7 +443,7 @@ def _compare_now(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition, 
         for symbol in ("BTC", "ETH", "SOL", "XRP"):
             if re.search(rf"\b{symbol}\b", lowered) and symbol not in symbols:
                 symbols.append(symbol)
-        symbols = symbols[:4] or ["BTC", "ETH"]
+        symbols = symbols[:4]
     policy = policy.model_copy(
         update={
             "name": " vs ".join(symbols),
@@ -515,7 +527,8 @@ def _morning_brief(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition
 
 def _event_watch(text: str, policy: IntelligencePolicy) -> tuple[JobDefinition, WorkflowDefinition, IntelligencePolicy]:
     cond = policy.asset_conditions[0] if policy.asset_conditions else None
-    asset = (policy.universe.symbols or ["BTC"])[0]
+    named = list(policy.universe.symbols or [])
+    asset = named[0] if named else ""
     trigger = None
     if cond:
         trigger = WorkflowTrigger(
@@ -701,7 +714,9 @@ def workflow_from_task(task) -> WorkflowDefinition:
         )
     if _task_is_reaction(task):
         cond = task.trigger.conditions[0] if task.trigger.conditions else {}
-        asset = task.trigger_asset() or (assets[0] if assets else "BTC")
+        asset = task.trigger_asset() or (assets[0] if assets else "")
+        if not asset:
+            return WorkflowDefinition()
         threshold = cond.get("value", -2.0)
         try:
             threshold = float(threshold)
@@ -713,7 +728,7 @@ def workflow_from_task(task) -> WorkflowDefinition:
         return _reaction_workflow(asset, threshold, limit, order=rank_order, metric=metric, operator=operator)
     if task.mode == "work":
         cond = task.trigger.conditions[0] if task.trigger.conditions else None
-        asset = task.trigger_asset() or (assets[0] if assets else "BTC")
+        asset = task.trigger_asset() or (assets[0] if assets else "")
         trigger = None
         if cond and cond.get("value") is not None:
             trigger = WorkflowTrigger(
@@ -745,11 +760,25 @@ def workflow_from_task(task) -> WorkflowDefinition:
                 WorkflowStep(type="present", format="market_summary"),
             ],
         )
-    symbols = assets[:4] or ["BTC"]
-    if len(assets) >= 2:
-        symbols = assets[:4]
+    if not assets:
+        if (task.scope.universe or "").startswith("top") or task.requested_output == "ranked_table":
+            return _market_cap_workflow(limit)
+        return WorkflowDefinition()
+    symbols = assets[:4]
     chart_window = task.scope.window or ("30d" if "historical" in (task.capabilities or []) else "24h")
     return _snapshot_workflow(symbols, chart_window)
+
+
+def _market_cap_workflow(limit: int) -> WorkflowDefinition:
+    return WorkflowDefinition(
+        trigger=None,
+        steps=[
+            WorkflowStep(type="get_universe", source="cmc", universe=f"top_{limit}", limit=limit),
+            WorkflowStep(type="get_market_data", fields=["price", "market_cap", "cmc_rank"]),
+            WorkflowStep(type="sort", field="market_cap", order="descending"),
+            WorkflowStep(type="present", format="ranked_table", operation="market_cap", limit=limit),
+        ],
+    )
 
 
 def _task_is_reaction(task) -> bool:

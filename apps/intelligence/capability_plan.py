@@ -115,8 +115,7 @@ class CapabilityPlan(BaseModel):
             list(self.verification_requirements or plan.verification_requirements)
         )
         plan.persistent = self.persistent if task is None else task.mode == "work"
-        if not plan.specialist:
-            plan.specialist = "research" if "historical" in plan.capabilities else "market"
+        plan.specialist = None
         plan.repair_policy = plan.repair_policy or RepairPolicy()
         return plan
 

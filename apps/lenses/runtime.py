@@ -128,7 +128,25 @@ class LensRuntime:
             fired = True
             if honor_trigger and workflow.trigger and workflow.trigger.type == "asset_condition":
                 run.set_stage("evaluating")
-                symbol = workflow.trigger.asset or "BTC"
+                symbol = workflow.trigger.asset or ""
+                if not symbol:
+                    result = Result.objects.create(
+                        lens=lens,
+                        lens_version=version,
+                        lens_run=run,
+                        kind="no_result",
+                        title="Trigger condition not met",
+                        payload_json={
+                            "message": "This watch has no asset, so I did not look up Bitcoin.",
+                            "trigger": workflow.trigger.model_dump(mode="json"),
+                            "actual": None,
+                            "assets": 0,
+                        },
+                    )
+                    self._finish_run(lens, run, tools=["get_quotes"], results=1, assets=0)
+                    if record_conversation:
+                        record_result(lens, result, run)
+                    return run
                 trigger_obs = fetch_trigger_asset(self.adapter, permissions, run, symbol)
                 fired, trigger_obs = trigger_fired(workflow.trigger, [trigger_obs] if trigger_obs else [])
                 if not fired:

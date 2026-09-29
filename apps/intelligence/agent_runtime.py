@@ -218,7 +218,29 @@ class AgentRuntime:
 
 
 def _plan_for_run(chief: ChiefAgent, version, run) -> AgentPlan:
+    """Execute the stored capability plan. Old versions without one use the stored workflow."""
+    from apps.intelligence.capability_plan import CapabilityPlan
+
     summary = run.summary_json or {}
+    report = dict(version.compile_report_json or {})
+    raw = summary.get("capability_plan") or report.get("capability_plan") or {}
+    workflow_raw = (raw.get("workflow") or {}) if isinstance(raw, dict) else {}
+    has_plan = bool(raw.get("capabilities") or workflow_raw.get("steps") or workflow_raw.get("trigger"))
+    if has_plan:
+        capability = CapabilityPlan.model_validate(raw)
+        research_plan = summary.get("research_plan") or report.get("research_plan") or {}
+        objective = ""
+        if isinstance(research_plan, dict):
+            objective = research_plan.get("objective") or ""
+        if not objective and isinstance(summary.get("job"), dict):
+            objective = summary["job"].get("purpose") or ""
+        plan = capability.to_agent_plan(objective=objective)
+        if summary.get("mode") == "ask":
+            plan.persistent = False
+        if summary.get("capabilities"):
+            plan.capabilities = list(summary["capabilities"])
+        validate_agent_plan(plan, version.tool_permissions())
+        return plan
     if summary.get("mode") == "ask" and (run.workflow_json or summary.get("job")):
         job = JobDefinition.model_validate(summary["job"]) if summary.get("job") else JobDefinition(
             purpose=run.objective or "Ask",
@@ -227,11 +249,14 @@ def _plan_for_run(chief: ChiefAgent, version, run) -> AgentPlan:
         )
         workflow = WorkflowDefinition.model_validate(run.workflow_json or {})
         plan = build_agent_plan(job, workflow, job.purpose)
+        plan.specialist = None
         plan.capabilities = list(summary.get("capabilities") or plan.capabilities)
         plan.persistent = False
         validate_agent_plan(plan, version.tool_permissions())
         return plan
-    return chief.plan_from_version(version)
+    plan = chief.plan_from_version(version)
+    plan.specialist = None
+    return plan
 
 
 def _apply_capabilities(lens, version, run, result, plan: AgentPlan) -> None:
@@ -368,7 +393,7 @@ def _seed_tasks(lens, run, plan: AgentPlan, plan_artifact: Artifact) -> tuple[Ag
         lens=lens,
         lens_run=run,
         parent_task=chief,
-        assigned_agent=specialist if specialist in {"market", "research", "unavailable"} else "market",
+        assigned_agent=specialist if specialist in {"market", "research", "unavailable"} else "chief",
         objective=plan.objective,
         status="planned",
         input_artifacts=[plan_artifact.id],

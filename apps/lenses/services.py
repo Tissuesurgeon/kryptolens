@@ -19,6 +19,9 @@ def _report_payload(report: dict) -> dict:
         "confidence": report.get("confidence"),
         "capabilities": report.get("capabilities") or [],
         "clarified_task": report.get("clarified_task") or {},
+        "capability_plan": report.get("capability_plan") or {},
+        "research_plan": report.get("research_plan") or {},
+        "research_task": report.get("research_task") or {},
     }
 
 
@@ -73,7 +76,11 @@ def attach_job_to_lens(
     if lens.current_version():
         version, _ = apply_intent_edit(lens, text, provider=provider)
         return lens, version, lens.current_policy()
-    report = compile_job_report(text, provider=provider)
+    from apps.intelligence.task_compiler import compile_message
+
+    report = compile_message(text, provider=provider)
+    if not report.get("job"):
+        report = compile_job_report(text, provider=provider)
     return attach_compiled_job(lens, text, report, persist_routine=persist_routine)
 
 
@@ -142,13 +149,25 @@ def apply_intent_edit(
     current_version = lens.current_version()
     current_job = current_version.as_job() if current_version else None
     current_workflow = current_version.as_workflow() if current_version else None
-    report = compile_job_report(
+    from apps.intelligence.research.context import ResearchContext
+    from apps.intelligence.task_compiler import compile_message
+
+    report = compile_message(
         text,
         provider=provider,
         current_policy=current,
         current_job=current_job,
         current_workflow=current_workflow,
+        research_context=ResearchContext.from_json(lens.context_json),
     )
+    if not report.get("job"):
+        report = compile_job_report(
+            text,
+            provider=provider,
+            current_policy=current,
+            current_job=current_job,
+            current_workflow=current_workflow,
+        )
     return apply_compiled_edit(lens, text, report, record_diff=record_diff)
 
 
@@ -256,7 +275,17 @@ def upsert_job(lens: Lens, version: LensVersion, definition: JobDefinition | Non
 
 
 def _record_plan(lens: Lens, version: LensVersion, job: JobDefinition | None, workflow) -> Artifact:
-    plan = ChiefAgent().plan_from_version(version)
+    raw = (version.compile_report_json or {}).get("capability_plan") or {}
+    workflow_raw = raw.get("workflow") or {}
+    if raw.get("capabilities") or workflow_raw.get("steps") or workflow_raw.get("trigger"):
+        from apps.intelligence.capability_plan import CapabilityPlan
+
+        plan = CapabilityPlan.model_validate(raw).to_agent_plan(
+            objective=(job.purpose if job else "") or raw.get("reason") or ""
+        )
+    else:
+        plan = ChiefAgent().plan_from_version(version)
+        plan.specialist = None
     artifact = Artifact.objects.create(
         lens=lens,
         lens_version=version,

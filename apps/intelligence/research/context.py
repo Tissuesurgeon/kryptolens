@@ -168,6 +168,17 @@ def resolve_follow_up(text: str, context: ResearchContext | None) -> TurnResult 
         inherited.pending_field = "follow_up"
         return TurnResult(status="needs_input", question=question, task=inherited.to_clarified())
 
+    switched = re.search(r"\b(?:now\s+)?(?:do|try|check|quote)\s+([A-Za-z]{2,12})\b", raw, re.I)
+    about = re.search(r"\bwhat about\s+([A-Za-z]{2,12})\b", raw, re.I)
+    named = (switched or about).group(1).upper() if (switched or about) else ""
+    if named and named not in _ADD_SKIP:
+        inherited.assets = [named]
+        inherited.window = inherited.window or context.timeframe
+        if inherited.window:
+            inherited.capabilities = list(dict.fromkeys(["historical", "market"] + list(inherited.capabilities)))
+        inherited.objective = _objective(inherited)
+        return _ready_turn(inherited)
+
     symbols = _extract_symbols(raw)
     if not symbols and not _recognized_research(lowered):
         question = "I am still on the current research. What should I change?"
@@ -182,7 +193,7 @@ def resolve_follow_up(text: str, context: ResearchContext | None) -> TurnResult 
 def _ready_turn(task: ResearchTask) -> TurnResult:
     clarified = task.to_clarified()
     clarified.status = "ready"
-    return TurnResult(status="ready", task=clarified)
+    return TurnResult(status="ready", task=clarified, research=task.model_dump(mode="json"))
 
 
 def _follow_window(text: str) -> str:

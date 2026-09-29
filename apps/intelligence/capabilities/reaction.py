@@ -23,8 +23,10 @@ class ReactionCapability:
         extras: dict | None = None,
     ) -> CapabilityResult:
         _ = extras
-        trigger_symbol = (task.trigger_asset() or (task.scope.assets[0] if task.scope.assets else "BTC")).upper()
+        trigger_symbol = (task.trigger_asset() or (task.scope.assets[0] if task.scope.assets else "")).upper()
         breadth = market_breadth(observations)
+        if not trigger_symbol:
+            return CapabilityResult(name=self.name, claims=[], metrics={"market_breadth": breadth})
         trigger = next((item for item in observations if item.symbol.upper() == trigger_symbol), None)
         claims: list[str] = []
         if trigger and trigger.price_change_24h is not None:

@@ -5,16 +5,7 @@ from __future__ import annotations
 from apps.intelligence.clarified_task import ClarifiedTask
 from apps.intelligence.compiler import extract_listing_limit, infer_you_asked
 from apps.intelligence.job import JobDefinition
-from apps.intelligence.job_compiler import (
-    _asset_reaction,
-    _compare_now,
-    _event_watch,
-    _listings_rank,
-    _morning_brief,
-    _news_job,
-    _status_now,
-    workflow_from_task,
-)
+from apps.intelligence.job_compiler import workflow_from_task
 from apps.intelligence.policy import IntelligencePolicy
 from apps.intelligence.tools import DEFAULT_TOOL_PERMISSIONS
 from apps.intelligence.workflow import WorkflowDefinition, WorkflowStep, WorkflowTrigger
@@ -29,6 +20,15 @@ def compile_from_task(
     current_workflow: WorkflowDefinition | None = None,
     provider=None,
 ) -> dict:
+    """Pack a validated task and its capability plan into job, workflow, and policy.
+
+    This does not re-read the user's sentence. Callers that only have text use
+    compile_message, which understands first.
+    """
+    from apps.intelligence.research.task import ResearchTask
+
+    if isinstance(task, ResearchTask):
+        task = task.to_clarified()
     text = _text_from_task(task)
     workflow = None
     if capability_plan is not None and getattr(capability_plan, "workflow", None) is not None:
@@ -38,59 +38,10 @@ def compile_from_task(
     if workflow is None:
         workflow = workflow_from_task(task)
 
-    policy = current_policy or _policy_from_task(task, text)
+    policy = _policy_from_task(task, text)
     job = _job_from_task_and_workflow(task, workflow, text)
-
-    if task.task_type == "news_brief":
-        report = _news_job(text)
-        workflow = report["workflow"]
-        job = report["job"]
-        policy = report["policy"]
-    elif task.task_type == "scheduled_brief":
-        job, workflow, policy = _morning_brief(text, policy)
-    elif _task_is_reaction(task):
-        policy = current_policy or _policy_from_task(task, text)
-        cond = task.trigger.conditions[0] if task.trigger.conditions else {}
-        asset = task.trigger_asset() or (task.scope.assets[0] if task.scope.assets else "BTC")
-        threshold = cond.get("value", -2.0)
-        try:
-            threshold = float(threshold)
-        except (TypeError, ValueError):
-            threshold = -2.0
-        limit = task.scope.listing_limit or extract_listing_limit(text) or 100
-        job, workflow, policy = _asset_reaction(text, policy, asset, threshold, limit)
-        _apply_task_trigger(job, workflow, task)
-    elif task.mode == "work":
-        policy = current_policy or _policy_from_task(task, text)
-        job, workflow, policy = _event_watch(text or task.objective, policy)
-        _apply_task_trigger(job, workflow, task)
-    elif task.action == "market_summary":
-        policy = _policy_from_task(task, text)
-        workflow = workflow_from_task(task)
-        job = JobDefinition(
-            purpose=task.objective or "Summarize the live crypto market.",
-            summary=text.strip(),
-            execution_model="task",
-            routine_kind=None,
-            trigger_summary="",
-            workflow_summary="Live market context",
-            you_asked=list(task.you_asked) or [text.strip()],
-            steps_explained=workflow.explained_steps(),
-        )
-    elif task.action in {"rank_gains", "rank_declines"} or task.requested_output == "ranked_table":
-        policy = _policy_from_task(task, text)
-        direction = "gainers" if task.action == "rank_gains" else "losers"
-        job, workflow, policy = _listings_rank(text or task.objective, policy, direction)
-    elif task.scope.window or "historical" in task.capabilities:
-        policy = _policy_from_task(task, text)
-        job, workflow, policy = _compare_now(text or task.objective, policy)
-        workflow = _with_historical(workflow, task)
-    elif len(task.scope.assets) >= 2:
-        policy = _policy_from_task(task, text)
-        job, workflow, policy = _compare_now(text, policy)
-    else:
-        policy = _policy_from_task(task, text)
-        job, workflow, policy = _status_now(text or task.objective, policy)
+    _apply_task_trigger(job, workflow, task)
+    job.steps_explained = workflow.explained_steps()
 
     listings = (task.scope.universe or "").startswith("top") or task.task_type in {
         "watch_plus_investigate",
@@ -104,18 +55,6 @@ def compile_from_task(
                 )
             }
         )
-
-    if capability_plan is not None and getattr(capability_plan, "workflow", None) is not None:
-        planned = capability_plan.workflow
-        if planned.steps or planned.trigger:
-            workflow = planned
-            _apply_task_trigger(job, workflow, task)
-            job.steps_explained = workflow.explained_steps()
-            if workflow.trigger and workflow.trigger.asset:
-                job.trigger_summary = (
-                    f"{workflow.trigger.asset} {workflow.trigger.metric} "
-                    f"{workflow.trigger.operator} {workflow.trigger.value}"
-                )
 
     report = _pack(job, workflow, policy, text)
     job = report["job"]
@@ -144,7 +83,58 @@ def compile_from_task(
         if getattr(capability_plan, "capabilities", None):
             report["capabilities"] = list(capability_plan.capabilities)
     report["tool_permissions"] = dict(DEFAULT_TOOL_PERMISSIONS)
-    _ = current_job, current_workflow, provider
+    _ = current_policy, current_job, current_workflow, provider
+    return report
+
+
+def compile_message(
+    text: str,
+    *,
+    provider=None,
+    current_policy: IntelligencePolicy | None = None,
+    current_job: JobDefinition | None = None,
+    current_workflow: WorkflowDefinition | None = None,
+    research_context=None,
+    pending: dict | None = None,
+) -> dict:
+    """Understand a message, plan it once, then pack the existing job infrastructure."""
+    from apps.intelligence.conversation_agent import ConversationAgent
+    from apps.intelligence.research.planner import ResearchPlanner
+    from apps.intelligence.research.task import ResearchTask
+
+    turn = ConversationAgent.understand(
+        text,
+        provider=provider,
+        current_job=current_job,
+        pending=pending,
+        research_context=research_context,
+    )
+    research_task = None
+    if turn.research:
+        research_task = ResearchTask.model_validate(turn.research)
+    elif turn.task is not None:
+        research_task = ResearchTask.from_clarified(turn.task)
+    if turn.status != "ready" or research_task is None:
+        return {
+            "policy": current_policy,
+            "job": None,
+            "workflow": current_workflow,
+            "clarification": turn.question,
+            "turn": turn,
+            "research_task": research_task.model_dump(mode="json") if research_task else {},
+        }
+    research_plan, capability_plan = ResearchPlanner().plan(research_task, research_context)
+    report = compile_from_task(
+        research_task,
+        capability_plan=capability_plan,
+        current_policy=current_policy,
+        current_job=current_job,
+        current_workflow=current_workflow,
+        provider=provider,
+    )
+    report["research_plan"] = research_plan.model_dump(mode="json")
+    report["research_task"] = research_task.model_dump(mode="json")
+    report["turn"] = turn
     return report
 
 
@@ -257,7 +247,9 @@ def _apply_task_trigger(job: JobDefinition, workflow: WorkflowDefinition, task: 
     cond = task.trigger.conditions[0] if task.trigger.conditions else None
     if not cond:
         return
-    asset = cond.get("asset") or task.trigger_asset() or (task.scope.assets[0] if task.scope.assets else "BTC")
+    asset = cond.get("asset") or task.trigger_asset() or (task.scope.assets[0] if task.scope.assets else "")
+    if not asset:
+        return
     metric = cond.get("metric") or "price_change_24h"
     operator = cond.get("operator") or "<="
     value = cond.get("value")
@@ -279,7 +271,7 @@ def _with_historical(workflow: WorkflowDefinition, task: ClarifiedTask) -> Workf
             insert_at,
             WorkflowStep(
                 type="get_quotes_historical",
-                symbols=list(task.scope.assets) or ["BTC"],
+                symbols=list(task.scope.assets),
                 operation=task.scope.window or "30d",
             ),
         )
