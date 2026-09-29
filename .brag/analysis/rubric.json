@@ -1,16 +1,16 @@
 {
-  "1_what_is_the_app": "Tell KryptoLens what matters. Give it a job. It keeps watch for you.",
-  "2_funniest_or_most_impressive_claim": "Positioned as a persistent crypto intelligence teammate, not a chatbot, dashboard, demo, or trading bot. Voice: Tell \u2192 Define \u2192 Watch \u2192 Act \u2192 Return. Quiet markets are a valid result.",
+  "1_what_is_the_app": "A conversational crypto analyst: create an Analyst (stored as a Lens), ask a question, and it researches live CoinMarketCap data in the same conversation.",
+  "2_funniest_or_most_impressive_claim": "Voice: direct, specific, Tell \u2192 Clarify \u2192 Watch \u2192 Act \u2192 Return. Never claims real-time continuous observation; monitoring is periodic. Never calls itself a demo. Never invents market numbers. Quiet markets and missing data (not treated as zero) are valid outcomes. User-unnamed coins are not filled in as Bitcoin.",
   "3_visual_hook": "",
-  "4_ui_to_show": "Agent / lens workspace",
-  "5_shortest_satisfying_video": "18-22 seconds",
+  "4_ui_to_show": "Lens workspace",
+  "5_shortest_satisfying_video": "25 seconds",
   "6_tone": {
     "preset": "default",
-    "direction": "Positioned as a persistent crypto intelligence teammate, not a chatbot, dashboard, demo, or trading bot. Voice: Tell \u2192 Define \u2192 Watch \u2192 Act \u2192 Return. Quiet markets are a valid result."
+    "direction": "Voice: direct, specific, Tell \u2192 Clarify \u2192 Watch \u2192 Act \u2192 Return. Never claims real-time continuous observation; monitoring is periodic. Never calls itself a demo. Never invents market numbers. Quiet markets and missing data (not treated as zero) are valid outcomes. User-unnamed coins are not filled in as Bitcoin."
   },
   "7_audio_feel": "Warm bed; SFX matched to UI motion unless disabled",
-  "8_share_caption": "Tell KryptoLens what matters. Give it a job. It keeps watch for you.",
-  "9_user_flow": "Authenticate \u2192 POST intent or pick a template \u2192 AgentService.create_from_intent \u2192 Redirect to lens detail",
+  "8_share_caption": "A conversational crypto analyst: create an Analyst (stored as a Lens), ask a question, and it researches live CoinMarketCap data in the same conversation.",
+  "9_user_flow": "Sign up or log in \u2192 Create a Lens from a natural-language intent or a draft \u2192 Open the workspace conversation \u2192 Send a question; understanding and planner compile a task \u2192 Runtime fetches CMC data, verifies, and replies in the same thread",
   "visual": {
     "background": "",
     "accent": "",

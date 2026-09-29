@@ -1350,14 +1350,6 @@ button.agent-remove.is-labeled {
   max-width: 42ch;
 }
 .landing-stage { position: relative; }
-.landing-stage::before {
-  content: "";
-  position: absolute;
-  inset: 18% -10% -16%;
-  background: none;
-  pointer-events: none;
-  z-index: 0;
-}
 .landing-window {
   position: relative;
   z-index: 1;
@@ -1443,7 +1435,7 @@ button.agent-remove.is-labeled {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.landing-composer .composer-shell > .btn-primary {
+.landing-composer .composer-shell > .btn {
   min-height: 40px;
   align-self: end;
 }
@@ -1456,9 +1448,10 @@ button.agent-remove.is-labeled {
   width: auto;
   display: inline-flex;
   align-items: center;
+  min-height: 44px;
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border: 3px solid var(--line);
+  border-radius: 8px;
   background: transparent;
   color: inherit;
   cursor: pointer;
@@ -1468,9 +1461,11 @@ button.agent-remove.is-labeled {
 .landing-jobs .job-line:hover { background: var(--surface-2); }
 .landing-jobs .job-line:hover strong { color: var(--link); }
 .landing-jobs .job-line[aria-selected="true"] {
-  border-color: var(--link);
-  color: var(--link);
+  border-color: var(--primary);
+  background: var(--surface);
+  color: var(--ink);
 }
+.landing-jobs .job-line[aria-selected="true"] strong { color: var(--primary); }
 .landing-stage .landing-jobs {
   position: relative;
   z-index: 1;
@@ -1764,12 +1759,8 @@ button.agent-remove.is-labeled {
 .landing-foot p + p { margin-top: var(--space-2); }
 
 @keyframes landing-rise {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
-}
-@keyframes landing-glow {
-  from { opacity: 0.45; }
-  to { opacity: 1; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .landing-bar,
@@ -1777,23 +1768,16 @@ button.agent-remove.is-labeled {
   .landing-stage,
   .landing-turn,
   .landing-composer {
-    animation: landing-rise 0.7s var(--ease) both;
+    animation: landing-rise 180ms var(--ease) both;
   }
-  .landing-mast > *:nth-child(2) { animation-delay: 0.08s; }
-  .landing-mast > *:nth-child(3) { animation-delay: 0.16s; }
-  .landing-mast > *:nth-child(4) { animation-delay: 0.24s; }
-  .landing-mast > *:nth-child(5) { animation-delay: 0.32s; }
-  .landing-stage { animation-delay: 0.16s; }
-  .landing-turn:nth-child(1) { animation-delay: 0.42s; }
-  .landing-turn:nth-child(2) { animation-delay: 0.58s; }
-  .landing-composer { animation-delay: 0.74s; }
-  .landing-stage::before {
-    animation: landing-glow 7s ease-in-out infinite alternate;
-  }
-  .landing .btn-primary {
-    transition: transform 0.2s var(--ease), background 0.2s var(--ease);
-  }
-  .landing .btn-primary:hover { transform: translateY(-1px); }
+  .landing-mast > *:nth-child(2) { animation-delay: 40ms; }
+  .landing-mast > *:nth-child(3) { animation-delay: 80ms; }
+  .landing-mast > *:nth-child(4) { animation-delay: 120ms; }
+  .landing-mast > *:nth-child(5) { animation-delay: 160ms; }
+  .landing-stage { animation-delay: 80ms; }
+  .landing-turn:nth-child(1) { animation-delay: 120ms; }
+  .landing-turn:nth-child(2) { animation-delay: 160ms; }
+  .landing-composer { animation-delay: 180ms; }
 }
 html.landing-motion .landing-spec,
 html.landing-motion .landing-close,
@@ -1806,25 +1790,19 @@ html.landing-motion .landing-trail > li {
 html.landing-motion .landing-spec.is-in,
 html.landing-motion .landing-close.is-in,
 html.landing-motion .landing-foot.is-in {
-  animation: landing-rise 0.7s var(--ease) forwards;
+  animation: landing-rise 180ms var(--ease) forwards;
 }
 html.landing-motion .landing-spec.is-in .landing-steps > div,
 html.landing-motion .landing-spec.is-in .landing-trail > li {
-  animation: landing-rise 0.6s var(--ease) forwards;
+  animation: landing-rise 180ms var(--ease) forwards;
 }
-html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(2),
-html.landing-motion .landing-spec.is-in .landing-trail > li:nth-child(2) { animation-delay: 0.08s; }
-html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(3),
-html.landing-motion .landing-spec.is-in .landing-trail > li:nth-child(3) { animation-delay: 0.16s; }
-html.landing-motion .landing-spec.is-in .landing-trail > li:nth-child(4) { animation-delay: 0.24s; }
-html.landing-motion .landing-spec.is-in .landing-trail > li:nth-child(5) { animation-delay: 0.32s; }
-html.landing-motion .landing-spec.is-in .landing-trail > li:nth-child(6) { animation-delay: 0.4s; }
-html.landing-motion .landing-spec.is-in .landing-trail > li:nth-child(7) { animation-delay: 0.48s; }
-html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(4) { animation-delay: 0.24s; }
-html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(5) { animation-delay: 0.32s; }
-html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(6) { animation-delay: 0.4s; }
-html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(7) { animation-delay: 0.48s; }
-html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(8) { animation-delay: 0.56s; }
+html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(2) { animation-delay: 40ms; }
+html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(3) { animation-delay: 80ms; }
+html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(4) { animation-delay: 120ms; }
+html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(5) { animation-delay: 160ms; }
+html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(6) { animation-delay: 200ms; }
+html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(7) { animation-delay: 240ms; }
+html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(8) { animation-delay: 280ms; }
 
 /* Legacy surfaces still referenced by unused templates */
 .shell { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
@@ -1857,6 +1835,10 @@ html.landing-motion .landing-spec.is-in .landing-steps > div:nth-child(8) { anim
   .landing-nav a[href="#what"],
   .landing-nav a[href="#what-it-does"] { display: none; }
   .landing-bar { padding: var(--space-3) var(--space-4); gap: var(--space-3); }
+  .landing-nav { gap: var(--space-2); }
+  .landing-nav a { white-space: nowrap; flex-shrink: 0; }
+  .landing-nav .btn-primary { min-width: 0; padding: 0 var(--space-3); }
+  .landing-marks span { white-space: nowrap; }
 }
 @media (max-width: 980px) {
   .landing-hero {

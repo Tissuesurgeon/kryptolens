@@ -99,7 +99,7 @@
     .quiet { margin-top: 12px; color: var(--muted); font-size: 15px; }
     .steps {
       position: absolute; left: 72px; right: 72px; bottom: 36px; z-index: 3;
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px;
     }
     .step {
       padding: 16px 18px; border: 1px solid var(--line); border-radius: 8px;
@@ -126,7 +126,7 @@
     <section class="hero" id="hero">
       <div class="mast" id="mast">
         <h1>Tell it what matters</h1>
-        <p class="sub">Ask questions. Investigate markets. Monitor what matters. Get answers grounded in live CoinMarketCap data.</p>
+        <p class="sub">A conversational crypto analyst: create an Analyst (stored as a Lens), ask a question, and it researches live CoinMarketCap data in the same conversation.</p>
         <p class="lede">Name it. Tell it what to research. The investigation stays in that workspace.</p>
       </div>
       <div class="window" id="window">
@@ -139,11 +139,11 @@
         </div>
         <div class="preview" id="preview">
           <article class="turn" id="asked">
-            <h2>You</h2>
+            <h2>You asked</h2>
             <p class="asked">Watch BTC and tell me when it drops more than 2%.</p>
           </article>
           <article class="turn" id="assumed">
-            <h2>KryptoLens</h2>
+            <h2>KryptoLens assumed</h2>
             <p class="asked">What should I analyze when the trigger occurs?</p>
           </article>
         </div>
@@ -152,15 +152,15 @@
             <textarea id="intent" rows="3" placeholder="Watch BTC and tell me when it drops more than 2%." readonly></textarea>
             <button class="btn btn-primary" type="button">Create an Analyst</button>
           </div>
-          <div class="jobs" id="jobs"><button class="job-line" type="button"><strong>Watch</strong></button><button class="job-line" type="button"><strong>Reaction</strong></button><button class="job-line" type="button"><strong>Volume</strong></button><button class="job-line" type="button"><strong>Compare</strong></button></div>
-          <p class="quiet">Your words wait here until you have an account.</p>
+          <div class="jobs" id="jobs"><button class="job-line" type="button"><strong>Persistent Lens / Analyst</strong></button><button class="job-line" type="button"><strong>Conversational job compiler</strong></button><button class="job-line" type="button"><strong>LLM-first request understanding</strong></button></div>
+          <p class="quiet">Creates a real account, then a real Lens.</p>
         </form>
       </div>
     </section>
-    <dl class="steps" id="steps"><div class='step'><dt>Create an Analyst</dt><dd>An Analyst is a persistent intelligence workspace. Name it Market Watch, BTC Reaction, Altcoin Monitor, or Market Research.</dd></div><div class='step'><dt>Tell KryptoLens what you want</dt><dd>Describe the request in natural language. You don&#x27;t need the API endpoint or the analytical method.</dd></div><div class='step'><dt>KryptoLens asks questions when necessary</dt><dd>It can ask what counts as a sharp drop, or whether to use the top 50, the top 100, or the entire market.</dd></div><div class='step'><dt>KryptoLens builds the investigation</dt><dd>Market, anomaly, reaction, historical, discovery, and regime analysis are selected behind the scenes. You interact with one Analyst.</dd></div></dl>
+    <dl class="steps" id="steps"><div class='step'><dt>Create an Analyst</dt><dd>An Analyst is a persistent intelligence workspace. Name it Market Watch, BTC Reaction, Altcoin Monitor, or Market Research.</dd></div><div class='step'><dt>Tell KryptoLens what you want</dt><dd>Describe the request in natural language. You don&#x27;t need the API endpoint or the analytical method.</dd></div><div class='step'><dt>KryptoLens asks questions when necessary</dt><dd>It can ask what counts as a sharp drop, or whether to use the top 50, the top 100, or the entire market.</dd></div><div class='step'><dt>KryptoLens builds the investigation</dt><dd>Market, anomaly, reaction, historical, discovery, and regime analysis are selected behind the scenes. You interact with one Analyst.</dd></div><div class='step'><dt>KryptoLens retrieves live market data</dt><dd>Listings, prices, capitalization, volume, rankings, historical quotes, categories, and global metrics come from CoinMarketCap, chosen for the task.</dd></div></dl>
     <div class="outro" id="outro">
       <h1>KryptoLens</h1>
-      <p>Ask questions. Investigate markets. Monitor what matters. Get answers grounded in live CoinMarketCap data.</p>
+      <p>A conversational crypto analyst: create an Analyst (stored as a Lens), ask a question, and it researches live CoinMarketCap data in the same conversation.</p>
     </div>
     <audio id="music-bed" data-start="0" data-duration="90" data-track-index="10" data-volume="0.32" src="assets/music/happy-beats-business-moves-vol-1-by-ende-dot-app.mp3"></audio>
     <audio id="sfx-reveal" data-start="6.8" data-duration="0.18" data-track-index="11" data-volume="0.42" src="assets/sfx/drop_002.ogg"></audio>
@@ -171,11 +171,10 @@
   <script>
     window.__timelines = window.__timelines || {};
     (function () {
-      const data = {"job": "Watch BTC and tell me when it drops more than 2%.", "jobs": [{"title": "Watch", "body": "Watch BTC and tell me when it drops more than 2%.", "reply": "What should I analyze when the trigger occurs?"}, {"title": "Reaction", "body": "I want to know which top 100 coins react the most when BTC drops sharply.", "reply": "What should count as a sharp BTC drop \u2014 2%, 5%, or another threshold?"}, {"title": "Volume", "body": "Find unusual volume activity across the market.", "reply": "Should the analysis consider the top 50, top 100, or the entire market?"}, {"title": "Compare", "body": "Compare the current market environment with previous periods where BTC experienced a similar move.", "reply": "The comparison uses historical CoinMarketCap quotes. Missing data is not treated as zero."}], "duration": 90, "t": {"bar": 0.85, "mast": 2.55, "window": 6.8, "typeStart": 11.9, "asked": 23.8, "assumed": 28.9, "jobs": 35.7, "chip0": 37.4, "chipGap": 0.4, "jobCycle": 42.5, "jobCycleSpan": 15.3, "steps": 59.5, "stepGap": 4.0, "outro": 85.0}};
+      const data = {"job": "Watch BTC and tell me when it drops more than 2%.", "jobs": [{"title": "Persistent Lens / Analyst", "body": "A Lens is a user-owned persistent crypto agent with name, purpose, natural-language request, status (draft/active/paused), versions, routines, and runs."}, {"title": "Conversational job compiler", "body": "Web chat router classifies messages into commands or research, compiles jobs from intent, and can preview policy diffs. Shared for web and later Telegram; does not call CMC directly."}, {"title": "LLM-first request understanding", "body": "Understanding classifies a crypto-market request as snapshot, compare, watch, watch_plus_workflow, scheduled, news, or edit, and returns structured JSON (symbols, trigger, listing limit). No CMC calls in this layer."}], "duration": 90, "t": {"bar": 0.85, "mast": 2.55, "window": 6.8, "typeStart": 11.9, "asked": 23.8, "assumed": 28.9, "jobs": 35.7, "chip0": 37.4, "chipGap": 0.4, "jobCycle": 42.5, "jobCycleSpan": 15.3, "steps": 59.5, "stepGap": 3.74, "outro": 85.0}};
       const t = data.t;
       const field = document.getElementById("intent");
       const askedLine = document.querySelector("#asked .asked");
-      const assumedLine = document.querySelector("#assumed .asked");
       const chips = Array.from(document.querySelectorAll(".job-line"));
       const tl = gsap.timeline({ paused: true });
       gsap.set("#window", { y: 36, scale: 0.98 });
@@ -221,7 +220,6 @@
               chip.classList.toggle("is-on", chipIndex === index + 1);
             });
             if (askedLine) askedLine.textContent = item.body;
-            if (assumedLine && item.reply) assumedLine.textContent = item.reply;
             if (field) field.value = "";
           }, null, at);
           typeJob(item.body, at + 0.2, Math.max(1.6, each * 0.65));

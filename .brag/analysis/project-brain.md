@@ -1,25 +1,24 @@
 # KryptoLens
 
-Updated: 2026-09-17T01:47:42.965760+00:00
+Updated: 2026-09-29T04:24:14.917414+00:00
 
 ## Identity
-Tell KryptoLens what matters. Give it a job. It keeps watch for you.
+A conversational crypto analyst: create an Analyst (stored as a Lens), ask a question, and it researches live CoinMarketCap data in the same conversation.
 
 ## Features
-- Persistent Lens / Agent (verified)
-- Natural-language job compile and conversation (verified)
-- Chief Agent planning (verified)
-- Closed CMC workflow execution (verified)
-- AgentRuntime loop with verification (verified)
-- Unattended Beat / routines (verified)
-- Live run status (HTMX / JSON) (verified)
-- Tool permission boundary (verified)
+- Persistent Lens / Analyst (verified)
+- Conversational job compiler (verified)
+- LLM-first request understanding (verified)
+- Research planner (verified)
+- Agent runtime loop (verified)
+- Policy evaluation and scoring (verified)
+- CoinMarketCap market data (verified)
+- Activate, pause, and run-now controls (verified)
+- Scheduled Beat / Celery routines (inferred)
 
 ## Unverified
 
-- Cadence is 15 minutes.
-- CMC adapter uses a 60s cache and CmcCallLog; raw JSON never enters the engine.
-- Landing composer stashes instruction; no Agent and no CMC job before authentication.
-- Scoring is an extracted service; the LLM does not rank events.
-- Jobs open an execution trace at /jobs/<id>.
-- This iteration is not a multi-agent OS and not a specialist graph; the user sees a single Agent teammate.
+- Standing watches check every 15 minutes.
+- Understanding uses Grok 4.6 when CURSOR_API_KEY is set; heuristics only if the model is missing or invalid.
+- Landing composer stashes the instruction and does not create a Lens or call CMC before authentication.
+- UI polls LensRun.stage until complete or error; Check now and Beat need a Celery worker while a chat question runs in the web process.

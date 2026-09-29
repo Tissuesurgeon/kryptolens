@@ -6,7 +6,7 @@
       "id": "identity-name",
       "text": "KryptoLens",
       "status": "verified",
-      "confidence": 0.92,
+      "confidence": 0.95,
       "evidence": [
         {
           "id": "ev-README.md",
@@ -47,16 +47,26 @@
           "hash": null,
           "collected_at": "2026-09-17T01:47:42.936076Z",
           "excerpt": ""
+        },
+        {
+          "id": "ev-apps-lenses-conversation_service.py",
+          "kind": "source_code",
+          "path": "apps/lenses/conversation_service.py",
+          "uri": null,
+          "locator": null,
+          "hash": null,
+          "collected_at": "2026-09-29T04:22:38.911347Z",
+          "excerpt": ""
         }
       ],
       "conflicts": [],
       "demote": false
     },
     "one_liner": {
-      "id": "identity-one-liner",
-      "text": "Tell KryptoLens what matters. Give it a job. It keeps watch for you.",
+      "id": "identity-oneliner",
+      "text": "A conversational crypto analyst: create an Analyst (stored as a Lens), ask a question, and it researches live CoinMarketCap data in the same conversation.",
       "status": "inferred",
-      "confidence": 0.62,
+      "confidence": 0.9,
       "evidence": [
         {
           "id": "ev-README.md",
@@ -77,6 +87,16 @@
           "hash": "669aa3a71fae23b2701c7de6c9cc2e3bcb35bf689cd46347d4a7d1bb360cd06b",
           "collected_at": "2026-09-17T01:41:50.430102Z",
           "excerpt": ""
+        },
+        {
+          "id": "ev-apps-lenses-conversation_service.py",
+          "kind": "source_code",
+          "path": "apps/lenses/conversation_service.py",
+          "uri": null,
+          "locator": null,
+          "hash": null,
+          "collected_at": "2026-09-29T04:22:38.911750Z",
+          "excerpt": ""
         }
       ],
       "conflicts": [],
@@ -86,7 +106,7 @@
       "id": "identity-description",
       "text": "A persistent crypto intelligence workspace: users create Agents (UI name for a Lens), give them natural-language market jobs, and leave those jobs running against CoinMarketCap data with a structured Plan \u2192 Evidence \u2192 Verification \u2192 Result log.",
       "status": "verified",
-      "confidence": 0.7,
+      "confidence": 0.88,
       "evidence": [
         {
           "id": "ev-apps-lenses-models.py",
@@ -130,6 +150,7 @@
         }
       ],
       "conflicts": [
+        "kept verified text; incoming inferred differed",
         "kept verified text; incoming inferred differed"
       ],
       "demote": false
@@ -139,7 +160,7 @@
     "id": "problem",
     "text": "Someone who can name a crypto-market job in language wants a teammate that stays on it, not a dashboard they have to configure.",
     "status": "inferred",
-    "confidence": 0.55,
+    "confidence": 0.7,
     "evidence": [
       {
         "id": "ev-PRODUCT.md",
@@ -157,9 +178,9 @@
   },
   "solution": {
     "id": "solution",
-    "text": "A Lens is a persistent crypto agent with a compiled job, workflow, routines, tool permissions, conversation, and results; AgentRuntime plans then LensRuntime/workflow hits live CMC and writes verified results back.",
+    "text": "Interpret a user message into a research task, plan capabilities without calling CoinMarketCap, then execute PLAN \u2192 ACT \u2192 OBSERVE \u2192 VERIFY \u2192 REPAIR? \u2192 COMPLETE against live CMC tools and return a grounded reply in the same Lens conversation.",
     "status": "verified",
-    "confidence": 0.68,
+    "confidence": 0.86,
     "evidence": [
       {
         "id": "ev-apps-lenses-models.py",
@@ -220,18 +241,49 @@
         "hash": null,
         "collected_at": "2026-09-17T01:47:42.936189Z",
         "excerpt": ""
+      },
+      {
+        "id": "ev-apps-intelligence-understanding.py",
+        "kind": "source_code",
+        "path": "apps/intelligence/understanding.py",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:22:38.911812Z",
+        "excerpt": ""
+      },
+      {
+        "id": "ev-apps-intelligence-research-planner.py",
+        "kind": "source_code",
+        "path": "apps/intelligence/research/planner.py",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:22:38.911819Z",
+        "excerpt": ""
+      },
+      {
+        "id": "ev-apps-lenses-conversation_service.py",
+        "kind": "source_code",
+        "path": "apps/lenses/conversation_service.py",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:22:38.911832Z",
+        "excerpt": ""
       }
     ],
     "conflicts": [
+      "kept verified text; incoming inferred differed",
       "kept verified text; incoming inferred differed"
     ],
     "demote": false
   },
   "users": {
     "id": "users",
-    "text": "A researcher or operator who can name a crypto-market job in language and wants an unattended teammate on live CoinMarketCap data.",
+    "text": "Researchers or operators who can describe a crypto-market job in natural language and want an analyst that investigates, optionally watches a condition, and returns a verified result with evidence.",
     "status": "inferred",
-    "confidence": 0.55,
+    "confidence": 0.68,
     "evidence": [
       {
         "id": "ev-PRODUCT.md",
@@ -259,12 +311,12 @@
   },
   "features": [
     {
-      "name": "Persistent Lens / Agent",
+      "name": "Persistent Lens / Analyst",
       "description": {
         "id": "feat-lens-desc",
-        "text": "A Lens is a user-owned persistent crypto agent with name, purpose, natural-language request, status (draft/active/paused), versions, routines, conversation, and results.",
+        "text": "A Lens is a user-owned persistent crypto agent with name, purpose, natural-language request, status (draft/active/paused), versions, routines, and runs.",
         "status": "verified",
-        "confidence": 0.93,
+        "confidence": 0.95,
         "evidence": [
           {
             "id": "ev-apps-lenses-models.py",
@@ -273,17 +325,7 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.936233Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-lenses-views.py",
-            "kind": "source_code",
-            "path": "apps/lenses/views.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.936239Z",
+            "collected_at": "2026-09-29T04:24:14.898243Z",
             "excerpt": ""
           }
         ],
@@ -292,9 +334,9 @@
       },
       "implemented": {
         "id": "feat-lens-impl",
-        "text": "Lens and LensVersion models persist job_definition_json, policy_json, workflow_json, and tool_permissions_json; views create agents from intent via AgentService.",
+        "text": "Lens, LensVersion, and LensRun models exist; versions store policy, job, workflow, and tool-permission JSON.",
         "status": "verified",
-        "confidence": 0.9,
+        "confidence": 0.94,
         "evidence": [
           {
             "id": "ev-apps-lenses-models.py",
@@ -303,17 +345,7 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.936252Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-lenses-views.py",
-            "kind": "source_code",
-            "path": "apps/lenses/views.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.936259Z",
+            "collected_at": "2026-09-29T04:24:14.898319Z",
             "excerpt": ""
           }
         ],
@@ -322,13 +354,23 @@
       }
     },
     {
-      "name": "Natural-language job compile and conversation",
+      "name": "Conversational job compiler",
       "description": {
         "id": "feat-chat-desc",
-        "text": "Authenticated users describe a job; ConversationService handles intent/actions on the lens detail page, including run, preview, and draft diffs.",
+        "text": "Web chat router classifies messages into commands or research, compiles jobs from intent, and can preview policy diffs. Shared for web and later Telegram; does not call CMC directly.",
         "status": "verified",
-        "confidence": 0.86,
+        "confidence": 0.92,
         "evidence": [
+          {
+            "id": "ev-apps-lenses-conversation_service.py",
+            "kind": "source_code",
+            "path": "apps/lenses/conversation_service.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898358Z",
+            "excerpt": ""
+          },
           {
             "id": "ev-apps-lenses-views.py",
             "kind": "source_code",
@@ -336,17 +378,7 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.936277Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-lenses-runtime.py",
-            "kind": "source_code",
-            "path": "apps/lenses/runtime.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.936284Z",
+            "collected_at": "2026-09-29T04:24:14.898378Z",
             "excerpt": ""
           }
         ],
@@ -355,7 +387,295 @@
       },
       "implemented": {
         "id": "feat-chat-impl",
-        "text": "lens_create POSTs intent to AgentService.create_from_intent; lens_detail POSTs to ConversationService.handle; LensRuntime.handle_instruction applies intent edits.",
+        "text": "ConversationService.handle is used from login-required lens_detail POST; phrase sets cover check now, pause, resume, results, evidence, why, status, keep watching, and capability/help.",
+        "status": "verified",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "id": "ev-apps-lenses-conversation_service.py",
+            "kind": "source_code",
+            "path": "apps/lenses/conversation_service.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898433Z",
+            "excerpt": ""
+          },
+          {
+            "id": "ev-apps-lenses-views.py",
+            "kind": "source_code",
+            "path": "apps/lenses/views.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898454Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      }
+    },
+    {
+      "name": "LLM-first request understanding",
+      "description": {
+        "id": "feat-understand-desc",
+        "text": "Understanding classifies a crypto-market request as snapshot, compare, watch, watch_plus_workflow, scheduled, news, or edit, and returns structured JSON (symbols, trigger, listing limit). No CMC calls in this layer.",
+        "status": "verified",
+        "confidence": 0.93,
+        "evidence": [
+          {
+            "id": "ev-apps-intelligence-understanding.py",
+            "kind": "source_code",
+            "path": "apps/intelligence/understanding.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898503Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      },
+      "implemented": {
+        "id": "feat-understand-impl",
+        "text": "understand_with_llm and Understanding Pydantic models are implemented; HeuristicProvider is the non-LLM fallback path.",
+        "status": "verified",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "id": "ev-apps-intelligence-understanding.py",
+            "kind": "source_code",
+            "path": "apps/intelligence/understanding.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898541Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      }
+    },
+    {
+      "name": "Research planner",
+      "description": {
+        "id": "feat-planner-desc",
+        "text": "ResearchPlanner maps a ResearchTask (and optional follow-up context) to a CapabilityPlan and ResearchPlan, selecting existing capabilities and tools without calling CoinMarketCap.",
+        "status": "verified",
+        "confidence": 0.93,
+        "evidence": [
+          {
+            "id": "ev-apps-intelligence-research-planner.py",
+            "kind": "source_code",
+            "path": "apps/intelligence/research/planner.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898590Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      },
+      "implemented": {
+        "id": "feat-planner-impl",
+        "text": "Planner inherits blank follow-up fields from context and defaults capabilities such as market, anomaly, reaction, historical, discovery, and regime.",
+        "status": "verified",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "id": "ev-apps-intelligence-research-planner.py",
+            "kind": "source_code",
+            "path": "apps/intelligence/research/planner.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898626Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      }
+    },
+    {
+      "name": "Agent runtime loop",
+      "description": {
+        "id": "feat-runtime-desc",
+        "text": "AgentRuntime wraps LensRuntime and runs PLAN \u2192 ACT \u2192 OBSERVE \u2192 VERIFY \u2192 REPAIR? \u2192 COMPLETE, persisting plans, tasks, observations, evidence, and verification records.",
+        "status": "verified",
+        "confidence": 0.92,
+        "evidence": [
+          {
+            "id": "ev-apps-intelligence-agent_runtime.py",
+            "kind": "source_code",
+            "path": "apps/intelligence/agent_runtime.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898645Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      },
+      "implemented": {
+        "id": "feat-runtime-impl",
+        "text": "run_now and trigger_routine create or continue a LensRun, ensure a Job, persist an AgentPlan, and seed chief/market tasks.",
+        "status": "verified",
+        "confidence": 0.88,
+        "evidence": [
+          {
+            "id": "ev-apps-intelligence-agent_runtime.py",
+            "kind": "source_code",
+            "path": "apps/intelligence/agent_runtime.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898663Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      }
+    },
+    {
+      "name": "Policy evaluation and scoring",
+      "description": {
+        "id": "feat-policy-desc",
+        "text": "Deterministic engine compares observation metrics to IntelligencePolicy asset conditions (AND/OR), scores candidates, and decides promote/notify including Telegram notify when severity clears the threshold.",
+        "status": "verified",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "id": "ev-apps-intelligence-engine.py",
+            "kind": "source_code",
+            "path": "apps/intelligence/engine.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898690Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      },
+      "implemented": {
+        "id": "feat-policy-impl",
+        "text": "evaluate_policy, compare, and fallback_explanation are implemented in apps/intelligence/engine.py.",
+        "status": "verified",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "id": "ev-apps-intelligence-engine.py",
+            "kind": "source_code",
+            "path": "apps/intelligence/engine.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898705Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      }
+    },
+    {
+      "name": "CoinMarketCap market data",
+      "description": {
+        "id": "feat-cmc-desc",
+        "text": "CMCAdapter calls CoinMarketCap Pro API for listings, quotes, historical quotes/listings, and related market endpoints, with optional as_of historical mode.",
+        "status": "verified",
+        "confidence": 0.94,
+        "evidence": [
+          {
+            "id": "ev-apps-cmc-adapter.py",
+            "kind": "source_code",
+            "path": "apps/cmc/adapter.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898723Z",
+            "excerpt": ""
+          },
+          {
+            "id": "ev-apps-intelligence-agent_runtime.py",
+            "kind": "source_code",
+            "path": "apps/intelligence/agent_runtime.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898730Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      },
+      "implemented": {
+        "id": "feat-cmc-impl",
+        "text": "httpx client against https://pro-api.coinmarketcap.com; runtime registers tools for listings, new listings, historical quotes/OHLCV, latest quotes, content/latest, global metrics, fear-and-greed, trending, gainers-losers, categories, price-performance, altcoin-season, and index quotes.",
+        "status": "verified",
+        "confidence": 0.91,
+        "evidence": [
+          {
+            "id": "ev-apps-cmc-adapter.py",
+            "kind": "source_code",
+            "path": "apps/cmc/adapter.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898746Z",
+            "excerpt": ""
+          },
+          {
+            "id": "ev-apps-intelligence-agent_runtime.py",
+            "kind": "source_code",
+            "path": "apps/intelligence/agent_runtime.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898752Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      }
+    },
+    {
+      "name": "Activate, pause, and run-now controls",
+      "description": {
+        "id": "feat-controls-desc",
+        "text": "Authenticated users can create a Lens from intent, open its workspace, activate a routine, pause it, and receive HTMX/JSON/redirect run status.",
+        "status": "verified",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "id": "ev-apps-lenses-views.py",
+            "kind": "source_code",
+            "path": "apps/lenses/views.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898770Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      },
+      "implemented": {
+        "id": "feat-controls-impl",
+        "text": "lens_create, lens_detail, lens_activate, and lens_pause are login_required; activate can return no_job or a news-unavailable flash.",
         "status": "verified",
         "confidence": 0.88,
         "evidence": [
@@ -366,289 +686,32 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.936309Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-lenses-runtime.py",
-            "kind": "source_code",
-            "path": "apps/lenses/runtime.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.936325Z",
+            "collected_at": "2026-09-29T04:24:14.898785Z",
             "excerpt": ""
           }
         ],
-        "conflicts": [],
+        "conflicts": [
+          "News activate path says monitoring is not available yet, while understanding and product docs treat news as a CMC Content Latest job."
+        ],
         "demote": false
       }
     },
     {
-      "name": "Chief Agent planning",
-      "description": {
-        "id": "feat-plan-desc",
-        "text": "Chief Agent emits a schema-validated AgentPlan (monitor/investigate/research) with allowed steps and tools; plans do not call CMC.",
-        "status": "verified",
-        "confidence": 0.88,
-        "evidence": [
-          {
-            "id": "ev-apps-intelligence-agent.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/agent.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.938967Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-intelligence-agent_runtime.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/agent_runtime.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939001Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      },
-      "implemented": {
-        "id": "feat-plan-impl",
-        "text": "AgentPlan validation rejects unknown steps/tools and unavailable specialists with executable steps; AgentRuntime persists the plan as a conversation artifact.",
-        "status": "verified",
-        "confidence": 0.87,
-        "evidence": [
-          {
-            "id": "ev-apps-intelligence-agent.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/agent.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939027Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-intelligence-agent_runtime.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/agent_runtime.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939035Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "name": "Closed CMC workflow execution",
-      "description": {
-        "id": "feat-wf-desc",
-        "text": "WorkflowDefinition allows a fixed step set (universe/listings, quotes, global metrics, fear & greed, calculate, sort, filter, aggregate, present) and optional asset_condition triggers.",
-        "status": "verified",
-        "confidence": 0.94,
-        "evidence": [
-          {
-            "id": "ev-apps-intelligence-workflow.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/workflow.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939054Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-intelligence-workflow_executor.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/workflow_executor.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939060Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      },
-      "implemented": {
-        "id": "feat-wf-impl",
-        "text": "execute_steps dispatches permitted CMC tools, normalizes listings, can exclude stablecoins, and rejects unknown calculations; arbitrary code step types are rejected.",
-        "status": "verified",
-        "confidence": 0.93,
-        "evidence": [
-          {
-            "id": "ev-apps-intelligence-workflow.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/workflow.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939074Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-intelligence-workflow_executor.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/workflow_executor.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939081Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-intelligence-tools.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/tools.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939086Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "name": "AgentRuntime loop with verification",
-      "description": {
-        "id": "feat-runtime-desc",
-        "text": "AgentRuntime wraps LensRuntime in PLAN \u2192 ACT \u2192 OBSERVE \u2192 VERIFY \u2192 REPAIR? \u2192 COMPLETE, sharing Check now and scheduled paths.",
-        "status": "verified",
-        "confidence": 0.9,
-        "evidence": [
-          {
-            "id": "ev-apps-intelligence-agent_runtime.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/agent_runtime.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939102Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-lenses-runtime.py",
-            "kind": "source_code",
-            "path": "apps/lenses/runtime.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939109Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-monitoring-tasks.py",
-            "kind": "source_code",
-            "path": "apps/monitoring/tasks.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939115Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      },
-      "implemented": {
-        "id": "feat-runtime-impl",
-        "text": "Celery run_lens constructs AgentRuntime; manual/historical/chat use run_now, scheduled uses trigger_routine; LensRuntime falls back to MonitoringService when a workflow has no steps.",
-        "status": "verified",
-        "confidence": 0.9,
-        "evidence": [
-          {
-            "id": "ev-apps-monitoring-tasks.py",
-            "kind": "source_code",
-            "path": "apps/monitoring/tasks.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939128Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-intelligence-agent_runtime.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/agent_runtime.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939134Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-lenses-runtime.py",
-            "kind": "source_code",
-            "path": "apps/lenses/runtime.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939140Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "name": "Unattended Beat / routines",
+      "name": "Scheduled Beat / Celery routines",
       "description": {
         "id": "feat-beat-desc",
-        "text": "Celery task run_active_lenses enqueues due routines via RoutineService; run_lens executes the same AgentRuntime path as manual checks.",
-        "status": "verified",
-        "confidence": 0.88,
-        "evidence": [
-          {
-            "id": "ev-apps-monitoring-tasks.py",
-            "kind": "source_code",
-            "path": "apps/monitoring/tasks.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939156Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-docker-compose.yml",
-            "kind": "config",
-            "path": "docker-compose.yml",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939163Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      },
-      "implemented": {
-        "id": "feat-beat-impl",
-        "text": "Compose defines a beat service; run_active_lenses delays run_lens(lens_id, 'scheduled') for each due routine. 15-minute cadence is documented, not shown in task code.",
-        "status": "verified",
+        "text": "Background worker and beat processes exist so standing watches can run unattended and write later findings into the same conversation.",
+        "status": "inferred",
         "confidence": 0.78,
         "evidence": [
           {
-            "id": "ev-apps-monitoring-tasks.py",
+            "id": "ev-Procfile",
             "kind": "source_code",
-            "path": "apps/monitoring/tasks.py",
+            "path": "Procfile",
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939176Z",
+            "collected_at": "2026-09-29T04:24:14.898802Z",
             "excerpt": ""
           },
           {
@@ -658,7 +721,17 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939182Z",
+            "collected_at": "2026-09-29T04:24:14.898810Z",
+            "excerpt": ""
+          },
+          {
+            "id": "ev-apps-lenses-views.py",
+            "kind": "source_code",
+            "path": "apps/lenses/views.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898817Z",
             "excerpt": ""
           },
           {
@@ -668,105 +741,47 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939188Z",
+            "collected_at": "2026-09-29T04:24:14.898824Z",
             "excerpt": ""
           }
         ],
-        "conflicts": [
-          "README claims a 15-minute cadence; monitoring tasks evidence does not set Beat interval."
-        ],
+        "conflicts": [],
         "demote": false
-      }
-    },
-    {
-      "name": "Live run status (HTMX / JSON)",
-      "description": {
-        "id": "feat-htmx-desc",
-        "text": "Check-now style runs can return an HTMX run_status partial or JSON {run_id, stage}.",
-        "status": "verified",
-        "confidence": 0.86,
+      },
+      "implemented": {
+        "id": "feat-beat-impl",
+        "text": "Procfile and compose define web, worker, and beat; views import monitoring.tasks.run_lens. The 15-minute interval is documented, not shown in the provided source excerpts.",
+        "status": "inferred",
+        "confidence": 0.75,
         "evidence": [
           {
-            "id": "ev-apps-lenses-views.py",
+            "id": "ev-Procfile",
             "kind": "source_code",
-            "path": "apps/lenses/views.py",
+            "path": "Procfile",
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939204Z",
+            "collected_at": "2026-09-29T04:24:14.898840Z",
             "excerpt": ""
           },
           {
-            "id": "ev-apps-lenses-models.py",
-            "kind": "source_code",
-            "path": "apps/lenses/models.py",
+            "id": "ev-docker-compose.yml",
+            "kind": "config",
+            "path": "docker-compose.yml",
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939211Z",
+            "collected_at": "2026-09-29T04:24:14.898846Z",
             "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      },
-      "implemented": {
-        "id": "feat-htmx-impl",
-        "text": "_run_response renders workspace/partials/run_status.html on HX-Request or JsonResponse with run_id and stage.",
-        "status": "verified",
-        "confidence": 0.86,
-        "evidence": [
+          },
           {
-            "id": "ev-apps-lenses-views.py",
-            "kind": "source_code",
-            "path": "apps/lenses/views.py",
+            "id": "ev-README.md",
+            "kind": "docs",
+            "path": "README.md",
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939245Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "name": "Tool permission boundary",
-      "description": {
-        "id": "feat-tools-desc",
-        "text": "Default permissions allow four CMC read tools and deny news and on_chain.",
-        "status": "verified",
-        "confidence": 0.95,
-        "evidence": [
-          {
-            "id": "ev-apps-intelligence-tools.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/tools.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939263Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      },
-      "implemented": {
-        "id": "feat-tools-impl",
-        "text": "require_tool raises ToolPermissionError for news, on_chain, unknown, or disabled tools; dispatch_cmc maps only CMC handlers.",
-        "status": "verified",
-        "confidence": 0.95,
-        "evidence": [
-          {
-            "id": "ev-apps-intelligence-tools.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/tools.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939299Z",
+            "collected_at": "2026-09-29T04:24:14.898853Z",
             "excerpt": ""
           }
         ],
@@ -777,125 +792,30 @@
   ],
   "journeys": [
     {
-      "name": "Create agent from intent",
+      "name": "Create analyst and ask in the thread",
       "beats": [
-        "Authenticate",
-        "POST intent or pick a template",
-        "AgentService.create_from_intent",
-        "Redirect to lens detail"
+        "Sign up or log in",
+        "Create a Lens from a natural-language intent or a draft",
+        "Open the workspace conversation",
+        "Send a question; understanding and planner compile a task",
+        "Runtime fetches CMC data, verifies, and replies in the same thread"
       ],
       "claim": {
-        "id": "journey-create",
-        "text": "Logged-in users create a Lens from natural-language intent or a catalog template and land on the agent workspace.",
-        "status": "verified",
-        "confidence": 0.88,
-        "evidence": [
-          {
-            "id": "ev-apps-lenses-views.py",
-            "kind": "source_code",
-            "path": "apps/lenses/views.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939350Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "name": "Chat a job and run",
-      "beats": [
-        "Open owned lens",
-        "POST conversation intent/action",
-        "ConversationService.handle",
-        "If kind=run, return HTMX/JSON/redirect with LensRun"
-      ],
-      "claim": {
-        "id": "journey-chat-run",
-        "text": "The lens detail conversation can start a run and return live stage UI.",
-        "status": "verified",
-        "confidence": 0.86,
-        "evidence": [
-          {
-            "id": "ev-apps-lenses-views.py",
-            "kind": "source_code",
-            "path": "apps/lenses/views.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939395Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-lenses-runtime.py",
-            "kind": "source_code",
-            "path": "apps/lenses/runtime.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939411Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "name": "Unattended scheduled watch",
-      "beats": [
-        "Routine becomes due",
-        "run_active_lenses enqueues run_lens",
-        "AgentRuntime.trigger_routine",
-        "Workflow/CMC + conversation result"
-      ],
-      "claim": {
-        "id": "journey-beat",
-        "text": "Due routines are executed unattended through Celery AgentRuntime, the same stack as manual runs.",
-        "status": "verified",
-        "confidence": 0.87,
-        "evidence": [
-          {
-            "id": "ev-apps-monitoring-tasks.py",
-            "kind": "source_code",
-            "path": "apps/monitoring/tasks.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939451Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-intelligence-agent_runtime.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/agent_runtime.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939467Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "name": "Landing then auth then agent",
-      "beats": [
-        "Landing composer stashes instruction",
-        "Get Started / Log In",
-        "Pending instruction creates Agent"
-      ],
-      "claim": {
-        "id": "journey-landing",
-        "text": "Docs say no Agent and no CMC job before authentication; landing instruction creates an Agent after signup/login.",
+        "id": "journey-ask",
+        "text": "Authenticated users create a Lens and converse on lens_detail; AgentService and ConversationService compile and run work, rendering workspace/lens.html.",
         "status": "inferred",
-        "confidence": 0.58,
+        "confidence": 0.82,
         "evidence": [
+          {
+            "id": "ev-apps-lenses-views.py",
+            "kind": "source_code",
+            "path": "apps/lenses/views.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898873Z",
+            "excerpt": ""
+          },
           {
             "id": "ev-README.md",
             "kind": "docs",
@@ -903,7 +823,7 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939532Z",
+            "collected_at": "2026-09-29T04:24:14.898880Z",
             "excerpt": ""
           },
           {
@@ -913,7 +833,104 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939551Z",
+            "collected_at": "2026-09-29T04:24:14.898887Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      }
+    },
+    {
+      "name": "Keep watching and check now",
+      "beats": [
+        "User says keep watching this",
+        "A Routine is attached to the current task",
+        "Beat/worker ticks the standing job",
+        "Check now / run phrases trigger an immediate LensRun"
+      ],
+      "claim": {
+        "id": "journey-watch",
+        "text": "ConversationService recognizes keep-watching and check-now phrases; activate/pause views and Celery run_lens support standing work. Product docs say Beat writes into the same conversation every 15 minutes.",
+        "status": "inferred",
+        "confidence": 0.8,
+        "evidence": [
+          {
+            "id": "ev-apps-lenses-conversation_service.py",
+            "kind": "source_code",
+            "path": "apps/lenses/conversation_service.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898911Z",
+            "excerpt": ""
+          },
+          {
+            "id": "ev-apps-lenses-views.py",
+            "kind": "source_code",
+            "path": "apps/lenses/views.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898931Z",
+            "excerpt": ""
+          },
+          {
+            "id": "ev-README.md",
+            "kind": "docs",
+            "path": "README.md",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.898967Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      }
+    },
+    {
+      "name": "Landing then auth then first analyst",
+      "beats": [
+        "Landing composer stashes instruction without creating a Lens or calling CMC",
+        "Get Started / Log In",
+        "After auth, pending instruction creates the user's analyst or they create one by name"
+      ],
+      "claim": {
+        "id": "journey-landing",
+        "text": "Landing \u2192 signup/login \u2192 Your Analysts \u2192 empty conversation is described in README and PRODUCT.md only; no landing or users URL module is in this evidence pack.",
+        "status": "inferred",
+        "confidence": 0.6,
+        "evidence": [
+          {
+            "id": "ev-README.md",
+            "kind": "docs",
+            "path": "README.md",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.899002Z",
+            "excerpt": ""
+          },
+          {
+            "id": "ev-PRODUCT.md",
+            "kind": "docs",
+            "path": "PRODUCT.md",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.899015Z",
+            "excerpt": ""
+          },
+          {
+            "id": "ev-config-urls.py",
+            "kind": "source_code",
+            "path": "config/urls.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.899029Z",
             "excerpt": ""
           }
         ],
@@ -924,11 +941,11 @@
   ],
   "screens": [
     {
-      "name": "Agent / lens workspace",
+      "name": "Lens workspace",
       "path": null,
       "claim": {
         "id": "screen-lens",
-        "text": "lens_detail renders templates/workspace/lens.html with ConversationService context, optional preview/diffs.",
+        "text": "Authenticated lens_detail renders workspace/lens.html with ConversationService context, optional preview/diffs, and HTMX run_status partials.",
         "status": "verified",
         "confidence": 0.88,
         "evidence": [
@@ -939,7 +956,7 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939632Z",
+            "collected_at": "2026-09-29T04:24:14.899096Z",
             "excerpt": ""
           }
         ],
@@ -948,22 +965,22 @@
       }
     },
     {
-      "name": "Run status partial",
-      "path": null,
+      "name": "Django admin",
+      "path": "/admin/",
       "claim": {
-        "id": "screen-run-status",
-        "text": "HTMX run responses render workspace/partials/run_status.html with working_cards from RunService.",
+        "id": "screen-admin",
+        "text": "Root urlconf mounts Django admin at admin/.",
         "status": "verified",
-        "confidence": 0.86,
+        "confidence": 0.95,
         "evidence": [
           {
-            "id": "ev-apps-lenses-views.py",
+            "id": "ev-config-urls.py",
             "kind": "source_code",
-            "path": "apps/lenses/views.py",
+            "path": "config/urls.py",
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939683Z",
+            "collected_at": "2026-09-29T04:24:14.899140Z",
             "excerpt": ""
           }
         ],
@@ -972,11 +989,11 @@
       }
     },
     {
-      "name": "Landing",
-      "path": "/",
+      "name": "Landing / auth / Your Analysts",
+      "path": null,
       "claim": {
-        "id": "screen-landing",
-        "text": "Docs describe a landing composer with Get Started and Log In before any Agent exists.",
+        "id": "screen-marketing",
+        "text": "Docs describe landing, /signup, /login, and an analysts list; users and lenses URL includes exist but concrete paths and templates are not in this pack (git shows dirty templates/landing.html).",
         "status": "inferred",
         "confidence": 0.55,
         "evidence": [
@@ -987,7 +1004,7 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939728Z",
+            "collected_at": "2026-09-29T04:24:14.899181Z",
             "excerpt": ""
           },
           {
@@ -997,147 +1014,27 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939736Z",
+            "collected_at": "2026-09-29T04:24:14.899196Z",
             "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "name": "Signup",
-      "path": "/signup",
-      "claim": {
-        "id": "screen-signup",
-        "text": "README names Get Started at /signup.",
-        "status": "inferred",
-        "confidence": 0.5,
-        "evidence": [
+          },
           {
-            "id": "ev-README.md",
-            "kind": "docs",
-            "path": "README.md",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939753Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "name": "Log in",
-      "path": "/login",
-      "claim": {
-        "id": "screen-login",
-        "text": "README names Log In at /login and Django built-in password reset.",
-        "status": "inferred",
-        "confidence": 0.5,
-        "evidence": [
-          {
-            "id": "ev-README.md",
-            "kind": "docs",
-            "path": "README.md",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939815Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "name": "Agent home",
-      "path": null,
-      "claim": {
-        "id": "screen-home",
-        "text": "lens_list redirects to agent_home; PRODUCT lists Agent home and Create Agent.",
-        "status": "inferred",
-        "confidence": 0.64,
-        "evidence": [
-          {
-            "id": "ev-apps-lenses-views.py",
+            "id": "ev-config-urls.py",
             "kind": "source_code",
-            "path": "apps/lenses/views.py",
+            "path": "config/urls.py",
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939831Z",
+            "collected_at": "2026-09-29T04:24:14.899212Z",
             "excerpt": ""
           },
           {
-            "id": "ev-PRODUCT.md",
-            "kind": "docs",
-            "path": "PRODUCT.md",
+            "id": "ev-git-log",
+            "kind": "git",
+            "path": ".git",
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939838Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "name": "Job execution trace",
-      "path": "/jobs/<id>",
-      "claim": {
-        "id": "screen-jobs",
-        "text": "README says jobs open an execution trace at /jobs/<id>. URL routing is not in this evidence pack.",
-        "status": "inferred",
-        "confidence": 0.45,
-        "evidence": [
-          {
-            "id": "ev-README.md",
-            "kind": "docs",
-            "path": "README.md",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939854Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "name": "Settings",
-      "path": null,
-      "claim": {
-        "id": "screen-settings",
-        "text": "Docs list Settings for Telegram connect/test/disconnect and Log Out.",
-        "status": "inferred",
-        "confidence": 0.48,
-        "evidence": [
-          {
-            "id": "ev-README.md",
-            "kind": "docs",
-            "path": "README.md",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939869Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-PRODUCT.md",
-            "kind": "docs",
-            "path": "PRODUCT.md",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.939876Z",
+            "collected_at": "2026-09-29T04:24:14.899230Z",
             "excerpt": ""
           }
         ],
@@ -1148,7 +1045,7 @@
   ],
   "architecture": {
     "id": "architecture",
-    "text": "Django monolith: users, lenses, intelligence, monitoring, events, notifications, cmc. Human intent \u2192 Chief Agent AgentPlan \u2192 validated Workflow \u2192 AgentRuntime wrapping LensRuntime \u2192 CMCAdapter. Celery worker/beat share run_lens. WhiteNoise + Django templates.",
+    "text": "Django monolith (config + apps users, lenses, intelligence, monitoring, events, notifications, cmc). Understanding and ResearchPlanner do not call CMC; AgentRuntime/LensRuntime execute registered CMC tools. Web is gunicorn; worker/beat are Celery; compose adds Postgres, Redis, and nginx. LensVersion stores compiled policy/job/workflow JSON.",
     "status": "verified",
     "confidence": 0.9,
     "evidence": [
@@ -1211,6 +1108,66 @@
         "hash": null,
         "collected_at": "2026-09-17T01:47:42.939955Z",
         "excerpt": ""
+      },
+      {
+        "id": "ev-config-urls.py",
+        "kind": "source_code",
+        "path": "config/urls.py",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:22:38.912522Z",
+        "excerpt": ""
+      },
+      {
+        "id": "ev-apps-lenses-conversation_service.py",
+        "kind": "source_code",
+        "path": "apps/lenses/conversation_service.py",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:22:38.912529Z",
+        "excerpt": ""
+      },
+      {
+        "id": "ev-apps-intelligence-understanding.py",
+        "kind": "source_code",
+        "path": "apps/intelligence/understanding.py",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:22:38.912535Z",
+        "excerpt": ""
+      },
+      {
+        "id": "ev-apps-intelligence-research-planner.py",
+        "kind": "source_code",
+        "path": "apps/intelligence/research/planner.py",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:22:38.912542Z",
+        "excerpt": ""
+      },
+      {
+        "id": "ev-apps-lenses-models.py",
+        "kind": "source_code",
+        "path": "apps/lenses/models.py",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:24:14.899300Z",
+        "excerpt": ""
+      },
+      {
+        "id": "ev-Procfile",
+        "kind": "source_code",
+        "path": "Procfile",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:24:14.899313Z",
+        "excerpt": ""
       }
     ],
     "conflicts": [],
@@ -1219,20 +1176,10 @@
   "stack": [
     {
       "id": "stack-django",
-      "text": "Django 5.1\u2013<5.3 with custom AUTH_USER_MODEL users.User, sessions, CSRF, WhiteNoise, humanize.",
+      "text": "Django 5.1\u2013<5.3 web app with custom AUTH_USER_MODEL users.User, WhiteNoise, and Django templates under templates/.",
       "status": "verified",
       "confidence": 0.95,
       "evidence": [
-        {
-          "id": "ev-config-settings.py",
-          "kind": "source_code",
-          "path": "config/settings.py",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.939997Z",
-          "excerpt": ""
-        },
         {
           "id": "ev-requirements.txt",
           "kind": "docs",
@@ -1240,7 +1187,17 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940019Z",
+          "collected_at": "2026-09-29T04:24:14.899327Z",
+          "excerpt": ""
+        },
+        {
+          "id": "ev-config-settings.py",
+          "kind": "source_code",
+          "path": "config/settings.py",
+          "uri": null,
+          "locator": null,
+          "hash": null,
+          "collected_at": "2026-09-29T04:24:14.899333Z",
           "excerpt": ""
         }
       ],
@@ -1249,9 +1206,9 @@
     },
     {
       "id": "stack-python",
-      "text": "Python 3.12 slim container.",
+      "text": "Python 3.12 (Docker base image python:3.12-slim).",
       "status": "verified",
-      "confidence": 0.92,
+      "confidence": 0.93,
       "evidence": [
         {
           "id": "ev-Dockerfile",
@@ -1260,7 +1217,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940048Z",
+          "collected_at": "2026-09-29T04:24:14.899346Z",
           "excerpt": ""
         }
       ],
@@ -1269,9 +1226,9 @@
     },
     {
       "id": "stack-celery",
-      "text": "Celery + django-celery-beat + Redis broker for worker and beat.",
+      "text": "Celery worker and beat with django-celery-beat; Redis as broker/backend in compose.",
       "status": "verified",
-      "confidence": 0.92,
+      "confidence": 0.9,
       "evidence": [
         {
           "id": "ev-requirements.txt",
@@ -1280,17 +1237,17 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940076Z",
+          "collected_at": "2026-09-29T04:24:14.899358Z",
           "excerpt": ""
         },
         {
-          "id": "ev-apps-monitoring-tasks.py",
+          "id": "ev-Procfile",
           "kind": "source_code",
-          "path": "apps/monitoring/tasks.py",
+          "path": "Procfile",
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940083Z",
+          "collected_at": "2026-09-29T04:24:14.899364Z",
           "excerpt": ""
         },
         {
@@ -1300,7 +1257,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940089Z",
+          "collected_at": "2026-09-29T04:24:14.899370Z",
           "excerpt": ""
         }
       ],
@@ -1308,10 +1265,10 @@
       "demote": false
     },
     {
-      "id": "stack-pydantic",
-      "text": "Pydantic v2 models for AgentPlan, WorkflowDefinition, JobDefinition, IntelligencePolicy.",
+      "id": "stack-httpx-pydantic",
+      "text": "httpx for CMC HTTP; Pydantic for policy/understanding/job models.",
       "status": "verified",
-      "confidence": 0.93,
+      "confidence": 0.9,
       "evidence": [
         {
           "id": "ev-requirements.txt",
@@ -1320,39 +1277,9 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940102Z",
+          "collected_at": "2026-09-29T04:24:14.899382Z",
           "excerpt": ""
         },
-        {
-          "id": "ev-apps-intelligence-agent.py",
-          "kind": "source_code",
-          "path": "apps/intelligence/agent.py",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940108Z",
-          "excerpt": ""
-        },
-        {
-          "id": "ev-apps-intelligence-workflow.py",
-          "kind": "source_code",
-          "path": "apps/intelligence/workflow.py",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940114Z",
-          "excerpt": ""
-        }
-      ],
-      "conflicts": [],
-      "demote": false
-    },
-    {
-      "id": "stack-httpx",
-      "text": "httpx client for CoinMarketCap Pro API.",
-      "status": "verified",
-      "confidence": 0.93,
-      "evidence": [
         {
           "id": "ev-apps-cmc-adapter.py",
           "kind": "source_code",
@@ -1360,17 +1287,17 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940127Z",
+          "collected_at": "2026-09-29T04:24:14.899389Z",
           "excerpt": ""
         },
         {
-          "id": "ev-requirements.txt",
-          "kind": "docs",
-          "path": "requirements.txt",
+          "id": "ev-apps-intelligence-understanding.py",
+          "kind": "source_code",
+          "path": "apps/intelligence/understanding.py",
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940133Z",
+          "collected_at": "2026-09-29T04:24:14.899395Z",
           "excerpt": ""
         }
       ],
@@ -1378,10 +1305,10 @@
       "demote": false
     },
     {
-      "id": "stack-gunicorn-nginx",
-      "text": "Gunicorn (requirements) behind nginx:1.27 on host 8080 in compose.",
-      "status": "verified",
-      "confidence": 0.86,
+      "id": "stack-drf",
+      "text": "djangorestframework is a declared dependency; no DRF view or router appears in the provided excerpts.",
+      "status": "inferred",
+      "confidence": 0.45,
       "evidence": [
         {
           "id": "ev-requirements.txt",
@@ -1390,17 +1317,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940155Z",
-          "excerpt": ""
-        },
-        {
-          "id": "ev-docker-compose.yml",
-          "kind": "config",
-          "path": "docker-compose.yml",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940162Z",
+          "collected_at": "2026-09-29T04:24:14.899407Z",
           "excerpt": ""
         }
       ],
@@ -1413,7 +1330,7 @@
       "id": "dep-django",
       "text": "Django>=5.1,<5.3",
       "status": "inferred",
-      "confidence": 0.97,
+      "confidence": 0.98,
       "evidence": [
         {
           "id": "ev-requirements.txt",
@@ -1422,7 +1339,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940177Z",
+          "collected_at": "2026-09-29T04:24:14.899421Z",
           "excerpt": ""
         }
       ],
@@ -1433,9 +1350,9 @@
     },
     {
       "id": "dep-drf",
-      "text": "djangorestframework>=3.15,<3.17 is listed; no REST view usage appears in this pack.",
+      "text": "djangorestframework>=3.15,<3.17",
       "status": "inferred",
-      "confidence": 0.7,
+      "confidence": 0.98,
       "evidence": [
         {
           "id": "ev-requirements.txt",
@@ -1444,7 +1361,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940189Z",
+          "collected_at": "2026-09-29T04:24:14.899433Z",
           "excerpt": ""
         }
       ],
@@ -1457,7 +1374,7 @@
       "id": "dep-psycopg",
       "text": "psycopg2-binary>=2.9,<3",
       "status": "inferred",
-      "confidence": 0.95,
+      "confidence": 0.98,
       "evidence": [
         {
           "id": "ev-requirements.txt",
@@ -1466,7 +1383,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940201Z",
+          "collected_at": "2026-09-29T04:24:14.899445Z",
           "excerpt": ""
         }
       ],
@@ -1479,7 +1396,7 @@
       "id": "dep-redis",
       "text": "redis>=5.0,<6",
       "status": "inferred",
-      "confidence": 0.95,
+      "confidence": 0.98,
       "evidence": [
         {
           "id": "ev-requirements.txt",
@@ -1488,7 +1405,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940212Z",
+          "collected_at": "2026-09-29T04:24:14.899456Z",
           "excerpt": ""
         }
       ],
@@ -1501,7 +1418,7 @@
       "id": "dep-celery",
       "text": "celery>=5.4,<6 and django-celery-beat>=2.7,<3",
       "status": "inferred",
-      "confidence": 0.95,
+      "confidence": 0.98,
       "evidence": [
         {
           "id": "ev-requirements.txt",
@@ -1510,7 +1427,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940233Z",
+          "collected_at": "2026-09-29T04:24:14.899467Z",
           "excerpt": ""
         }
       ],
@@ -1523,7 +1440,7 @@
       "id": "dep-httpx",
       "text": "httpx>=0.27,<0.29",
       "status": "inferred",
-      "confidence": 0.95,
+      "confidence": 0.98,
       "evidence": [
         {
           "id": "ev-requirements.txt",
@@ -1532,7 +1449,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940245Z",
+          "collected_at": "2026-09-29T04:24:14.899479Z",
           "excerpt": ""
         }
       ],
@@ -1545,7 +1462,7 @@
       "id": "dep-pydantic",
       "text": "pydantic>=2.9,<3",
       "status": "inferred",
-      "confidence": 0.95,
+      "confidence": 0.98,
       "evidence": [
         {
           "id": "ev-requirements.txt",
@@ -1554,7 +1471,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940258Z",
+          "collected_at": "2026-09-29T04:24:14.899491Z",
           "excerpt": ""
         }
       ],
@@ -1567,7 +1484,7 @@
       "id": "dep-gunicorn",
       "text": "gunicorn>=23,<24",
       "status": "inferred",
-      "confidence": 0.95,
+      "confidence": 0.98,
       "evidence": [
         {
           "id": "ev-requirements.txt",
@@ -1576,7 +1493,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940280Z",
+          "collected_at": "2026-09-29T04:24:14.899504Z",
           "excerpt": ""
         }
       ],
@@ -1588,68 +1505,8 @@
     {
       "id": "dep-whitenoise",
       "text": "whitenoise>=6.7,<7",
-      "status": "verified",
-      "confidence": 0.95,
-      "evidence": [
-        {
-          "id": "ev-requirements.txt",
-          "kind": "docs",
-          "path": "requirements.txt",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940302Z",
-          "excerpt": ""
-        },
-        {
-          "id": "ev-config-settings.py",
-          "kind": "source_code",
-          "path": "config/settings.py",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940308Z",
-          "excerpt": ""
-        }
-      ],
-      "conflicts": [],
-      "demote": false
-    },
-    {
-      "id": "dep-dotenv",
-      "text": "python-dotenv>=1.0,<2",
-      "status": "verified",
-      "confidence": 0.95,
-      "evidence": [
-        {
-          "id": "ev-requirements.txt",
-          "kind": "docs",
-          "path": "requirements.txt",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940322Z",
-          "excerpt": ""
-        },
-        {
-          "id": "ev-config-settings.py",
-          "kind": "source_code",
-          "path": "config/settings.py",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940327Z",
-          "excerpt": ""
-        }
-      ],
-      "conflicts": [],
-      "demote": false
-    },
-    {
-      "id": "dep-pytest",
-      "text": "pytest, pytest-django, pytest-cov, respx for tests",
       "status": "inferred",
-      "confidence": 0.9,
+      "confidence": 0.98,
       "evidence": [
         {
           "id": "ev-requirements.txt",
@@ -1658,7 +1515,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940339Z",
+          "collected_at": "2026-09-29T04:24:14.899516Z",
           "excerpt": ""
         }
       ],
@@ -1668,10 +1525,10 @@
       "demote": false
     },
     {
-      "id": "dep-cursor-sdk",
-      "text": "Optional cursor-sdk when CURSOR_API_KEY is set (commented in requirements).",
+      "id": "dep-dotenv",
+      "text": "python-dotenv>=1.0,<2",
       "status": "inferred",
-      "confidence": 0.55,
+      "confidence": 0.98,
       "evidence": [
         {
           "id": "ev-requirements.txt",
@@ -1680,7 +1537,69 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.940351Z",
+          "collected_at": "2026-09-29T04:24:14.899527Z",
+          "excerpt": ""
+        }
+      ],
+      "conflicts": [
+        "downgraded: verified requires non-docs evidence"
+      ],
+      "demote": false
+    },
+    {
+      "id": "dep-pytest",
+      "text": "pytest>=8.3,<9, pytest-django, pytest-cov, respx",
+      "status": "verified",
+      "confidence": 0.98,
+      "evidence": [
+        {
+          "id": "ev-requirements.txt",
+          "kind": "docs",
+          "path": "requirements.txt",
+          "uri": null,
+          "locator": null,
+          "hash": null,
+          "collected_at": "2026-09-29T04:24:14.899539Z",
+          "excerpt": ""
+        },
+        {
+          "id": "ev-pytest.ini",
+          "kind": "test",
+          "path": "pytest.ini",
+          "uri": null,
+          "locator": null,
+          "hash": null,
+          "collected_at": "2026-09-29T04:24:14.899546Z",
+          "excerpt": ""
+        }
+      ],
+      "conflicts": [],
+      "demote": false
+    },
+    {
+      "id": "dep-cursor-sdk",
+      "text": "cursor-sdk>=1.0.24 (Dockerfile falls back to installing requirements without this package if the full install fails)",
+      "status": "verified",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "id": "ev-requirements.txt",
+          "kind": "docs",
+          "path": "requirements.txt",
+          "uri": null,
+          "locator": null,
+          "hash": null,
+          "collected_at": "2026-09-29T04:24:14.899559Z",
+          "excerpt": ""
+        },
+        {
+          "id": "ev-Dockerfile",
+          "kind": "config",
+          "path": "Dockerfile",
+          "uri": null,
+          "locator": null,
+          "hash": null,
+          "collected_at": "2026-09-29T04:24:14.899565Z",
           "excerpt": ""
         }
       ],
@@ -1693,9 +1612,9 @@
       "name": "CoinMarketCap Pro API",
       "claim": {
         "id": "int-cmc",
-        "text": "CMCAdapter calls https://pro-api.coinmarketcap.com for listings/latest, quotes/latest, historical quotes/listings, using CMC_API_KEY and optional as_of historical mode.",
+        "text": "Primary market-data integration via CMC_API_KEY and https://pro-api.coinmarketcap.com (listings, quotes, historical, content, global metrics, fear-and-greed, and other registered endpoints).",
         "status": "verified",
-        "confidence": 0.95,
+        "confidence": 0.94,
         "evidence": [
           {
             "id": "ev-apps-cmc-adapter.py",
@@ -1704,17 +1623,17 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.940380Z",
+            "collected_at": "2026-09-29T04:24:14.899581Z",
             "excerpt": ""
           },
           {
-            "id": "ev-apps-intelligence-tools.py",
+            "id": "ev-apps-intelligence-agent_runtime.py",
             "kind": "source_code",
-            "path": "apps/intelligence/tools.py",
+            "path": "apps/intelligence/agent_runtime.py",
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.940387Z",
+            "collected_at": "2026-09-29T04:24:14.899587Z",
             "excerpt": ""
           }
         ],
@@ -1723,10 +1642,53 @@
       }
     },
     {
-      "name": "PostgreSQL / Supabase",
+      "name": "Telegram notifications",
       "claim": {
-        "id": "int-postgres",
-        "text": "DATABASE_URL can use PostgreSQL; settings rewrite IPv6-only db.<ref>.supabase.co hosts to an IPv4 pooler on port 6543.",
+        "id": "int-telegram",
+        "text": "AgentRuntime imports notify_artifact from apps.notifications.telegram; conversation router is web-first with later Telegram. Git history includes telegram integration. Chat-over-Telegram is not shown as complete in these excerpts.",
+        "status": "inferred",
+        "confidence": 0.7,
+        "evidence": [
+          {
+            "id": "ev-apps-intelligence-agent_runtime.py",
+            "kind": "source_code",
+            "path": "apps/intelligence/agent_runtime.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.899604Z",
+            "excerpt": ""
+          },
+          {
+            "id": "ev-apps-lenses-conversation_service.py",
+            "kind": "source_code",
+            "path": "apps/lenses/conversation_service.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.899611Z",
+            "excerpt": ""
+          },
+          {
+            "id": "ev-git-log",
+            "kind": "git",
+            "path": ".git",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.899617Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      }
+    },
+    {
+      "name": "Railway",
+      "claim": {
+        "id": "int-railway",
+        "text": "Settings detect RAILWAY_ENVIRONMENT / RAILWAY_PUBLIC_DOMAIN, tighten DEBUG, extend ALLOWED_HOSTS and CSRF origins, and set forwarded-proto SSL headers.",
         "status": "verified",
         "confidence": 0.9,
         "evidence": [
@@ -1737,17 +1699,7 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.940406Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-docker-compose.yml",
-            "kind": "config",
-            "path": "docker-compose.yml",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.940412Z",
+            "collected_at": "2026-09-29T04:24:14.899633Z",
             "excerpt": ""
           }
         ],
@@ -1756,64 +1708,21 @@
       }
     },
     {
-      "name": "Redis",
+      "name": "Supabase Postgres (optional)",
       "claim": {
-        "id": "int-redis",
-        "text": "Compose and web/worker/beat set REDIS_URL redis://redis:6379/0.",
+        "id": "int-supabase",
+        "text": "DATABASE_URL may point at db.<ref>.supabase.co; settings rewrite to an IPv4 pooler host when the direct host has no IPv4.",
         "status": "verified",
-        "confidence": 0.9,
+        "confidence": 0.8,
         "evidence": [
           {
-            "id": "ev-docker-compose.yml",
-            "kind": "config",
-            "path": "docker-compose.yml",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.940439Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "name": "Telegram",
-      "claim": {
-        "id": "int-telegram",
-        "text": "LensRuntime and AgentRuntime import telegram notify helpers (notify_event, notify_result, notify_artifact). Connect/test/disconnect UI is documented only.",
-        "status": "verified",
-        "confidence": 0.72,
-        "evidence": [
-          {
-            "id": "ev-apps-lenses-runtime.py",
+            "id": "ev-config-settings.py",
             "kind": "source_code",
-            "path": "apps/lenses/runtime.py",
+            "path": "config/settings.py",
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.940475Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-intelligence-agent_runtime.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/agent_runtime.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.940513Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-README.md",
-            "kind": "docs",
-            "path": "README.md",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.940537Z",
+            "collected_at": "2026-09-29T04:24:14.899648Z",
             "excerpt": ""
           }
         ],
@@ -1824,90 +1733,22 @@
   ],
   "apis": [
     {
-      "method": "GET",
-      "path": "/v3/cryptocurrency/listings/latest",
+      "method": null,
+      "path": "/admin/",
       "claim": {
-        "id": "api-cmc-listings",
-        "text": "Outbound CMC listings latest used by get_listings / get_market_listings.",
+        "id": "api-admin",
+        "text": "Django admin is mounted at admin/.",
         "status": "verified",
-        "confidence": 0.94,
+        "confidence": 0.95,
         "evidence": [
           {
-            "id": "ev-apps-cmc-adapter.py",
+            "id": "ev-config-urls.py",
             "kind": "source_code",
-            "path": "apps/cmc/adapter.py",
+            "path": "config/urls.py",
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.940613Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-intelligence-tools.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/tools.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.940640Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "method": "GET",
-      "path": "/v3/cryptocurrency/quotes/latest",
-      "claim": {
-        "id": "api-cmc-quotes",
-        "text": "Outbound CMC quotes latest used by get_quotes.",
-        "status": "verified",
-        "confidence": 0.94,
-        "evidence": [
-          {
-            "id": "ev-apps-cmc-adapter.py",
-            "kind": "source_code",
-            "path": "apps/cmc/adapter.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.940691Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-intelligence-tools.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/tools.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.940705Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "method": "GET",
-      "path": "/v2/cryptocurrency/quotes/historical",
-      "claim": {
-        "id": "api-cmc-quotes-hist",
-        "text": "Outbound CMC historical quotes when adapter as_of is set.",
-        "status": "verified",
-        "confidence": 0.9,
-        "evidence": [
-          {
-            "id": "ev-apps-cmc-adapter.py",
-            "kind": "source_code",
-            "path": "apps/cmc/adapter.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.940774Z",
+            "collected_at": "2026-09-29T04:24:14.899667Z",
             "excerpt": ""
           }
         ],
@@ -1917,12 +1758,36 @@
     },
     {
       "method": null,
-      "path": "lens run JSON",
+      "path": "/",
+      "claim": {
+        "id": "api-includes",
+        "text": "Root urlconf includes apps.users, apps.lenses, apps.events, and apps.notifications URL modules; concrete public paths are not in this pack.",
+        "status": "verified",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "id": "ev-config-urls.py",
+            "kind": "source_code",
+            "path": "config/urls.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.899683Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      }
+    },
+    {
+      "method": "POST",
+      "path": "lens_detail (application/json or HX-Request)",
       "claim": {
         "id": "api-run-json",
-        "text": "Accepts application/json (without HTML) returns {run_id, stage} for a lens run. Exact URL path not in pack.",
+        "text": "After a conversation result of kind run, views may return JsonResponse {run_id, stage} or an HTMX run_status partial instead of a full redirect.",
         "status": "verified",
-        "confidence": 0.75,
+        "confidence": 0.8,
         "evidence": [
           {
             "id": "ev-apps-lenses-views.py",
@@ -1931,7 +1796,7 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.940806Z",
+            "collected_at": "2026-09-29T04:24:14.899699Z",
             "excerpt": ""
           }
         ],
@@ -1942,7 +1807,7 @@
   ],
   "database": {
     "id": "database",
-    "text": "Default SQLite at db.sqlite3; PostgreSQL when DATABASE_URL is set (Django ENGINE postgresql, pooler-aware CONN_MAX_AGE/DISABLE_SERVER_SIDE_CURSORS on 6543). Compose runs postgres:16-alpine database kryptolens. Core models include Lens, LensVersion, LensRun plus AgentRuntime imports of Job, Result, Artifact, Evidence, AgentTask, ApprovalRequest, VerificationRecord.",
+    "text": "Default Django SQLite at db.sqlite3; DATABASE_URL overrides (Postgres in docker-compose). Settings include a Supabase IPv4 pooler rewrite for db.*.supabase.co hosts. Domain models include Lens, LensVersion, LensRun, plus runtime entities referenced by AgentRuntime (Job, Observation, Evidence, Result, Artifact, etc.).",
     "status": "verified",
     "confidence": 0.88,
     "evidence": [
@@ -1985,6 +1850,16 @@
         "hash": null,
         "collected_at": "2026-09-17T01:47:42.940908Z",
         "excerpt": ""
+      },
+      {
+        "id": "ev-requirements.txt",
+        "kind": "docs",
+        "path": "requirements.txt",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:22:38.912998Z",
+        "excerpt": ""
       }
     ],
     "conflicts": [],
@@ -1992,9 +1867,9 @@
   },
   "auth": {
     "id": "auth",
-    "text": "Custom users.User; Django AuthenticationMiddleware; lens views require login_required and scope objects with Lens.objects.filter(..., user=request.user). README infers /signup, /login, and built-in password reset.",
+    "text": "Django AuthenticationMiddleware plus AUTH_USER_MODEL users.User. Lens views are login_required and scoped with _owned / _owned_routine (Http404 if not the owner). CSRF trusted origins are configured for local ports and Railway HTTPS hosts.",
     "status": "verified",
-    "confidence": 0.88,
+    "confidence": 0.82,
     "evidence": [
       {
         "id": "ev-config-settings.py",
@@ -2025,16 +1900,28 @@
         "hash": "ae5fe93af07a96bb948b9a1b1d371a3cdca12b6398fd804ac0dc9b3de44ae22b",
         "collected_at": "2026-09-17T01:41:50.424562Z",
         "excerpt": ""
+      },
+      {
+        "id": "ev-config-urls.py",
+        "kind": "source_code",
+        "path": "config/urls.py",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:22:38.913025Z",
+        "excerpt": ""
       }
     ],
-    "conflicts": [],
+    "conflicts": [
+      "kept verified text; incoming inferred differed"
+    ],
     "demote": false
   },
   "deployment": {
     "id": "deployment",
-    "text": "Docker image from python:3.12-slim, entrypoint docker/entrypoint.sh, expose 8000. Compose: postgres, redis, web, worker, beat, nginx 8080\u219280. Env via .env plus DATABASE_URL and REDIS_URL.",
+    "text": "Docker image runs docker/entrypoint.sh (default web). Compose: Postgres 16, Redis 7, web/worker/beat, nginx on 8080. Procfile: gunicorn on PORT (default 8000), celery worker, celery beat. Railway host/CSRF/proxy settings in Django. Dockerfile can omit cursor-sdk on pip failure.",
     "status": "verified",
-    "confidence": 0.92,
+    "confidence": 0.9,
     "evidence": [
       {
         "id": "ev-docker-compose.yml",
@@ -2065,46 +1952,42 @@
         "hash": "c7e1d632f07845355ad3a352a8088274f337d053217118e464aad03a2aa8e6e2",
         "collected_at": "2026-09-17T01:41:50.330766Z",
         "excerpt": ""
+      },
+      {
+        "id": "ev-Procfile",
+        "kind": "source_code",
+        "path": "Procfile",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:22:38.913052Z",
+        "excerpt": ""
       }
     ],
     "conflicts": [],
     "demote": false
   },
   "git_activity": {
-    "head": "da9afbbcd4f83cfcbde4286370cb2f5814dca9a6",
+    "head": "79581c20b940c20ac47d936a573078756bfc1aae",
     "branch": "main",
     "recent_commits": [
-      "da9afbbc modified the readme and the config folder",
-      "512d617c first push for kryptolens"
+      "79581c20 fix: stress test how the agent response",
+      "9365ee5e fix: stress test how the agent response",
+      "24da203f fix: stress test how the agent response",
+      "fbcb96fa fix: stress test how the agent response",
+      "cce7a6f9 added some animations and stress test how the agent response",
+      "1be52f27 fix: how the agent reads and response",
+      "d52dd98e fix: how the agent respond to chat",
+      "7ee5f94c changed the entire system"
     ],
     "dirty": true
   },
   "implemented_functionality": [
     {
-      "id": "impl-lens-model",
-      "text": "Lens versioning stores policy, job definition, workflow, tool permissions, and compile report JSON; LensRun tracks stages from queued through fetching_cmc, verifying, repairing, notifying, complete/error.",
+      "id": "impl-owned-lenses",
+      "text": "Create Lens from intent or draft, list redirects to agent_home, detail conversation with preview/apply/run responses, activate and pause routines, ownership 404 if not the user's Lens.",
       "status": "verified",
-      "confidence": 0.91,
-      "evidence": [
-        {
-          "id": "ev-apps-lenses-models.py",
-          "kind": "source_code",
-          "path": "apps/lenses/models.py",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941138Z",
-          "excerpt": ""
-        }
-      ],
-      "conflicts": [],
-      "demote": false
-    },
-    {
-      "id": "impl-agent-service-create",
-      "text": "AgentService.create_from_intent / create_draft / select / activate used by login-required lens views.",
-      "status": "verified",
-      "confidence": 0.85,
+      "confidence": 0.9,
       "evidence": [
         {
           "id": "ev-apps-lenses-views.py",
@@ -2113,7 +1996,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941180Z",
+          "collected_at": "2026-09-29T04:24:14.899806Z",
           "excerpt": ""
         }
       ],
@@ -2121,39 +2004,41 @@
       "demote": false
     },
     {
-      "id": "impl-workflow-closed-world",
-      "text": "Workflow validator rejects unknown steps and explicitly blocks eval/exec/code/http.",
-      "status": "verified",
-      "confidence": 0.94,
-      "evidence": [
-        {
-          "id": "ev-apps-intelligence-workflow.py",
-          "kind": "source_code",
-          "path": "apps/intelligence/workflow.py",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941209Z",
-          "excerpt": ""
-        }
-      ],
-      "conflicts": [],
-      "demote": false
-    },
-    {
-      "id": "impl-trigger-check",
-      "text": "trigger_fired compares an asset observation metric against WorkflowTrigger operator/value using intelligence.engine.compare.",
+      "id": "impl-understand-kinds",
+      "text": "Understanding kinds: snapshot, compare, watch, watch_plus_workflow, scheduled, news, edit. Watch requires a user-stated threshold; snapshot/compare must not invent percents. News is defined as CMC Content Latest plus quotes, not a price-threshold watch.",
       "status": "verified",
       "confidence": 0.9,
       "evidence": [
         {
-          "id": "ev-apps-intelligence-workflow_executor.py",
+          "id": "ev-apps-intelligence-understanding.py",
           "kind": "source_code",
-          "path": "apps/intelligence/workflow_executor.py",
+          "path": "apps/intelligence/understanding.py",
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941236Z",
+          "collected_at": "2026-09-29T04:24:14.899818Z",
+          "excerpt": ""
+        }
+      ],
+      "conflicts": [
+        "lens_activate flashes that news monitoring is not available yet."
+      ],
+      "demote": false
+    },
+    {
+      "id": "impl-no-trade",
+      "text": "Capability help text states the agent investigates with live CMC data, keeps evidence in-thread, and does not place trades.",
+      "status": "verified",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "id": "ev-apps-lenses-conversation_service.py",
+          "kind": "source_code",
+          "path": "apps/lenses/conversation_service.py",
+          "uri": null,
+          "locator": null,
+          "hash": null,
+          "collected_at": "2026-09-29T04:24:14.899831Z",
           "excerpt": ""
         }
       ],
@@ -2161,19 +2046,19 @@
       "demote": false
     },
     {
-      "id": "impl-empty-workflow-monitor",
-      "text": "If a version workflow has no steps, LensRuntime delegates to MonitoringService.run_lens.",
+      "id": "impl-run-stages",
+      "text": "LensRun tracks status running/ok/error and stages from queued through fetching_cmc, evaluating, verifying, notifying, complete, or error.",
       "status": "verified",
       "confidence": 0.88,
       "evidence": [
         {
-          "id": "ev-apps-lenses-runtime.py",
+          "id": "ev-apps-lenses-models.py",
           "kind": "source_code",
-          "path": "apps/lenses/runtime.py",
+          "path": "apps/lenses/models.py",
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941279Z",
+          "collected_at": "2026-09-29T04:24:14.900175Z",
           "excerpt": ""
         }
       ],
@@ -2181,69 +2066,19 @@
       "demote": false
     },
     {
-      "id": "impl-historical-cmc",
-      "text": "Adapter as_of switches listings/quotes to historical CMC endpoints and stamps LensRun trigger historical.",
+      "id": "impl-pytest",
+      "text": "pytest is configured with DJANGO_SETTINGS_MODULE=config.settings and a live marker for external APIs.",
       "status": "verified",
-      "confidence": 0.86,
+      "confidence": 0.9,
       "evidence": [
         {
-          "id": "ev-apps-cmc-adapter.py",
-          "kind": "source_code",
-          "path": "apps/cmc/adapter.py",
+          "id": "ev-pytest.ini",
+          "kind": "test",
+          "path": "pytest.ini",
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941317Z",
-          "excerpt": ""
-        },
-        {
-          "id": "ev-apps-lenses-runtime.py",
-          "kind": "source_code",
-          "path": "apps/lenses/runtime.py",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941354Z",
-          "excerpt": ""
-        },
-        {
-          "id": "ev-apps-intelligence-agent_runtime.py",
-          "kind": "source_code",
-          "path": "apps/intelligence/agent_runtime.py",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941375Z",
-          "excerpt": ""
-        }
-      ],
-      "conflicts": [],
-      "demote": false
-    },
-    {
-      "id": "impl-conversation-log",
-      "text": "AgentRuntime writes plan and status_update conversation items; LensRuntime records CMC activity, results, and errors.",
-      "status": "verified",
-      "confidence": 0.87,
-      "evidence": [
-        {
-          "id": "ev-apps-intelligence-agent_runtime.py",
-          "kind": "source_code",
-          "path": "apps/intelligence/agent_runtime.py",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941445Z",
-          "excerpt": ""
-        },
-        {
-          "id": "ev-apps-lenses-runtime.py",
-          "kind": "source_code",
-          "path": "apps/lenses/runtime.py",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941473Z",
+          "collected_at": "2026-09-29T04:24:14.900249Z",
           "excerpt": ""
         }
       ],
@@ -2255,7 +2090,7 @@
     "id": "runtime",
     "text": "Local/dev DEBUG defaults to on; ALLOWED_HOSTS localhost/127.0.0.1. Compose runtime is web+worker+beat+postgres+redis+nginx. No live process evidence in this pack (tests array empty, no runtime kind).",
     "status": "verified",
-    "confidence": 0.7,
+    "confidence": 0.8,
     "evidence": [
       {
         "id": "ev-docker-compose.yml",
@@ -2286,37 +2121,70 @@
         "hash": null,
         "collected_at": "2026-09-17T01:41:50.438476Z",
         "excerpt": ""
+      },
+      {
+        "id": "ev-Procfile",
+        "kind": "source_code",
+        "path": "Procfile",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:22:38.913535Z",
+        "excerpt": ""
+      },
+      {
+        "id": "ev-apps-cmc-adapter.py",
+        "kind": "source_code",
+        "path": "apps/cmc/adapter.py",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:24:14.900314Z",
+        "excerpt": ""
+      },
+      {
+        "id": "ev-apps-intelligence-understanding.py",
+        "kind": "source_code",
+        "path": "apps/intelligence/understanding.py",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:24:14.900320Z",
+        "excerpt": ""
+      },
+      {
+        "id": "ev-README.md",
+        "kind": "docs",
+        "path": "README.md",
+        "uri": null,
+        "locator": null,
+        "hash": null,
+        "collected_at": "2026-09-29T04:24:14.900327Z",
+        "excerpt": ""
       }
     ],
-    "conflicts": [],
+    "conflicts": [
+      "kept verified text; incoming inferred differed",
+      "kept verified text; incoming inferred differed"
+    ],
     "demote": false
   },
   "screenshots": [],
   "demo_opportunities": [
     {
-      "id": "demo-intent-to-run",
-      "text": "Create an Agent from a template or intent, chat a market job, Check now, and show HTMX stage plus CMC-backed result.",
+      "id": "demo-ask",
+      "text": "Create an analyst, ask how a named coin is doing or which top-N listings moved, and show the in-thread finding plus evidence.",
       "status": "inferred",
-      "confidence": 0.7,
+      "confidence": 0.75,
       "evidence": [
         {
-          "id": "ev-apps-lenses-views.py",
+          "id": "ev-apps-lenses-conversation_service.py",
           "kind": "source_code",
-          "path": "apps/lenses/views.py",
+          "path": "apps/lenses/conversation_service.py",
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941571Z",
-          "excerpt": ""
-        },
-        {
-          "id": "ev-apps-cmc-adapter.py",
-          "kind": "source_code",
-          "path": "apps/cmc/adapter.py",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941631Z",
+          "collected_at": "2026-09-29T04:24:14.900343Z",
           "excerpt": ""
         },
         {
@@ -2326,7 +2194,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941655Z",
+          "collected_at": "2026-09-29T04:24:14.900350Z",
           "excerpt": ""
         }
       ],
@@ -2334,19 +2202,29 @@
       "demote": false
     },
     {
-      "id": "demo-plan-evidence-verify",
-      "text": "Show conversation artifacts Plan \u2192 Evidence \u2192 Verification \u2192 Result as AgentRuntime executes.",
+      "id": "demo-watch",
+      "text": "Compile a stated threshold watch (for example a named-asset percent move) then demonstrate check now versus waiting for the trigger.",
       "status": "inferred",
-      "confidence": 0.65,
+      "confidence": 0.72,
       "evidence": [
         {
-          "id": "ev-apps-intelligence-agent_runtime.py",
+          "id": "ev-apps-intelligence-understanding.py",
           "kind": "source_code",
-          "path": "apps/intelligence/agent_runtime.py",
+          "path": "apps/intelligence/understanding.py",
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941693Z",
+          "collected_at": "2026-09-29T04:24:14.900363Z",
+          "excerpt": ""
+        },
+        {
+          "id": "ev-apps-lenses-conversation_service.py",
+          "kind": "source_code",
+          "path": "apps/lenses/conversation_service.py",
+          "uri": null,
+          "locator": null,
+          "hash": null,
+          "collected_at": "2026-09-29T04:24:14.900369Z",
           "excerpt": ""
         },
         {
@@ -2356,47 +2234,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941715Z",
-          "excerpt": ""
-        }
-      ],
-      "conflicts": [],
-      "demote": false
-    },
-    {
-      "id": "demo-honest-refusal",
-      "text": "Ask for news/on-chain/wallet work and show permission/specialist unavailable refusal.",
-      "status": "inferred",
-      "confidence": 0.62,
-      "evidence": [
-        {
-          "id": "ev-apps-intelligence-tools.py",
-          "kind": "source_code",
-          "path": "apps/intelligence/tools.py",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941753Z",
-          "excerpt": ""
-        },
-        {
-          "id": "ev-apps-intelligence-agent.py",
-          "kind": "source_code",
-          "path": "apps/intelligence/agent.py",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941761Z",
-          "excerpt": ""
-        },
-        {
-          "id": "ev-PRODUCT.md",
-          "kind": "docs",
-          "path": "PRODUCT.md",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941768Z",
+          "collected_at": "2026-09-29T04:24:14.900375Z",
           "excerpt": ""
         }
       ],
@@ -2406,9 +2244,9 @@
   ],
   "marketing": {
     "id": "marketing",
-    "text": "Positioned as a persistent crypto intelligence teammate, not a chatbot, dashboard, demo, or trading bot. Voice: Tell \u2192 Define \u2192 Watch \u2192 Act \u2192 Return. Quiet markets are a valid result.",
+    "text": "Voice: direct, specific, Tell \u2192 Clarify \u2192 Watch \u2192 Act \u2192 Return. Never claims real-time continuous observation; monitoring is periodic. Never calls itself a demo. Never invents market numbers. Quiet markets and missing data (not treated as zero) are valid outcomes. User-unnamed coins are not filled in as Bitcoin.",
     "status": "inferred",
-    "confidence": 0.6,
+    "confidence": 0.7,
     "evidence": [
       {
         "id": "ev-README.md",
@@ -2436,9 +2274,9 @@
   },
   "hackathon": {
     "id": "hackathon",
-    "text": "Built for CoinMarketCap Build with CMC hackathon, track AI Agents and Automation, tag #BuildwithCMC.",
+    "text": "Positioned for CoinMarketCap Build with CMC, track AI Agents and Automation, tag #BuildwithCMC.",
     "status": "inferred",
-    "confidence": 0.7,
+    "confidence": 0.75,
     "evidence": [
       {
         "id": "ev-README.md",
@@ -2454,65 +2292,24 @@
     "conflicts": [],
     "demote": false
   },
-  "web3": [
-    {
-      "id": "web3-not-wallet",
-      "text": "Not a wallet or on-chain execution product: on_chain tool is denied; docs mark wallet/execution as future and on-chain as an architectural boundary.",
-      "status": "verified",
-      "confidence": 0.88,
-      "evidence": [
-        {
-          "id": "ev-apps-intelligence-tools.py",
-          "kind": "source_code",
-          "path": "apps/intelligence/tools.py",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941859Z",
-          "excerpt": ""
-        },
-        {
-          "id": "ev-PRODUCT.md",
-          "kind": "docs",
-          "path": "PRODUCT.md",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941867Z",
-          "excerpt": ""
-        },
-        {
-          "id": "ev-README.md",
-          "kind": "docs",
-          "path": "README.md",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.941874Z",
-          "excerpt": ""
-        }
-      ],
-      "conflicts": [],
-      "demote": false
-    }
-  ],
+  "web3": [],
   "limitations": [
     {
-      "text": "News and on-chain tools are refused; no fake specialist agents.",
+      "text": "Does not place trades; not a trading bot, wallet, or execution venue.",
       "claim": {
-        "id": "lim-news-onchain",
-        "text": "DEFAULT_TOOL_PERMISSIONS sets news and on_chain False; require_tool always errors those names.",
-        "status": "verified",
-        "confidence": 0.96,
+        "id": "lim-no-trade",
+        "text": "Capability reply and product docs forbid trading; wallet/execution are future; on-chain is an architectural boundary.",
+        "status": "inferred",
+        "confidence": 0.88,
         "evidence": [
           {
-            "id": "ev-apps-intelligence-tools.py",
+            "id": "ev-apps-lenses-conversation_service.py",
             "kind": "source_code",
-            "path": "apps/intelligence/tools.py",
+            "path": "apps/lenses/conversation_service.py",
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.941892Z",
+            "collected_at": "2026-09-29T04:24:14.900425Z",
             "excerpt": ""
           },
           {
@@ -2522,7 +2319,17 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.941899Z",
+            "collected_at": "2026-09-29T04:24:14.900432Z",
+            "excerpt": ""
+          },
+          {
+            "id": "ev-apps-intelligence-understanding.py",
+            "kind": "source_code",
+            "path": "apps/intelligence/understanding.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.900438Z",
             "excerpt": ""
           }
         ],
@@ -2531,56 +2338,23 @@
       }
     },
     {
-      "text": "Approvals are foundation-only.",
+      "text": "Market numbers come only from CoinMarketCap observations; no on-chain, third-party news APIs, or invented figures.",
       "claim": {
-        "id": "lim-approvals",
-        "text": "ApprovalRequirement and ApprovalRequest exist in agent code; docs say READ/ANALYZE not required and EXECUTE denied / foundation only.",
+        "id": "lim-cmc-only",
+        "text": "Understanding system prompt and product out-of-scope list restrict data to CMC quotes, listings, and Content Latest.",
         "status": "inferred",
-        "confidence": 0.68,
+        "confidence": 0.85,
         "evidence": [
           {
-            "id": "ev-apps-intelligence-agent.py",
+            "id": "ev-apps-intelligence-understanding.py",
             "kind": "source_code",
-            "path": "apps/intelligence/agent.py",
+            "path": "apps/intelligence/understanding.py",
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.941919Z",
+            "collected_at": "2026-09-29T04:24:14.900456Z",
             "excerpt": ""
           },
-          {
-            "id": "ev-apps-intelligence-agent_runtime.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/agent_runtime.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.941925Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-README.md",
-            "kind": "docs",
-            "path": "README.md",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.941932Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "text": "Trading, charts, wallets, and news providers are out of scope.",
-      "claim": {
-        "id": "lim-oos",
-        "text": "PRODUCT out-of-scope list: trading, charts, wallets, news providers, fake demo mode, fake specialists, LLM scoring or invented ticks.",
-        "status": "inferred",
-        "confidence": 0.62,
-        "evidence": [
           {
             "id": "ev-PRODUCT.md",
             "kind": "docs",
@@ -2588,7 +2362,7 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.941948Z",
+            "collected_at": "2026-09-29T04:24:14.900462Z",
             "excerpt": ""
           }
         ],
@@ -2597,35 +2371,80 @@
       }
     },
     {
-      "text": "plan_to_workflow cannot invent a new CMC workflow from a plan.",
+      "text": "News monitoring activation is blocked in the activate view even though news understanding and get_content exist.",
       "claim": {
-        "id": "lim-plan-wf",
-        "text": "plan_to_workflow returns existing workflow, empty workflow for unavailable/evaluate_policy, otherwise PlanValidationError.",
-        "status": "verified",
-        "confidence": 0.9,
-        "evidence": [
-          {
-            "id": "ev-apps-intelligence-agent.py",
-            "kind": "source_code",
-            "path": "apps/intelligence/agent.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.941964Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "text": "No test or live-runtime verification in this evidence pack.",
-      "claim": {
-        "id": "lim-no-tests",
-        "text": "tests array is empty; git working tree is dirty with large uncommitted agent-OS surface.",
+        "id": "lim-news-activate",
+        "text": "lens_activate returns status news with flash \u201cNews monitoring isn't available yet.\u201d PRODUCT.md marks News implemented via CMC Content Latest.",
         "status": "verified",
         "confidence": 0.8,
+        "evidence": [
+          {
+            "id": "ev-apps-lenses-views.py",
+            "kind": "source_code",
+            "path": "apps/lenses/views.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.900478Z",
+            "excerpt": ""
+          },
+          {
+            "id": "ev-PRODUCT.md",
+            "kind": "docs",
+            "path": "PRODUCT.md",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.900484Z",
+            "excerpt": ""
+          },
+          {
+            "id": "ev-apps-intelligence-understanding.py",
+            "kind": "source_code",
+            "path": "apps/intelligence/understanding.py",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.900491Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [
+          "PRODUCT.md vs lens_activate news path"
+        ],
+        "demote": false
+      }
+    },
+    {
+      "text": "Approvals are foundation-only; on-chain/DeFi/risk/security and wallet/execution are not product capabilities.",
+      "claim": {
+        "id": "lim-approvals",
+        "text": "PRODUCT.md capability table: Approvals foundation only; Onchain/DeFi/Risk/Security architectural boundary; Wallet/Execution future.",
+        "status": "inferred",
+        "confidence": 0.7,
+        "evidence": [
+          {
+            "id": "ev-PRODUCT.md",
+            "kind": "docs",
+            "path": "PRODUCT.md",
+            "uri": null,
+            "locator": null,
+            "hash": null,
+            "collected_at": "2026-09-29T04:24:14.900507Z",
+            "excerpt": ""
+          }
+        ],
+        "conflicts": [],
+        "demote": false
+      }
+    },
+    {
+      "text": "Working tree is dirty; landing CSS/HTML may differ from last commit.",
+      "claim": {
+        "id": "lim-dirty",
+        "text": "Git status dirty on .brag/cache/llm-sandbox/request.json, static/css/app.css, templates/landing.html. HEAD 79581c20 on main.",
+        "status": "verified",
+        "confidence": 0.9,
         "evidence": [
           {
             "id": "ev-git-log",
@@ -2634,56 +2453,11 @@
             "uri": null,
             "locator": null,
             "hash": null,
-            "collected_at": "2026-09-17T01:47:42.941996Z",
+            "collected_at": "2026-09-29T04:24:14.900524Z",
             "excerpt": ""
           }
         ],
         "conflicts": [],
-        "demote": false
-      }
-    },
-    {
-      "text": "15-minute monitoring cadence is documentation, not shown in task code.",
-      "claim": {
-        "id": "lim-cadence",
-        "text": "README/PRODUCT assert 15-minute Beat cadence; apps/monitoring/tasks.py only shows due-routine enqueue.",
-        "status": "inferred",
-        "confidence": 0.55,
-        "evidence": [
-          {
-            "id": "ev-README.md",
-            "kind": "docs",
-            "path": "README.md",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.942519Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-PRODUCT.md",
-            "kind": "docs",
-            "path": "PRODUCT.md",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.942555Z",
-            "excerpt": ""
-          },
-          {
-            "id": "ev-apps-monitoring-tasks.py",
-            "kind": "source_code",
-            "path": "apps/monitoring/tasks.py",
-            "uri": null,
-            "locator": null,
-            "hash": null,
-            "collected_at": "2026-09-17T01:47:42.942627Z",
-            "excerpt": ""
-          }
-        ],
-        "conflicts": [
-          "Cadence interval not present in provided task source."
-        ],
         "demote": false
       }
     }
@@ -2691,9 +2465,9 @@
   "unverified_claims": [
     {
       "id": "unv-15min",
-      "text": "Cadence is 15 minutes.",
+      "text": "Standing watches check every 15 minutes.",
       "status": "inferred",
-      "confidence": 0.5,
+      "confidence": 0.55,
       "evidence": [
         {
           "id": "ev-README.md",
@@ -2702,7 +2476,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.942734Z",
+          "collected_at": "2026-09-29T04:24:14.900543Z",
           "excerpt": ""
         },
         {
@@ -2712,40 +2486,16 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.942753Z",
+          "collected_at": "2026-09-29T04:24:14.900549Z",
           "excerpt": ""
         }
       ],
-      "conflicts": [
-        "Not present in monitoring tasks excerpt."
-      ],
+      "conflicts": [],
       "demote": false
     },
     {
-      "id": "unv-60s-cache",
-      "text": "CMC adapter uses a 60s cache and CmcCallLog; raw JSON never enters the engine.",
-      "status": "inferred",
-      "confidence": 0.48,
-      "evidence": [
-        {
-          "id": "ev-README.md",
-          "kind": "docs",
-          "path": "README.md",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.942776Z",
-          "excerpt": ""
-        }
-      ],
-      "conflicts": [
-        "Adapter excerpt shows an in-memory _cache but not TTL or CmcCallLog."
-      ],
-      "demote": true
-    },
-    {
-      "id": "unv-no-agent-before-auth",
-      "text": "Landing composer stashes instruction; no Agent and no CMC job before authentication.",
+      "id": "unv-grok",
+      "text": "Understanding uses Grok 4.6 when CURSOR_API_KEY is set; heuristics only if the model is missing or invalid.",
       "status": "inferred",
       "confidence": 0.5,
       "evidence": [
@@ -2756,7 +2506,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.942809Z",
+          "collected_at": "2026-09-29T04:24:14.900562Z",
           "excerpt": ""
         }
       ],
@@ -2764,10 +2514,10 @@
       "demote": false
     },
     {
-      "id": "unv-llm-not-rank",
-      "text": "Scoring is an extracted service; the LLM does not rank events.",
+      "id": "unv-landing-stash",
+      "text": "Landing composer stashes the instruction and does not create a Lens or call CMC before authentication.",
       "status": "inferred",
-      "confidence": 0.45,
+      "confidence": 0.5,
       "evidence": [
         {
           "id": "ev-README.md",
@@ -2776,27 +2526,7 @@
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.942847Z",
-          "excerpt": ""
-        }
-      ],
-      "conflicts": [],
-      "demote": true
-    },
-    {
-      "id": "unv-jobs-url",
-      "text": "Jobs open an execution trace at /jobs/<id>.",
-      "status": "inferred",
-      "confidence": 0.42,
-      "evidence": [
-        {
-          "id": "ev-README.md",
-          "kind": "docs",
-          "path": "README.md",
-          "uri": null,
-          "locator": null,
-          "hash": null,
-          "collected_at": "2026-09-17T01:47:42.942901Z",
+          "collected_at": "2026-09-29T04:24:14.900574Z",
           "excerpt": ""
         }
       ],
@@ -2804,25 +2534,23 @@
       "demote": false
     },
     {
-      "id": "unv-not-multi-agent-os",
-      "text": "This iteration is not a multi-agent OS and not a specialist graph; the user sees a single Agent teammate.",
+      "id": "unv-ui-poll",
+      "text": "UI polls LensRun.stage until complete or error; Check now and Beat need a Celery worker while a chat question runs in the web process.",
       "status": "inferred",
       "confidence": 0.55,
       "evidence": [
         {
-          "id": "ev-PRODUCT.md",
+          "id": "ev-README.md",
           "kind": "docs",
-          "path": "PRODUCT.md",
+          "path": "README.md",
           "uri": null,
           "locator": null,
           "hash": null,
-          "collected_at": "2026-09-17T01:47:42.942915Z",
+          "collected_at": "2026-09-29T04:24:14.900586Z",
           "excerpt": ""
         }
       ],
-      "conflicts": [
-        "agent_runtime seeds chief_task and market_task, which looks like an internal specialist split."
-      ],
+      "conflicts": [],
       "demote": false
     }
   ],
@@ -2842,7 +2570,7 @@
       "uri": null,
       "locator": null,
       "hash": null,
-      "collected_at": "2026-09-17T01:47:42.942901Z",
+      "collected_at": "2026-09-29T04:24:14.900586Z",
       "excerpt": ""
     },
     "ev-docker-compose.yml": {
@@ -2852,7 +2580,7 @@
       "uri": null,
       "locator": null,
       "hash": null,
-      "collected_at": "2026-09-17T01:47:42.940439Z",
+      "collected_at": "2026-09-29T04:24:14.899370Z",
       "excerpt": ""
     },
     "ev-apps-lenses-runtime.py": {
@@ -2861,8 +2589,8 @@
       "path": "apps/lenses/runtime.py",
       "uri": null,
       "locator": null,
-      "hash": null,
-      "collected_at": "2026-09-17T01:47:42.941473Z",
+      "hash": "abfc745faed4ba08ae93f93e9df395373c64cb0ec0b5cd30c1d564c23907adeb",
+      "collected_at": "2026-09-17T01:41:50.367728Z",
       "excerpt": ""
     },
     "ev-PRODUCT.md": {
@@ -2872,7 +2600,7 @@
       "uri": null,
       "locator": null,
       "hash": null,
-      "collected_at": "2026-09-17T01:47:42.942915Z",
+      "collected_at": "2026-09-29T04:24:14.900549Z",
       "excerpt": ""
     },
     "ev-apps-lenses-models.py": {
@@ -2882,7 +2610,7 @@
       "uri": null,
       "locator": null,
       "hash": null,
-      "collected_at": "2026-09-17T01:47:42.941138Z",
+      "collected_at": "2026-09-29T04:24:14.900175Z",
       "excerpt": ""
     },
     "ev-apps-intelligence-agent_runtime.py": {
@@ -2892,7 +2620,7 @@
       "uri": null,
       "locator": null,
       "hash": null,
-      "collected_at": "2026-09-17T01:47:42.941925Z",
+      "collected_at": "2026-09-29T04:24:14.899604Z",
       "excerpt": ""
     },
     "ev-apps-intelligence-workflow_executor.py": {
@@ -2901,8 +2629,8 @@
       "path": "apps/intelligence/workflow_executor.py",
       "uri": null,
       "locator": null,
-      "hash": null,
-      "collected_at": "2026-09-17T01:47:42.941236Z",
+      "hash": "1d17f7cf2b9922a361b02e114ee3fa35601e7b29c28c8e12b6db1bb8a3956b57",
+      "collected_at": "2026-09-17T01:41:50.414157Z",
       "excerpt": ""
     },
     "ev-config-settings.py": {
@@ -2912,7 +2640,7 @@
       "uri": null,
       "locator": null,
       "hash": null,
-      "collected_at": "2026-09-17T01:47:42.940406Z",
+      "collected_at": "2026-09-29T04:24:14.899648Z",
       "excerpt": ""
     },
     "ev-apps-monitoring-tasks.py": {
@@ -2921,8 +2649,8 @@
       "path": "apps/monitoring/tasks.py",
       "uri": null,
       "locator": null,
-      "hash": null,
-      "collected_at": "2026-09-17T01:47:42.942627Z",
+      "hash": "af5440e60f27d9a598f1b36079ee9a4bccfc5628f8c277311ecc7da23a3ef33a",
+      "collected_at": "2026-09-17T01:41:50.420913Z",
       "excerpt": ""
     },
     "ev-apps-lenses-views.py": {
@@ -2932,7 +2660,7 @@
       "uri": null,
       "locator": null,
       "hash": null,
-      "collected_at": "2026-09-17T01:47:42.941571Z",
+      "collected_at": "2026-09-29T04:24:14.900478Z",
       "excerpt": ""
     },
     "ev-Dockerfile": {
@@ -2942,7 +2670,7 @@
       "uri": null,
       "locator": null,
       "hash": null,
-      "collected_at": "2026-09-17T01:47:42.940048Z",
+      "collected_at": "2026-09-29T04:24:14.899565Z",
       "excerpt": ""
     },
     "ev-git-log": {
@@ -2952,7 +2680,7 @@
       "uri": null,
       "locator": null,
       "hash": null,
-      "collected_at": "2026-09-17T01:47:42.941996Z",
+      "collected_at": "2026-09-29T04:24:14.900524Z",
       "excerpt": ""
     },
     "ev-apps-intelligence-agent.py": {
@@ -2992,7 +2720,7 @@
       "uri": null,
       "locator": null,
       "hash": null,
-      "collected_at": "2026-09-17T01:47:42.940351Z",
+      "collected_at": "2026-09-29T04:24:14.899559Z",
       "excerpt": ""
     },
     "ev-apps-cmc-adapter.py": {
@@ -3002,15 +2730,85 @@
       "uri": null,
       "locator": null,
       "hash": null,
-      "collected_at": "2026-09-17T01:47:42.941631Z",
+      "collected_at": "2026-09-29T04:24:14.899581Z",
+      "excerpt": ""
+    },
+    "ev-apps-lenses-conversation_service.py": {
+      "id": "ev-apps-lenses-conversation_service.py",
+      "kind": "source_code",
+      "path": "apps/lenses/conversation_service.py",
+      "uri": null,
+      "locator": null,
+      "hash": null,
+      "collected_at": "2026-09-29T04:24:14.900425Z",
+      "excerpt": ""
+    },
+    "ev-apps-intelligence-understanding.py": {
+      "id": "ev-apps-intelligence-understanding.py",
+      "kind": "source_code",
+      "path": "apps/intelligence/understanding.py",
+      "uri": null,
+      "locator": null,
+      "hash": null,
+      "collected_at": "2026-09-29T04:24:14.900491Z",
+      "excerpt": ""
+    },
+    "ev-apps-intelligence-research-planner.py": {
+      "id": "ev-apps-intelligence-research-planner.py",
+      "kind": "source_code",
+      "path": "apps/intelligence/research/planner.py",
+      "uri": null,
+      "locator": null,
+      "hash": null,
+      "collected_at": "2026-09-29T04:24:14.898626Z",
+      "excerpt": ""
+    },
+    "ev-config-urls.py": {
+      "id": "ev-config-urls.py",
+      "kind": "source_code",
+      "path": "config/urls.py",
+      "uri": null,
+      "locator": null,
+      "hash": null,
+      "collected_at": "2026-09-29T04:24:14.899683Z",
+      "excerpt": ""
+    },
+    "ev-Procfile": {
+      "id": "ev-Procfile",
+      "kind": "source_code",
+      "path": "Procfile",
+      "uri": null,
+      "locator": null,
+      "hash": null,
+      "collected_at": "2026-09-29T04:24:14.899364Z",
+      "excerpt": ""
+    },
+    "ev-apps-intelligence-engine.py": {
+      "id": "ev-apps-intelligence-engine.py",
+      "kind": "source_code",
+      "path": "apps/intelligence/engine.py",
+      "uri": null,
+      "locator": null,
+      "hash": null,
+      "collected_at": "2026-09-29T04:24:14.898705Z",
+      "excerpt": ""
+    },
+    "ev-pytest.ini": {
+      "id": "ev-pytest.ini",
+      "kind": "test",
+      "path": "pytest.ini",
+      "uri": null,
+      "locator": null,
+      "hash": null,
+      "collected_at": "2026-09-29T04:24:14.900249Z",
       "excerpt": ""
     }
   },
   "cache": {
-    "git_head": "da9afbbcd4f83cfcbde4286370cb2f5814dca9a6",
-    "dirty_tree_hash": "bc73709b266a2e73b2d99b41bd2fdea224ce6a37a2d1b1c643c844726852bab7",
+    "git_head": "79581c20b940c20ac47d936a573078756bfc1aae",
+    "dirty_tree_hash": "da3c79a37ce76fd78d38d192fb13dbf8f33db41cf75507f9b88e05a9db8a3a29",
     "collector_version": "1",
-    "analyzed_at": "2026-09-17T01:41:50.447742Z"
+    "analyzed_at": "2026-09-29T04:21:19.119993Z"
   },
-  "updated_at": "2026-09-17T01:47:42.965760Z"
+  "updated_at": "2026-09-29T04:24:14.917414Z"
 }

@@ -26,20 +26,20 @@
   <section class="landing-hero">
     <div class="landing-mast">
       <p class="landing-marks"><span>Persistent</span><span>Live CoinMarketCap data</span><span>One Analyst</span></p>
-      <h1>Your persistent <em>crypto intelligence</em> workspace</h1>
+      <h1>Tell it what <em>matters</em></h1>
       <p class="landing-lead">Ask questions. Investigate markets. Monitor what matters. Get answers grounded in live CoinMarketCap data.</p>
-      <p>Instead of searching dashboards, charts, news feeds, and market tables, tell KryptoLens what you want to know. A Lens persists, so the work stays when the conversation ends.</p>
+      <p>Instead of searching dashboards, charts, news feeds, and market tables, describe the intelligence you want. An Analyst persists, so the work stays when the conversation ends.</p>
       <div class="actions">
         <a class="btn btn-primary" href="{% url 'signup' %}">Create an Analyst</a>
       </div>
-      <p class="lede">Create an Analyst. Tell it what matters. Let it investigate.</p>
+      <p class="lede">Name it. Tell it what to research. The investigation stays in that workspace.</p>
     </div>
 
     <div class="landing-stage">
-      <div class="landing-jobs" role="tablist" aria-label="Ways to use a Lens">
-        <button type="button" class="job-line" role="tab" id="tab-watch" data-track="watch" aria-selected="true" aria-controls="panel-watch" data-name="Market Watch" data-caption="A Lens can keep checking the market and run the analysis when the condition occurs."><strong>Watch</strong></button>
+      <div class="landing-jobs" role="tablist" aria-label="Ways to use an Analyst">
+        <button type="button" class="job-line" role="tab" id="tab-watch" data-track="watch" aria-selected="true" aria-controls="panel-watch" data-name="Market Watch" data-caption="An Analyst can keep checking the market and run the analysis when the condition occurs."><strong>Watch</strong></button>
         <button type="button" class="job-line" role="tab" id="tab-reaction" data-track="reaction" aria-selected="false" aria-controls="panel-reaction" data-name="BTC Reaction" data-caption="If the request is ambiguous, KryptoLens asks. Clarification stays part of the analysis."><strong>Reaction</strong></button>
-        <button type="button" class="job-line" role="tab" id="tab-volume" data-track="volume" aria-selected="false" aria-controls="panel-volume" data-name="Altcoin Monitor" data-caption="You describe the intelligence you want. You do not choose an analyst."><strong>Volume</strong></button>
+        <button type="button" class="job-line" role="tab" id="tab-volume" data-track="volume" aria-selected="false" aria-controls="panel-volume" data-name="Altcoin Monitor" data-caption="You describe the intelligence you want. You do not choose a specialist."><strong>Volume</strong></button>
         <button type="button" class="job-line" role="tab" id="tab-compare" data-track="compare" aria-selected="false" aria-controls="panel-compare" data-name="Market Research" data-caption="Calculations stay deterministic. Missing data is not treated as zero."><strong>Compare</strong></button>
       </div>
       <div class="landing-window">
@@ -94,15 +94,15 @@
         </div>
         <form method="post" class="landing-composer" action="{% url 'landing' %}">
           {% csrf_token %}
-          <label for="landing-intent">Tell KryptoLens what you want.</label>
+          <label for="landing-intent">What would you like to research?</label>
           <div class="composer-shell">
             <textarea id="landing-intent" name="intent" required rows="3" placeholder="Watch BTC and tell me when it drops more than 2%."></textarea>
-            <button class="btn btn-primary" type="submit">Create an Analyst</button>
+            <button class="btn" type="submit">Create an Analyst</button>
           </div>
           <p class="quiet">Your words wait here until you have an account.</p>
         </form>
       </div>
-      <p class="landing-caption" data-lens-caption>A Lens can keep checking the market and run the analysis when the condition occurs.</p>
+      <p class="landing-caption" data-lens-caption>An Analyst can keep checking the market and run the analysis when the condition occurs.</p>
     </div>
   </section>
 
@@ -120,7 +120,7 @@
       <li>Which assets behaved differently from the rest of the market?</li>
       <li>What should I continue monitoring?</li>
     </ul>
-    <p>KryptoLens is designed to help answer those questions. Rather than giving you another dashboard filled with information, it gives you a workspace where you describe the intelligence you want. It understands the request, asks when something is missing, retrieves CoinMarketCap data, analyzes it, verifies the result, and explains the findings.</p>
+    <p>KryptoLens is a workspace where you describe the intelligence you want. It understands the request, asks when something is missing, retrieves CoinMarketCap data, analyzes it, verifies the result, and explains the findings.</p>
   </section>
 
   <section class="landing-spec" id="how-it-works">
@@ -130,7 +130,7 @@
       <dl class="landing-steps">
         <div>
           <dt>Create an Analyst</dt>
-          <dd>A Lens is a persistent intelligence workspace. Name it Market Watch, BTC Reaction, Altcoin Monitor, or Market Research.</dd>
+          <dd>An Analyst is a persistent intelligence workspace. Name it Market Watch, BTC Reaction, Altcoin Monitor, or Market Research.</dd>
         </div>
         <div>
           <dt>Tell KryptoLens what you want</dt>
@@ -142,7 +142,7 @@
         </div>
         <div>
           <dt>KryptoLens builds the investigation</dt>
-          <dd>Market, anomaly, reaction, historical, discovery, and regime analysis are selected behind the scenes. You interact with one Lens.</dd>
+          <dd>Market, anomaly, reaction, historical, discovery, and regime analysis are selected behind the scenes. You interact with one Analyst.</dd>
         </div>
         <div>
           <dt>KryptoLens retrieves live market data</dt>
@@ -154,7 +154,7 @@
         </div>
         <div>
           <dt>Results are verified before they are presented</dt>
-          <dd>Availability, coverage, calculations, ranking rules, evidence, and missing values are checked. If CoinMarketCap data is insufficient, KryptoLens says so.</dd>
+          <dd>Availability, coverage, calculations, ranking rules, evidence, and missing values are checked. If CoinMarketCap data is insufficient, KryptoLens says so. Missing data is not treated as zero.</dd>
         </div>
         <div>
           <dt>KryptoLens explains the result</dt>
@@ -167,18 +167,10 @@
             {% include "workspace/partials/bot_face.html" with face_id=2 kind="ok" %}
             <div>
               <p class="landing-window-name">BTC Reaction</p>
-              <p class="landing-window-presence">Same Lens, later</p>
+              <p class="landing-window-presence">Same Analyst, later</p>
             </div>
           </div>
           <div class="landing-preview">
-            <article class="landing-turn">
-              <h2>You</h2>
-              <p class="landing-asked">Watch BTC for a 2% drop.</p>
-            </article>
-            <article class="landing-turn">
-              <h2>KryptoLens</h2>
-              <p class="landing-asked">What should I analyze when the trigger occurs?</p>
-            </article>
             <article class="landing-turn">
               <h2>You</h2>
               <p class="landing-asked">Check the top 100 coins and rank their declines.</p>
@@ -209,7 +201,11 @@
         </dl>
       </aside>
     </div>
-    <p class="landing-sub">The capabilities behind one Lens</p>
+  </section>
+
+  <section class="landing-spec">
+    <h2>The capabilities behind one Analyst</h2>
+    <p>These capabilities work behind the scenes. You interact with KryptoLens, not a collection of separate bots.</p>
     <dl class="landing-work">
       <div>
         <dt>Market analysis</dt>
@@ -236,54 +232,16 @@
         <dd>The characteristics of the broader market environment.</dd>
       </div>
     </dl>
-    <p>These capabilities work behind the scenes. You interact with KryptoLens, not a collection of separate bots.</p>
-    <p>CoinMarketCap is the market-data layer: listings, latest quotes, historical information, categories, global metrics, and market-wide statistics. The integration is part of the investigation, not a display of every table.</p>
-    <p>Before a result is presented, KryptoLens can check that the required data was available, the requested assets were analyzed, calculations finished, ranking and filtering rules were applied, the result contains the expected evidence, and missing data was not treated as zero.</p>
-  </section>
-
-  <section class="landing-spec">
-    <h2>From a question to an investigation</h2>
-    <p>A request moves from natural-language intent to evidence-backed intelligence.</p>
-    <ol class="landing-trail">
-      <li>
-        <strong>Understand</strong>
-        <span>What is the user actually asking?</span>
-      </li>
-      <li>
-        <strong>Clarify</strong>
-        <span>Is anything important missing?</span>
-      </li>
-      <li>
-        <strong>Plan</strong>
-        <span>Which capabilities and data are required?</span>
-      </li>
-      <li>
-        <strong>Collect</strong>
-        <span>Retrieve the relevant CoinMarketCap data.</span>
-      </li>
-      <li>
-        <strong>Analyze</strong>
-        <span>Run deterministic calculations and comparisons.</span>
-      </li>
-      <li>
-        <strong>Verify</strong>
-        <span>Check the result against the task and the evidence.</span>
-      </li>
-      <li>
-        <strong>Explain</strong>
-        <span>Present the findings in a clear response.</span>
-      </li>
-    </ol>
   </section>
 
   <section class="landing-spec">
     <h2>Ask once. Keep working.</h2>
-    <p>A Lens can become a persistent monitoring workspace. “Watch BTC and alert me whenever it drops more than 2%” can become a routine. KryptoLens keeps checking the relevant market data and, when the condition occurs, runs the associated analysis. The conversation, the monitoring task, the results, and the evidence stay on the same Lens.</p>
+    <p>An Analyst can become a persistent monitoring workspace. “Watch BTC and alert me whenever it drops more than 2%” can become a routine. KryptoLens keeps checking the relevant market data and, when the condition occurs, runs the associated analysis. The conversation, the monitoring task, the results, and the evidence stay on the same Analyst.</p>
   </section>
 
   <section class="landing-spec">
     <h2>One Analyst. Multiple kinds of work.</h2>
-    <p>A Lens supports different kinds of intelligence work without a different bot for every task. That turns it into a persistent workspace rather than a disposable chat.</p>
+    <p>An Analyst supports different kinds of intelligence work without a different bot for every task.</p>
     <dl class="landing-work">
       <div>
         <dt>Ask</dt>
@@ -341,7 +299,7 @@
 
   <section class="landing-spec">
     <h2>Your Analyst remembers the work</h2>
-    <p>A Lens keeps continuity, so you return to previous work instead of starting from zero. It can evolve from a simple question into an ongoing research and monitoring workspace.</p>
+    <p>An Analyst keeps continuity, so you return to previous work instead of starting from zero.</p>
     <ul class="landing-data">
       <li>Conversations</li>
       <li>Clarifications</li>
@@ -371,6 +329,7 @@
 
   <section class="landing-spec">
     <h2>Why KryptoLens is different</h2>
+    <p>The interface is built around the investigation, not the amount of information on screen.</p>
     <dl class="landing-work landing-work-2">
       <div>
         <dt>Not another crypto dashboard</dt>
@@ -391,56 +350,9 @@
     </dl>
   </section>
 
-  <section class="landing-spec">
-    <h2>Designed for clarity, not noise</h2>
-    <p>Crypto products often compete for attention with endless charts, flashing numbers, dozens of indicators, crowded dashboards, and notification overload.</p>
-    <p class="landing-sub">Start with the question.</p>
-    <p>Then determine what data is needed, what analysis is required, what evidence supports the result, and what should continue to be monitored. The interface is built around the investigation rather than the amount of information displayed.</p>
-  </section>
-
-  <section class="landing-spec">
-    <h2>Your crypto intelligence workspace</h2>
-    <p>KryptoLens brings together natural language, dynamic analysis, live CoinMarketCap data, deterministic calculations, evidence, verification, persistent monitoring, and conversation continuity.</p>
-    <dl class="landing-work">
-      <div>
-        <dt>Natural-language interaction</dt>
-        <dd>Tell the system what you want without learning a specialized interface.</dd>
-      </div>
-      <div>
-        <dt>Dynamic analysis</dt>
-        <dd>The system determines which capabilities the task requires.</dd>
-      </div>
-      <div>
-        <dt>Live market data</dt>
-        <dd>Real CoinMarketCap data is the foundation for analysis.</dd>
-      </div>
-      <div>
-        <dt>Deterministic calculations</dt>
-        <dd>Ranking, filtering, comparison, and other numerical work run in the analytical runtime.</dd>
-      </div>
-      <div>
-        <dt>Evidence</dt>
-        <dd>Results stay connected to the observations and data behind them.</dd>
-      </div>
-      <div>
-        <dt>Verification</dt>
-        <dd>The system checks that the result satisfies the intended task.</dd>
-      </div>
-      <div>
-        <dt>Persistent monitoring</dt>
-        <dd>Turn a request into an ongoing routine when KryptoLens should keep watching.</dd>
-      </div>
-      <div>
-        <dt>Conversation continuity</dt>
-        <dd>Return to the same Lens and continue the work.</dd>
-      </div>
-    </dl>
-  </section>
-
   <section class="landing-close">
     <h2>Start with a question</h2>
     <p>You don't need to build a dashboard, configure a complicated agent, or know which API endpoint contains the answer. Create an Analyst. Give it a name. Tell it what matters.</p>
-    <p class="landing-close-line">Create an Analyst. Tell it what matters.</p>
     <div class="actions">
       <a class="btn btn-primary" href="{% url 'signup' %}">Create an Analyst</a>
       <a class="btn btn-ghost" href="{% url 'login' %}">Log In</a>
