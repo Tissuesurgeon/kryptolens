@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from apps.intelligence.calculations import period_adjective, period_label
 from apps.intelligence.observations import MarketObservation
 
 
@@ -20,6 +21,16 @@ def spoken_result(result) -> str | None:
         rows = list(payload.get("rows") or [])
         if not rows:
             return "CoinMarketCap returned quotes, but I couldn't read a price from them."
+        window = period_label(str(payload.get("window") or "")) or "the requested period"
+        if payload.get("window") and any(row.get("window_change") is not None for row in rows):
+            return " ".join(_spoken_window_row(row, window) for row in rows)
+        if payload.get("window"):
+            names = " and ".join(row.get("name") or row.get("symbol") or "the asset" for row in rows)
+            live = " ".join(_spoken_row(row) for row in rows)
+            return (
+                f"A {period_adjective(str(payload.get('window') or ''))} history was not returned for {names}, "
+                f"so these 24-hour quotes are not that comparison. {live}"
+            )
         return " ".join(_spoken_row(row) for row in rows)
     if kind == "ranked_table":
         rows = list(payload.get("rows") or [])
@@ -70,6 +81,26 @@ def spoken_result(result) -> str | None:
             or "No matching result was found based on the available CoinMarketCap data."
         )
     return None
+
+
+def _spoken_window_row(row: dict, window: str) -> str:
+    name = row.get("name") or row.get("symbol") or "This asset"
+    change = row.get("window_change")
+    start = _format_usd(row.get("window_start"))
+    end = _format_usd(row.get("window_end"))
+    if change is None or start == "—" or end == "—":
+        return _spoken_row(row)
+    if change > 0:
+        move = f"up {abs(change):.2f}%"
+    elif change < 0:
+        move = f"down {abs(change):.2f}%"
+    else:
+        move = "unchanged"
+    latest = _format_usd(row.get("price"))
+    sentence = f"{name} moved from {start} to {end}, {move} over {window}."
+    if latest != "—":
+        sentence += f" The latest price is {latest}."
+    return sentence
 
 
 def _spoken_row(row: dict) -> str:

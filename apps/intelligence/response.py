@@ -24,8 +24,10 @@ When verification is inconclusive or unsupported, say the evidence does not supp
 If historical comparisons are present, include: comparable observations, not a prediction.
 
 Shape:
-- Open with the direct answer in the asset's name: the live level and the 24-hour change when those are present.
-- Then two or three short paragraphs on what those figures show. Use market cap, rank, volume, and volume change when the payload includes them. If a field is missing, leave it out. Write market cap and volume in billions or trillions, not as a raw integer.
+- If the payload has a window and a row has window_change, open with that change over window_label. Name the start and end prices, then the latest price. Do not open with the 24-hour change. The 24-hour change is context after the window.
+- If the payload has a window and window_change is missing, say that history was not returned and that the 24-hour quotes are not that comparison. Do not present them as the answer.
+- Otherwise open with the direct answer in the asset's name: the live level and the 24-hour change when those are present.
+- Then two or three short paragraphs on what those figures show. Use market_cap_label, volume_label, volume_change_label, and rank when they are present. Do not print market_cap or volume_24h. If a field is missing, leave it out.
 - A "today" question is the trailing 24-hour CoinMarketCap snapshot, not a forecast and not a full session replay.
 - For a ranking, name the leaders from the rows and what the ordering is.
 - For a comparison, take each named asset in turn, then the difference that the figures support.
@@ -100,6 +102,19 @@ def compose_reply(
     return _heuristic_reply(fallback, claims, limitations, historical, verification)
 
 
+def _briefing_row(row):
+    if not isinstance(row, dict):
+        return row
+    cleaned = dict(row)
+    if cleaned.get("market_cap_label"):
+        cleaned.pop("market_cap", None)
+    if cleaned.get("volume_label"):
+        cleaned.pop("volume_24h", None)
+    if cleaned.get("volume_change_label"):
+        cleaned.pop("volume_change_24h", None)
+    return cleaned
+
+
 def _answer_with_model(
     provider,
     *,
@@ -118,6 +133,7 @@ def _answer_with_model(
         prompt = RESPONSE_SYSTEM + "\n\nUser message:\n" + (question or "Answer from the verified facts.")
         prompt += "\n\nVerified facts:\n" + fallback
         briefing = {key: value for key, value in payload.items() if key != "headlines"}
+        briefing["rows"] = [_briefing_row(row) for row in list(briefing.get("rows") or [])]
         prompt += "\n\nPayload:\n" + json.dumps(briefing, default=str)[:6000]
         prompt += f"\nclaims={claims}\nlimitations={limitations}\n"
         prompt += f"verification={(verification or {}).get('status')}\n"

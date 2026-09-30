@@ -59,6 +59,16 @@ def test_historical_btc_uses_the_same_planner():
     assert "check_btc" not in capability_plan.to_agent_plan().steps
 
 
+def test_named_window_survives_a_model_that_drops_it():
+    provider = _Json(
+        '{"status":"ready","mode":"ask","task_type":"one_shot_research","assets":["BTC","ETH"],'
+        '"window":"","capabilities":["market"],"action":"report"}'
+    )
+    task = _research("compare Bitcoin and Ethereum over the last 30 days", provider=provider)
+    assert task.window == "30d"
+    assert "historical" in task.capabilities
+
+
 def test_compare_names_both_assets_and_the_window():
     task = _research("Compare BTC and ETH over the last 30 days.")
     assert set(task.assets) == {"BTC", "ETH"}

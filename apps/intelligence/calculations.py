@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 
 from apps.intelligence.engine import compare
@@ -143,6 +144,28 @@ def rank_change(observation: MarketObservation) -> int | None:
     if observation.market_cap_rank is None or observation.previous_market_cap_rank is None:
         return None
     return observation.previous_market_cap_rank - observation.market_cap_rank
+
+
+def period_label(window: str) -> str:
+    text = (window or "").strip()
+    match = re.fullmatch(r"(\d+)\s*([dhm])", text.lower())
+    if not match:
+        return text
+    amount = int(match.group(1))
+    word = {"d": "day", "h": "hour", "m": "minute"}[match.group(2)]
+    if amount != 1:
+        word += "s"
+    return f"{amount} {word}"
+
+
+def period_adjective(window: str) -> str:
+    label = period_label(window)
+    if " " not in label:
+        return label
+    amount, word = label.rsplit(" ", 1)
+    if word.endswith("s"):
+        word = word[:-1]
+    return f"{amount}-{word}"
 
 
 def historical_comparison(current: float | None, previous: float | None) -> dict:

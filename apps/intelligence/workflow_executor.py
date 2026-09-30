@@ -15,7 +15,14 @@ from apps.cmc.normalize import (
 from apps.intelligence.news import analyze_news, attach_quotes, build_news_payload, symbols_from_items
 from apps.intelligence.web_news import fetch_headlines, headlines_as_news_items, headlines_from_content
 from apps.intelligence.present import comparison_title
-from apps.intelligence.calculations import aggregate_mean, filter_threshold, rank_assets, sort_assets
+from apps.intelligence.calculations import (
+    aggregate_mean,
+    filter_threshold,
+    historical_comparison,
+    period_label,
+    rank_assets,
+    sort_assets,
+)
 from apps.intelligence.engine import compare
 from apps.intelligence.observations import MarketObservation
 from apps.intelligence.tools import ToolPermissionError, dispatch_cmc
@@ -127,8 +134,14 @@ def execute_steps(
                     window=step.operation or "30d",
                 )
             )
+            if step.operation and step.operation != "24h":
+                extras["comparison_window"] = step.operation
             if extras.get("historical_call"):
-                extras["historical"] = select_quoted_assets(extras["historical_call"].payload, list(step.symbols or []))
+                chart = list((extras["historical_call"].payload or {}).get("chart") or [])
+                series = _history_points(chart)
+                extras["historical"] = series or select_quoted_assets(
+                    extras["historical_call"].payload, list(step.symbols or [])
+                )
         elif step.type == "get_ohlcv_historical":
             extras.update(
                 _optional_tool(
@@ -244,21 +257,17 @@ def execute_steps(
         from apps.cmc.normalize import draw_chart
 
         historical_payload = getattr(extras.get("historical_call"), "payload", None) or {}
+        chart = list(historical_payload.get("chart") or [])
+        window = str(extras.get("comparison_window") or "")
+        moves = _window_moves(chart)
         payload = {
+            "window": window,
+            "window_label": period_label(window),
             "rows": [
-                {
-                    "symbol": item.symbol,
-                    "name": item.name,
-                    "price": item.price,
-                    "price_change_24h": item.price_change_24h,
-                    "market_cap": item.market_cap,
-                    "volume_24h": item.volume_24h,
-                    "volume_change_24h": item.volume_change_24h,
-                    "market_cap_rank": item.market_cap_rank,
-                }
+                _comparison_row(item, moves.get(item.symbol), window)
                 for item in observations
             ],
-            "chart": draw_chart(list(historical_payload.get("chart") or [])),
+            "chart": draw_chart(chart),
         }
         kind = "comparison"
         title = comparison_title(observations)
@@ -323,6 +332,67 @@ def _optional_tool(adapter, permissions, run, tools_used, name: str, unavailable
     except (CMCError, ToolPermissionError) as exc:
         extras[unavailable_key] = str(exc)
     return extras
+
+
+def _history_points(chart: list[dict]) -> list[MarketObservation]:
+    points: list[MarketObservation] = []
+    for item in chart:
+        symbol = str(item.get("symbol") or "")
+        name = str(item.get("name") or "")
+        for point in item.get("points") or []:
+            price = point.get("price")
+            if not symbol or price is None:
+                continue
+            points.append(MarketObservation(asset_id=0, symbol=symbol, name=name, price=float(price)))
+    return points
+
+
+def _window_moves(chart: list[dict]) -> dict[str, dict]:
+    moves: dict[str, dict] = {}
+    for item in chart:
+        symbol = str(item.get("symbol") or "")
+        points = list(item.get("points") or [])
+        if not symbol or len(points) < 2:
+            continue
+        moves[symbol] = historical_comparison(points[-1].get("price"), points[0].get("price"))
+    return moves
+
+
+def _money_label(value) -> str | None:
+    try:
+        amount = float(value)
+    except (TypeError, ValueError):
+        return None
+    absolute = abs(amount)
+    if absolute >= 1_000_000_000_000:
+        return f"${amount / 1_000_000_000_000:.2f} trillion"
+    if absolute >= 1_000_000_000:
+        return f"${amount / 1_000_000_000:.2f} billion"
+    if absolute >= 1_000_000:
+        return f"${amount / 1_000_000:.2f} million"
+    return f"${amount:,.2f}"
+
+
+def _comparison_row(item: MarketObservation, move: dict | None, window: str) -> dict:
+    row = {
+        "symbol": item.symbol,
+        "name": item.name,
+        "price": item.price,
+        "price_change_24h": item.price_change_24h,
+        "market_cap": item.market_cap,
+        "market_cap_label": _money_label(item.market_cap),
+        "volume_24h": item.volume_24h,
+        "volume_label": _money_label(item.volume_24h),
+        "volume_change_24h": item.volume_change_24h,
+        "volume_change_label": None if item.volume_change_24h is None else f"{item.volume_change_24h:.2f}%",
+        "market_cap_rank": item.market_cap_rank,
+    }
+    if move and move.get("percent_change") is not None:
+        row["window"] = window
+        row["window_change"] = move["percent_change"]
+        row["window_start"] = move.get("previous")
+        row["window_end"] = move.get("current")
+    return row
 
 
 def fetch_trigger_asset(adapter: CMCAdapter, permissions: dict, run, symbol: str) -> MarketObservation | None:

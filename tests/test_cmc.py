@@ -188,6 +188,70 @@ def test_spoken_comparison_states_price_and_24h_move():
     assert "down 1.42% over 24 hours" in text
 
 
+def test_list_wrapped_history_keeps_the_path_and_the_last_print():
+    from apps.cmc.normalize import chart_series, flatten_historical_quotes
+
+    payload = {
+        "data": {
+            "BTC": [
+                {
+                    "symbol": "BTC",
+                    "name": "Bitcoin",
+                    "quotes": [
+                        {"timestamp": "2026-09-01T00:00:00.000Z", "quote": {"USD": {"price": 60000}}},
+                        {"timestamp": "2026-09-30T00:00:00.000Z", "quote": {"USD": {"price": 66000}}},
+                    ],
+                }
+            ]
+        }
+    }
+    series = chart_series(payload)
+    assert [point["price"] for point in series[0]["points"]] == [60000, 66000]
+    flat = flatten_historical_quotes(payload)
+    assert flat["data"][0]["symbol"] == "BTC"
+    assert flat["data"][0]["quote"]["USD"]["price"] == 66000
+
+
+def test_spoken_comparison_leads_with_the_window():
+    class Result:
+        kind = "comparison"
+        payload_json = {
+            "window": "30d",
+            "rows": [
+                {
+                    "name": "Bitcoin",
+                    "symbol": "BTC",
+                    "price": 83403.06,
+                    "price_change_24h": 0.08,
+                    "window_change": 10.0,
+                    "window_start": 60000,
+                    "window_end": 66000,
+                }
+            ],
+        }
+
+    text = spoken_result(Result())
+    assert "up 10.00% over 30 days" in text
+    assert text.index("30 days") < text.index("24 hours") if "24 hours" in text else True
+    assert "The latest price is $83,403.06" in text
+
+
+def test_spoken_comparison_does_not_treat_a_missing_window_as_the_answer():
+    class Result:
+        kind = "comparison"
+        payload_json = {
+            "window": "30d",
+            "rows": [
+                {"name": "Bitcoin", "symbol": "BTC", "price": 83403.06, "price_change_24h": 0.08},
+                {"name": "Ethereum", "symbol": "ETH", "price": 2667.81, "price_change_24h": -0.57},
+            ],
+        }
+
+    text = spoken_result(Result())
+    assert text.startswith("A 30-day history was not returned")
+    assert "not that comparison" in text
+
+
 def test_normalize_fear_greed():
     context = normalize_fear_greed(FEAR)
     assert context.fear_greed_value == 74

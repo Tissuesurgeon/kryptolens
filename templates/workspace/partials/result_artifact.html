@@ -59,12 +59,24 @@
     {% endif %}
   {% elif result.kind == "comparison" %}
     <table class="result-table">
-      <thead><tr><th>Asset</th><th>Price</th><th>24h Change</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Asset</th>
+          <th>Price</th>
+          {% if result.payload_json.rows.0.window_change != None %}<th>{{ result.payload_json.window_label|default:"Window" }}</th>{% endif %}
+          <th>24h Change</th>
+        </tr>
+      </thead>
       <tbody>
         {% for row in result.payload_json.rows %}
           <tr>
             <td>{{ row.symbol }} <span class="quiet">{{ row.name }}</span></td>
             <td class="mono">{% if row.price != None %}${{ row.price|floatformat:2 }}{% else %}—{% endif %}</td>
+            {% if result.payload_json.rows.0.window_change != None %}
+              <td class="mono {% if row.window_change < 0 %}is-down{% elif row.window_change > 0 %}is-up{% endif %}">
+                {% if row.window_change != None %}{{ row.window_change|floatformat:2 }}%{% else %}—{% endif %}
+              </td>
+            {% endif %}
             <td class="mono {% if row.price_change_24h < 0 %}is-down{% elif row.price_change_24h > 0 %}is-up{% endif %}">
               {% if row.price_change_24h != None %}{{ row.price_change_24h|floatformat:2 }}%{% else %}—{% endif %}
             </td>

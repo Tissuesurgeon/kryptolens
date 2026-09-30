@@ -141,6 +141,8 @@ def flatten_historical_quotes(payload: dict) -> dict:
     else:
         values = []
     for asset in values:
+        if isinstance(asset, list):
+            asset = asset[0] if asset else None
         if not isinstance(asset, dict):
             continue
         quotes = asset.get("quotes") or asset.get("quote") or []

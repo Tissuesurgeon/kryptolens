@@ -225,7 +225,12 @@ def _task_from_llm(text: str, data: dict) -> ClarifiedTask:
         assets = llm_assets
     else:
         assets = list(mentioned)
-    capabilities = list(data.get("capabilities") or _default_capabilities(data.get("task_type") or "", data.get("window") or ""))
+    named_window = _named_window(text)
+    capabilities = list(data.get("capabilities") or _default_capabilities(data.get("task_type") or "", named_window or data.get("window") or ""))
+    if named_window:
+        for name in ("historical", "market"):
+            if name not in capabilities:
+                capabilities.append(name)
     conditions = list(data.get("trigger_conditions") or [])
     for item in conditions:
         if isinstance(item, dict) and not item.get("asset") and assets:
@@ -238,7 +243,7 @@ def _task_from_llm(text: str, data: dict) -> ClarifiedTask:
         scope=TaskScope(
             assets=assets,
             universe=data.get("universe") or "",
-            window=data.get("window") or "",
+            window=_named_window(text) or data.get("window") or "",
             listing_limit=data.get("listing_limit"),
         ),
         trigger=TaskTrigger(conditions=conditions),
@@ -791,6 +796,10 @@ def _is_plain_status(lowered: str) -> bool:
 
 def _is_discovery(lowered: str) -> bool:
     return any(word in lowered for word in ("trending", "gainers", "new listing", "what is pumping", "discovery"))
+
+
+def _named_window(text: str) -> str:
+    return _window(text)
 
 
 def _window(text: str) -> str:
